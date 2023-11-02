@@ -15,16 +15,19 @@ library(ggpubr)
 library(rstatix)
 library(lubridate)
 
-#this currently works with local files, will modify to work with onedrive/teams files
-  #by end of day tomorrow -AGK
-setwd("~/Desktop")
+#has been updated to work with onedrive shortcuts -AGK 11/2
+
+# setwd("~/Desktop")
+setwd("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-0365")
+#this command should work in theory but doesn't actually work. works if set via session > set wd 
 
 #read in raw file, select columns (date_time, temp, do, do_sat), rename columns
 #add columns lake_id, local_tz, daylight_savings, depth
 
 #build sky pond database####
 #using bind_rows to build database while reading files in via read.table
-#these files have already been concatenated, just pulling together separate year files. 
+#these files have already been concatenated, just pulling together separate year files -> planning to update
+  #to work with uncat files similar to fern
   #I manually delimited these in excel and removed the line of units. can change if needed -AGK
 sky_minidot <- bind_rows(read.table("Sky_LS_20180625_20180912.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
     select(3, 5:7) %>%
@@ -72,8 +75,54 @@ sky_minidot <- bind_rows(read.table("Sky_LS_20180625_20180912.txt", sep = "\t", 
     do_sat = Dissolved.Oxygen.Saturation) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5"))
 
+#uncat sky db####
+sky_0.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_0.5", regexp = "\\.txt$") %>%
+  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+  select(1, 3, 4) %>%
+  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+  mutate(new_date = as_datetime(`date_time`))
+#this works! took about ~10 min to run. 
+#wondering if we need the date_time column in unix format? i kinda want to get rid of it -AGK
+sky_3.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_3.5", regexp = "\\.txt$") %>%
+  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+  select(1, 3, 4) %>%
+  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
+  mutate(new_date = as_datetime(`date_time`))
+#sick that worked too. about 5 minutes to run
+#need 2 figure out what depths these actually are
+sky_6 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_6", regexp = "\\.txt$") %>%
+  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+  select(1, 3, 4) %>%
+  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
+  mutate(new_date = as_datetime(`date_time`))
+#~10 minute run time
+
+#bind_rows can be done upfront, doesn't extend run time too significantly
+new_sky_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_0.5", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+    mutate(new_date = as_datetime(`date_time`))), 
+  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_3.5", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
+    mutate(new_date = as_datetime(`date_time`)),
+  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_6", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
+    mutate(new_date = as_datetime(`date_time`)))
+
 #trimmed sky pond database####
 #this was trimmed to fit the timeframe of another database, not due to data issues/outliers (per tim) -AGK
+#i kind of want to take this chunk out. might do so later -AGK
 trimmed_sky_minidot <- bind_rows(read.table("Sky_LS_20180625_20180912.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
     select(3, 5:7) %>%
     rename(date_time = GMT.07.00, temp = Temperature, do_obs = Dissolved.Oxygen, 
@@ -156,10 +205,26 @@ loch_minidot <- bind_rows(read.table("Loch_LS_20180924_20191003.txt", sep = "\t"
     do_sat = Dissolved.Oxygen.Saturation) %>% 
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"))
 
+#uncat loch db####
+new_loch_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Loch/loch_0.5", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+    mutate(new_date = as_datetime(`date_time`))), 
+  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Loch/loch_4", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
+    mutate(new_date = as_datetime(`date_time`)))
+#run time approximately 8 minutes
+
 #build fern database####
 #fern miniDOT files are not concatenated - code below does so manually
   #no do_sat - need to calculate
 #read in separate fern folders (21_22 and 22_23 hypo and surface)
+#I'll probably organize these files similar to sky and the loch (by depth), they're easier to work with that way -AGK
 fernLH_21_22 <- fs::dir_ls("~/Desktop/2021_22_FernLH", regexp = "\\.txt$") %>%
   purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
   select(1, 3, 4) %>%
@@ -188,7 +253,25 @@ fernLS_22_23 <- fs::dir_ls("~/Desktop/2022_23_FernLS", regexp = "\\.txt$") %>%
 #use bind_rows to build database 
 fern_minidot <- bind_rows(fernLH_21_22, fernLS_21_22, fernLH_22_23, fernLS_22_23)
 
+#uncat fern db####
+#reorganized file structure
+new_fern_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Fern/fern_0.5", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+    mutate(new_date = as_datetime(`date_time`))), 
+  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Fern/fern_5", regexp = "\\.txt$") %>%
+    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+    select(1, 3, 4) %>%
+    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
+    mutate(new_date = as_datetime(`date_time`)))
+#run time ~5 minutes
+
+
 #factors & change date formatting####
+#THIS HAS NOT BEEN UPDATED -AGK 11/2
 #depth as a factor for all data frames, date in ymd_hms
 sky_minidot$depth <- as.factor(sky_minidot$depth)
 sky_minidot <- sky_minidot %>%
