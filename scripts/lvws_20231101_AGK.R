@@ -1,19 +1,4 @@
-#LVWS miniDOT data (sky, loch, fern) 2018-2023
-#version 11/1/23 AGK
-
-#setup####
-#install.packages("ggQC")
-library(tidyverse)
-library(ggQC)
-# library(tibble)
-# library(ggplot2)
-library(plyr)
-# library(dplyr)
-library(dtplyr)
-library(Rmisc)
-library(ggpubr)
-library(rstatix)
-library(lubridate)
+source("scripts/00_libraries.R")
 
 #has been updated to work with onedrive shortcuts -AGK 11/2
 
