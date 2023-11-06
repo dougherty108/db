@@ -14,91 +14,93 @@ setwd("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-0365")
 #these files have already been concatenated, just pulling together separate year files -> planning to update
   #to work with uncat files similar to fern
   #I manually delimited these in excel and removed the line of units. can change if needed -AGK
-sky_minidot <- bind_rows(read.table("Sky_LS_20180625_20180912.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = GMT.07.00, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Sky_LS_20190806_20200714.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Sky_LS_20200721_20210624.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Sky_LS_20210706_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Sky_LH_20180924_20190731.txt", sep = "\t", header = TRUE, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature_C, do_obs = DissolvedOxygen_mgL, 
-    do_sat = DissolvedOxygenSaturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
-  read.table("Sky_LH_20190806_20200715.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
-  read.table("Sky_LH_20200721_20210624.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
-  read.table("Sky_LH_20210928_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
-  read.table("Sky_Mid_20210928_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5"))
+# sky_minidot <- bind_rows(read.table("Sky_LS_20180625_20180912.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = GMT.07.00, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Sky_LS_20190806_20200714.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Sky_LS_20200721_20210624.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Sky_LS_20210706_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Sky_LH_20180924_20190731.txt", sep = "\t", header = TRUE, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature_C, do_obs = DissolvedOxygen_mgL, 
+#     do_sat = DissolvedOxygenSaturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
+#   read.table("Sky_LH_20190806_20200715.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
+#   read.table("Sky_LH_20200721_20210624.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
+#   read.table("Sky_LH_20210928_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6"), 
+#   read.table("Sky_Mid_20210928_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>%
+#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5"))
 
 #uncat sky db####
-sky_0.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_0.5", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-#this works! took about ~10 min to run. 
-#wondering if we need the date_time column in unix format? i kinda want to get rid of it -AGK
-sky_3.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_3.5", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-#sick that worked too. about 5 minutes to run
-#need 2 figure out what depths these actually are
-sky_6 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_6", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-  mutate(new_date = as_datetime(`date_time`))
+# sky_0.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_0.5", regexp = "\\.txt$") %>%
+#   purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+#   select(1, 3, 4) %>%
+#   dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+#   mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+#   mutate(new_date = as_datetime(`date_time`))
+# #this works! took about ~10 min to run. 
+# #wondering if we need the date_time column in unix format? i kinda want to get rid of it -AGK
+# sky_3.5 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_3.5", regexp = "\\.txt$") %>%
+#   purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+#   select(1, 3, 4) %>%
+#   dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+#   mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
+#   mutate(new_date = as_datetime(`date_time`))
+# #sick that worked too. about 5 minutes to run
+# #need 2 figure out what depths these actually are
+# sky_6 <- fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/depth_6", regexp = "\\.txt$") %>%
+#   purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
+#   select(1, 3, 4) %>%
+#   dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
+#   mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
+#   mutate(new_date = as_datetime(`date_time`))
 #~10 minute run time
 
+setwd("~/Library/CloudStorage/OneDrive-UCB-O365/Data - Mountain limnology lab/Loch Vale/LVWS_data/miniDOT/raw/")
+
 #bind_rows can be done upfront, doesn't extend run time too significantly
-new_sky_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_0.5", regexp = "\\.txt$") %>%
+new_sky_minidot <- bind_rows((fs::dir_ls("Sky/sky_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(new_date = as_datetime(`date_time`))), 
-  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_3.5", regexp = "\\.txt$") %>%
+  fs::dir_ls("Sky/sky_3.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
     mutate(new_date = as_datetime(`date_time`)),
-  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Sky/sky_6", regexp = "\\.txt$") %>%
+  fs::dir_ls("Sky/sky_6", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
