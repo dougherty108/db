@@ -1,169 +1,91 @@
 source("scripts/00_libraries.R")
 
+#read in files from OneDrive and compile miniDOT data for Sky, Loch, Fern
+#I couldn't get this to run (at least not in a reasonable timeframe) until files had been synced locally -AGK
+  #this should all run fairly quickly. if not, it's likely a OneDrive issue
 
-#bind_rows can be done upfront, doesn't extend run time too significantly
-new_sky_minidot <- bind_rows((fs::dir_ls("data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_0.5", regexp = "\\.txt$") %>%
+#sky pond database####
+sky_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(new_date = as_datetime(`date_time`))), 
-  fs::dir_ls("Sky/sky_3.5", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_3.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
     mutate(new_date = as_datetime(`date_time`)),
-  fs::dir_ls("Sky/sky_6", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_6", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
     mutate(new_date = as_datetime(`date_time`)))
 
-#trimmed 2021 sky pond data####
-
-#build loch database####
-#bind_rows to build database while reading in files
-  #see above comment about sky pond delimiting/file editing -AGK
-# loch_minidot <- bind_rows(read.table("Loch_LS_20180924_20191003.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-#   read.table("Loch_LS_20190619_20200526.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-#   read.table("Loch_LS_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-#   read.table("Loch_LS_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-#   read.table("Loch_LH_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"), 
-#   read.table("Loch_LH_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-#     do_sat = Dissolved.Oxygen.Saturation) %>% 
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"))
-
-#uncat loch db####
-new_loch_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Loch/loch_0.5", regexp = "\\.txt$") %>%
+#loch database####
+loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch/loch_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(new_date = as_datetime(`date_time`))), 
-  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Loch/loch_4", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch/loch_4", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
     mutate(new_date = as_datetime(`date_time`)))
-#run time approximately 8 minutes
+#this is generating some NA values when converting unix to date_time. not sure why, will fix -AGK
 
-#build fern database####
-#fern miniDOT files are not concatenated - code below does so manually
-  #no do_sat - need to calculate
-#read in separate fern folders (21_22 and 22_23 hypo and surface)
-#I'll probably organize these files similar to sky and the loch (by depth), they're easier to work with that way -AGK
-fernLH_21_22 <- fs::dir_ls("~/Desktop/2021_22_FernLH", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-fernLS_21_22 <- fs::dir_ls("~/Desktop/2021_22_FernLS", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-fernLH_22_23 <- fs::dir_ls("~/Desktop/2022_23_FernLH", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-fernLS_22_23 <- fs::dir_ls("~/Desktop/2022_23_FernLS", regexp = "\\.txt$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-  select(1, 3, 4) %>%
-  dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-  mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-  mutate(new_date = as_datetime(`date_time`))
-
-#use bind_rows to build database 
-fern_minidot <- bind_rows(fernLH_21_22, fernLS_21_22, fernLH_22_23, fernLS_22_23)
-
-#uncat fern db####
-#reorganized file structure
-new_fern_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Fern/fern_0.5", regexp = "\\.txt$") %>%
+#fern database####
+fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(new_date = as_datetime(`date_time`))), 
-  fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Fern/fern_5", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
     mutate(new_date = as_datetime(`date_time`)))
-#run time ~5 minutes
 
-
-#factors & change date formatting####
-#THIS HAS NOT BEEN UPDATED -AGK 11/2
+#factor & change date formatting####
 #depth as a factor for all data frames, date in ymd_hms
 sky_minidot$depth <- as.factor(sky_minidot$depth)
 sky_minidot <- sky_minidot %>%
-  mutate(date_time = ymd_hms(`date_time`))
-# trimmed_sky_minidot$depth <- as.factor(trimmed_sky_minidot$depth)
-# trimmed_sky_minidot <- trimmed_sky_minidot %>%
-  # mutate(date_time = ymd_hms(`date_time`))
+  mutate(new_date = ymd_hms(`new_date`))
+
 loch_minidot$depth <- as.factor(loch_minidot$depth)
 loch_minidot <- loch_minidot %>%
-  mutate(date_time = ymd_hms(`date_time`))
+  mutate(new_date = ymd_hms(`new_date`))
+#failing to parse - some NAs generated in database collection
+
 fern_minidot$depth <- as.factor(fern_minidot$depth)
 fern_minidot <- fern_minidot %>%
   mutate(new_date = ymd_hms(`new_date`))
 
+#this section has not been updated as of 11/8 -AGK
 #flag outliers
 #calculate z-scores, flag values >3 sd from mean (?)
 #convert to long format - column with temp, do_obs, do_sat
 #split date_time into month and year
 sky_flag <- sky_minidot %>% 
-  mutate(year = year(date_time), 
-         month = month(date_time)) %>%
-  pivot_longer(c(temp, do_obs, do_sat)) %>%
+  mutate(year = year(new_date), 
+         month = month(new_date)) %>%
+  pivot_longer(c(temp, do_obs)) %>%
   group_by(month, depth, year, name) %>%
   mutate(value_scale = scale(value), 
          flag = case_when(abs(value_scale) > 3 ~ "yes", 
                           .default = "no"))
 
-# sky_flag_trim <- trimmed_sky_minidot %>% 
-#   mutate(year = year(date_time), 
-#          month = month(date_time)) %>%
-#   pivot_longer(c(temp, do_obs, do_sat)) %>%
-#   group_by(month, depth, year, name) %>%
-#   mutate(value_scale = scale(value), 
-#          flag = case_when(abs(value_scale) > 3 ~ "yes", 
-#                           .default = "no"))
-
 loch_flag <- loch_minidot %>%
-  mutate(year = year(date_time), 
-         month = month(date_time)) %>%
-  pivot_longer(c(temp, do_obs, do_sat)) %>%
+  mutate(year = year(new_date), 
+         month = month(new_date)) %>%
+  pivot_longer(c(temp, do_obs)) %>%
   group_by(month, depth, year, name) %>%
   mutate(value_scale = scale(value), 
          flag = case_when(abs(value_scale) > 3 ~ "yes", 
@@ -179,19 +101,13 @@ fern_flag <- fern_minidot %>%
                           .default = "no"))
 
 #plot data####
-#plot raw data####
 #do_obs####
-#trimmed data 
-# trim_sky_do <- ggplot(data = trimmed_sky_minidot, aes(x = date_time, y = do_obs, color = depth))+
-#   geom_point(aes(color = depth))
-# trim_sky_do
-#raw data
 sky_do <- ggplot(data = sky_minidot %>%
-                   filter(do_obs < 100), aes(x = date_time, y = do_obs, color = depth))+
+                   filter(do_obs < 100), aes(x = new_date, y = do_obs, color = depth))+
   geom_point(aes(color = depth))
 sky_do
 
-loch_do <- ggplot(data = loch_minidot, aes(x = date_time, y = do_obs, color = depth))+
+loch_do <- ggplot(data = loch_minidot, aes(x = new_date, y = do_obs, color = depth))+
   geom_point(aes(color = depth))
 loch_do
 
@@ -201,31 +117,14 @@ fern_do
 #wondering where the rest of the surface data is?
 
 #do_sat####
-# trim_sky_sat <- ggplot(data = trimmed_sky_minidot, aes(x = date_time, y = do_sat, color = depth))+
-#   geom_point(aes(color = depth))
-# trim_sky_sat
-#raw data
-sky_sat <- ggplot(data = sky_minidot %>%
-                   filter(do_sat < 200), aes(x = date_time, y = do_sat, color = depth))+
-  geom_point(aes(color = depth))
-sky_sat
-
-loch_sat <- ggplot(data = loch_minidot, aes(x = date_time, y = do_sat, color = depth))+
-  geom_point(aes(color = depth))
-loch_sat
-
-#need to calculate fern do_sat
+#this needs to be calculated prior to be being plotted
 
 #temp####
-# trim_sky_temp <- ggplot(data = trimmed_sky_minidot, aes(x = date_time, y = temp, color = depth))+
-#   geom_point(aes(color = depth))
-# trim_sky_temp
-
-sky_temp <- ggplot(data = sky_minidot, aes(x = date_time, y = temp, color = depth))+
+sky_temp <- ggplot(data = sky_minidot, aes(x = new_date, y = temp, color = depth))+
   geom_point(aes(color = depth))
 sky_temp
 
-loch_temp <- ggplot(data = loch_minidot, aes(x = date_time, y = temp, color = depth))+
+loch_temp <- ggplot(data = loch_minidot, aes(x = new_date, y = temp, color = depth))+
   geom_point(aes(color = depth))
 loch_temp
 
@@ -240,10 +139,10 @@ sky_do_scaled <- ggplot(data = sky_flag %>%
                       facet_wrap(~depth, scales = "free_y")
 sky_do_scaled
 
-sky_dosat_scaled <- ggplot(data = sky_flag %>%
-                      filter(name == "do_sat"), aes(x = date_time, y = value_scale, color = flag))+
-                      geom_point(aes(shape = flag))+
-                      facet_wrap(~depth, scales = "free_y")
+# sky_dosat_scaled <- ggplot(data = sky_flag %>%
+#                       filter(name == "do_sat"), aes(x = date_time, y = value_scale, color = flag))+
+#                       geom_point(aes(shape = flag))+
+#                       facet_wrap(~depth, scales = "free_y")
 sky_dosat_scaled
 #4x as a cutoff? should be grouped seasonally first though
 sky_temp_scaled <- ggplot(data = sky_flag %>%
@@ -258,10 +157,10 @@ loch_do_scaled <- ggplot(data = loch_flag %>%
                       facet_wrap(~depth, scales = "free_y")
 loch_do_scaled
 
-loch_dosat_scaled <- ggplot(data = loch_flag %>%
-                      filter(name == "do_sat"), aes(x = date_time, y = value_scale, color = flag))+
-                      geom_point(aes(shape = flag))+
-                      facet_wrap(~depth, scales = "free_y")
+# loch_dosat_scaled <- ggplot(data = loch_flag %>%
+#                       filter(name == "do_sat"), aes(x = date_time, y = value_scale, color = flag))+
+#                       geom_point(aes(shape = flag))+
+#                       facet_wrap(~depth, scales = "free_y")
 loch_dosat_scaled
 
 loch_temp_scaled <- ggplot(data = loch_flag %>% 
@@ -284,26 +183,31 @@ fern_temp_scaled <- ggplot(data = fern_flag %>%
                       facet_wrap(~ depth, scales = "free_y")
 
 fern_temp_scaled
-#need to calculate do_sat
 
-#finding outliers - z-score, look into other methods
-  #z-score is best when the data follow a normal distribution - do they?
 
 #xbar to visualize outliers - this isn't great but it's functional. AGK
-xbar_sky <- ggplot(sky_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
+xbar_sky <- ggplot(sky_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
   stat_summary(fun = mean, geom = "point") +
   stat_summary(fun = mean, geom = "line") +
   stat_QC(method = "XmR") 
 xbar_sky
 
-xbar_sky_trim <- ggplot(trimmed_sky_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
-  stat_summary(fun = mean, geom = "point") +
-  stat_summary(fun = mean, geom = "line") +
-  stat_QC(method = "XmR") 
-xbar_sky_trim
 
-xbar_loch <- ggplot(loch_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
+xbar_loch <- ggplot(loch_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
   stat_summary(fun = mean, geom = "point") +
   stat_summary(fun = mean, geom = "line") +
   stat_QC(method = "XmR") 
 xbar_loch
+
+xbar_fern <- ggplot(fern_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
+  stat_summary(fun = mean, geom = "point") +
+  stat_summary(fun = mean, geom = "line") +
+  stat_QC(method = "XmR") 
+xbar_fern
+
+
+
+
+
+
+
