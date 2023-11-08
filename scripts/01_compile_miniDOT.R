@@ -1,17 +1,8 @@
 source("scripts/00_libraries.R")
 
-#has been updated to work with onedrive shortcuts -AGK 11/2
-
-# setwd("~/Desktop")
-# setwd("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-0365")
-#this command should work in theory but doesn't actually work. works if set via session > set wd 
-
-here::i_am("/Users/isol5015/Dropbox/dropbox Research/")
-# setwd("/Users/isol5015/Dropbox/dropbox Research/")
-setwd("~/Library/CloudStorage/OneDrive-UCB-O365/Data - Mountain limnology lab/Loch Vale/LVWS_data/miniDOT/raw/")
 
 #bind_rows can be done upfront, doesn't extend run time too significantly
-new_sky_minidot <- bind_rows((fs::dir_ls("Sky/sky_0.5", regexp = "\\.txt$") %>%
+new_sky_minidot <- bind_rows((fs::dir_ls("data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
@@ -35,36 +26,36 @@ new_sky_minidot <- bind_rows((fs::dir_ls("Sky/sky_0.5", regexp = "\\.txt$") %>%
 #build loch database####
 #bind_rows to build database while reading in files
   #see above comment about sky pond delimiting/file editing -AGK
-loch_minidot <- bind_rows(read.table("Loch_LS_20180924_20191003.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Loch_LS_20190619_20200526.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Loch_LS_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Loch_LS_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
-  read.table("Loch_LH_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"), 
-  read.table("Loch_LH_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
-    rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
-    do_sat = Dissolved.Oxygen.Saturation) %>% 
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"))
+# loch_minidot <- bind_rows(read.table("Loch_LS_20180924_20191003.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Loch_LS_20190619_20200526.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Loch_LS_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Loch_LS_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5"), 
+#   read.table("Loch_LH_20200602_20210608.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"), 
+#   read.table("Loch_LH_20210615_20220809.txt", sep = "\t", header = TRUE, skip = 7, strip.white = TRUE) %>%
+#     select(3, 5:7) %>%
+#     rename(date_time = Mountain.Standard.Time, temp = Temperature, do_obs = Dissolved.Oxygen, 
+#     do_sat = Dissolved.Oxygen.Saturation) %>% 
+#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4"))
 
 #uncat loch db####
 new_loch_mindot <- bind_rows((fs::dir_ls("/Users/adeline.kelly/Library/CloudStorage/OneDrive-UCB-O365/Loch/loch_0.5", regexp = "\\.txt$") %>%
