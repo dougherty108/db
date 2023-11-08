@@ -8,6 +8,7 @@ source("scripts/00_libraries.R")
 
 here::i_am("/Users/isol5015/Dropbox/dropbox Research/")
 # setwd("/Users/isol5015/Dropbox/dropbox Research/")
+setwd("~/Library/CloudStorage/OneDrive-UCB-O365/Data - Mountain limnology lab/Loch Vale/LVWS_data/miniDOT/raw/")
 
 #bind_rows can be done upfront, doesn't extend run time too significantly
 new_sky_minidot <- bind_rows((fs::dir_ls("Sky/sky_0.5", regexp = "\\.txt$") %>%
