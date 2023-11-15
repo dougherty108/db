@@ -1,12 +1,14 @@
 source("scripts/01_compile_miniDOT.R")
 
+
+# Create flag dataframes --------------------------------------------------
 # Create dataframes that put the data into long format and flag outliers
 # based on 3 std devs for now
 sky_flag <- sky_minidot %>%
   mutate(year = year(date_time),
          month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs, do_sat)) %>%
-  group_by(month, depth, year, name) %>%
+  group_by(depth, year, name) %>%
   mutate(value_scale = scale(value),
          flag = case_when(abs(value_scale) > 3 ~ "yes",
                           .default = "no"))
@@ -15,7 +17,7 @@ loch_flag <- loch_minidot %>%
   mutate(year = year(date_time),
          month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs, do_sat)) %>%
-  group_by(month, depth, year, name) %>%
+  group_by(depth, year, name) %>%
   mutate(value_scale = scale(value),
          flag = case_when(abs(value_scale) > 3 ~ "yes",
                           .default = "no"))
@@ -24,19 +26,22 @@ fern_flag <- fern_minidot %>%
   mutate(year = year(date_time),
          month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs, do_sat)) %>%
-  group_by(month, depth, year, name) %>%
+  group_by(depth, year, name) %>%
   mutate(value_scale = scale(value),
          flag = case_when(abs(value_scale) > 3 ~ "yes",
                           .default = "no"))
 
-#plot data####
-#do_obs####
+
+# Raw data plots ----------------------------------------------------------
+
+
+#do_obs
 sky_do <- ggplot(data = sky_flag %>%
                    filter(name == "do_obs") %>%
                    filter(value < 100),
                  aes(x = date_time, y = value)) +
   geom_point(aes(color = flag, shape = flag)) +
-  facet_wrap(depth ~ year, scales = "free") +
+  facet_wrap2(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -45,22 +50,38 @@ sky_do <- ggplot(data = sky_flag %>%
 sky_do
 
 loch_do <-
-  ggplot(data = loch_minidot, aes(x = date_time, y = do_obs, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = loch_flag %>%
+           filter(name == "do_obs"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m"
+  )
 loch_do
 
 fern_do <-
-  ggplot(data = fern_minidot, aes(x = date_time, y = do_obs, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = fern_flag %>%
+           filter(name == "do_obs"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m"
+  )
 fern_do
 #wondering where the rest of the surface data is?
 
-#do sat####
-sky_do_sat <- ggplot(data = sky_minidot %>%
-                   filter(do_obs < 100),
-                 aes(x = date_time, y = do_sat, color = depth)) +
-  geom_point(aes(color = depth)) +
-  facet_wrap(depth ~ year(date_time), scales = "free") +
+#do sat
+sky_do_sat <- ggplot(data = sky_flag %>%
+                       filter(name == "do_sat"),
+                     aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -69,33 +90,76 @@ sky_do_sat <- ggplot(data = sky_minidot %>%
 sky_do_sat
 
 loch_do_sat <-
-  ggplot(data = loch_minidot, aes(x = date_time, y = do_sat, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = loch_flag %>%
+           filter(name == "do_sat"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m"
+  )
 loch_do_sat
-#What happened in 2020 with the 4m ?
 
 
 fern_do_sat <-
-  ggplot(data = fern_minidot, aes(x = date_time, y = do_sat, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = fern_flag %>%
+           filter(name == "do_sat"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m-%d"
+  )
 fern_do_sat
 #wondering where the rest of the surface data is?
 
-#temp####
-sky_temp <-
-  ggplot(data = sky_minidot, aes(x = date_time, y = temp, color = depth)) +
-  geom_point(aes(color = depth))
+#temp
+sky_temp <- ggplot(data = sky_flag %>%
+                       filter(name == "temp"),
+                     aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m"
+  )
 sky_temp
 
 loch_temp <-
-  ggplot(data = loch_minidot, aes(x = date_time, y = temp, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = loch_flag %>%
+           filter(name == "temp"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m"
+  )
 loch_temp
 
+
 fern_temp <-
-  ggplot(data = fern_minidot, aes(x = date_time, y = temp, color = depth)) +
-  geom_point(aes(color = depth))
+  ggplot(data = fern_flag %>%
+           filter(name == "temp"),
+         aes(x = date_time, y = value)) +
+  geom_point(aes(color = flag, shape = flag)) +
+  facet_wrap2(depth ~ year, scales = "free") +
+  scale_x_datetime(
+    date_breaks = "3 months",
+    date_minor_breaks = "1 month",
+    date_labels = "%m-%d"
+  )
 fern_temp
+
+
+# z-score plots -----------------------------------------------------------
+
 
 #plot z-scores for do_sat, do_obs, and temp for sky pond and loch
 sky_do_scaled <- ggplot(data = sky_flag %>%
