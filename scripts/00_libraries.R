@@ -16,7 +16,8 @@ pacman::p_load("lubridate",
                "rstatix",
                "ggQC",
                "renv",
-               "here")
+               "here",
+               "wql")
 
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
