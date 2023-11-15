@@ -42,11 +42,10 @@ fern_flag <- fern_minidot %>%
 
 
 #do_obs
-sky_do <- ggplot(data = sky_flag_3sd %>%
-                   filter(name == "do_obs") %>%
-                   filter(value < 100),
+sky_do <- ggplot(data = sky_flag %>%
+                   filter(name == "do_obs"),
                  aes(x = date_time, y = value)) +
-  geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
+  geom_point(aes(color = flag_4sd, shape = flag_3sd)) +
   facet_wrap2(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
@@ -56,7 +55,7 @@ sky_do <- ggplot(data = sky_flag_3sd %>%
 sky_do
 
 loch_do <-
-  ggplot(data = loch_flag_3sd %>%
+  ggplot(data = loch_flag %>%
            filter(name == "do_obs"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -69,7 +68,7 @@ loch_do <-
 loch_do
 
 fern_do <-
-  ggplot(data = fern_flag_3sd %>%
+  ggplot(data = fern_flag %>%
            filter(name == "do_obs"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -83,7 +82,7 @@ fern_do
 #wondering where the rest of the surface data is?
 
 #do sat
-sky_do_sat <- ggplot(data = sky_flag_3sd %>%
+sky_do_sat <- ggplot(data = sky_flag %>%
                        filter(name == "do_sat"),
                      aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -96,7 +95,7 @@ sky_do_sat <- ggplot(data = sky_flag_3sd %>%
 sky_do_sat
 
 loch_do_sat <-
-  ggplot(data = loch_flag_3sd %>%
+  ggplot(data = loch_flag %>%
            filter(name == "do_sat"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -110,7 +109,7 @@ loch_do_sat
 
 
 fern_do_sat <-
-  ggplot(data = fern_flag_3sd %>%
+  ggplot(data = fern_flag %>%
            filter(name == "do_sat"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -124,7 +123,7 @@ fern_do_sat
 #wondering where the rest of the surface data is?
 
 #temp
-sky_temp <- ggplot(data = sky_flag_3sd %>%
+sky_temp <- ggplot(data = sky_flag %>%
                        filter(name == "temp"),
                      aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -137,7 +136,7 @@ sky_temp <- ggplot(data = sky_flag_3sd %>%
 sky_temp
 
 loch_temp <-
-  ggplot(data = loch_flag_3sd %>%
+  ggplot(data = loch_flag %>%
            filter(name == "temp"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -151,7 +150,7 @@ loch_temp
 
 
 fern_temp <-
-  ggplot(data = fern_flag_3sd %>%
+  ggplot(data = fern_flag %>%
            filter(name == "temp"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -168,7 +167,7 @@ fern_temp
 
 
 #plot z-scores for do_sat, do_obs, and temp for sky pond and loch
-sky_do_scaled <- ggplot(data = sky_flag_3sd %>%
+sky_do_scaled <- ggplot(data = sky_flag %>%
                           filter(name == "do_obs"),
                         aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -180,7 +179,7 @@ sky_do_scaled <- ggplot(data = sky_flag_3sd %>%
   )
 sky_do_scaled
 
-sky_do_sat_scaled <- ggplot(data = sky_flag_3sd %>%
+sky_do_sat_scaled <- ggplot(data = sky_flag %>%
                           filter(name == "do_sat"),
                         aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -192,7 +191,7 @@ sky_do_sat_scaled <- ggplot(data = sky_flag_3sd %>%
   )
 sky_do_sat_scaled
 
-sky_temp_scaled <- ggplot(data = sky_flag_3sd %>%
+sky_temp_scaled <- ggplot(data = sky_flag %>%
                             filter(name == "temp"),
                           aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -205,7 +204,7 @@ sky_temp_scaled <- ggplot(data = sky_flag_3sd %>%
 sky_temp_scaled
 
 
-loch_do_scaled <- ggplot(data = loch_flag_3sd %>%
+loch_do_scaled <- ggplot(data = loch_flag %>%
                           filter(name == "do_obs"),
                         aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -217,7 +216,7 @@ loch_do_scaled <- ggplot(data = loch_flag_3sd %>%
   )
 loch_do_scaled
 
-loch_do_sat_scaled <- ggplot(data = loch_flag_3sd %>%
+loch_do_sat_scaled <- ggplot(data = loch_flag %>%
                               filter(name == "do_sat"),
                             aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -229,7 +228,7 @@ loch_do_sat_scaled <- ggplot(data = loch_flag_3sd %>%
   )
 loch_do_sat_scaled
 
-loch_temp_scaled <- ggplot(data = loch_flag_3sd %>%
+loch_temp_scaled <- ggplot(data = loch_flag %>%
                             filter(name == "temp"),
                           aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -241,7 +240,7 @@ loch_temp_scaled <- ggplot(data = loch_flag_3sd %>%
   )
 loch_temp_scaled
 
-fern_do_scaled <- ggplot(data = fern_flag_3sd %>%
+fern_do_scaled <- ggplot(data = fern_flag %>%
                           filter(name == "do_obs"),
                         aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -253,7 +252,7 @@ fern_do_scaled <- ggplot(data = fern_flag_3sd %>%
   )
 fern_do_scaled
 
-fern_do_sat_scaled <- ggplot(data = fern_flag_3sd %>%
+fern_do_sat_scaled <- ggplot(data = fern_flag %>%
                               filter(name == "do_sat"),
                             aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
@@ -265,7 +264,7 @@ fern_do_sat_scaled <- ggplot(data = fern_flag_3sd %>%
   )
 fern_do_sat_scaled
 
-fern_temp_scaled <- ggplot(data = fern_flag_3sd %>%
+fern_temp_scaled <- ggplot(data = fern_flag %>%
                             filter(name == "temp"),
                           aes(x = date_time, y = value_scale)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
