@@ -39,7 +39,7 @@ loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch
 
 #Check where the NAs are:
 # loch_minidot %>% filter(if_any(everything(), is.na))
-# Did not find any NAs with the function above so just overriding new_date with date_time
+# Did not find any NAs with the function above so just overriding date_time with date_time
 
 
 
@@ -63,8 +63,8 @@ fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern
 #convert to long format - column with temp, do_obs, do_sat
 #split date_time into month and year
 sky_flag <- sky_minidot %>% 
-  mutate(year = year(new_date), 
-         month = month(new_date)) %>%
+  mutate(year = year(date_time), 
+         month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs)) %>%
   group_by(month, depth, year, name) %>%
   mutate(value_scale = scale(value), 
@@ -72,8 +72,8 @@ sky_flag <- sky_minidot %>%
                           .default = "no"))
 
 loch_flag <- loch_minidot %>%
-  mutate(year = year(new_date), 
-         month = month(new_date)) %>%
+  mutate(year = year(date_time), 
+         month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs)) %>%
   group_by(month, depth, year, name) %>%
   mutate(value_scale = scale(value), 
@@ -81,8 +81,8 @@ loch_flag <- loch_minidot %>%
                           .default = "no"))
 
 fern_flag <- fern_minidot %>%
-  mutate(year = year(new_date),
-         month = month(new_date)) %>%
+  mutate(year = year(date_time),
+         month = month(date_time)) %>%
   pivot_longer(c(temp, do_obs)) %>%
   group_by(month, depth, year, name) %>%
   mutate(value_scale = scale(value), 
@@ -92,15 +92,15 @@ fern_flag <- fern_minidot %>%
 #plot data####
 #do_obs####
 sky_do <- ggplot(data = sky_minidot %>%
-                   filter(do_obs < 100), aes(x = new_date, y = do_obs, color = depth))+
+                   filter(do_obs < 100), aes(x = date_time, y = do_obs, color = depth))+
   geom_point(aes(color = depth))
 sky_do
 
-loch_do <- ggplot(data = loch_minidot, aes(x = new_date, y = do_obs, color = depth))+
+loch_do <- ggplot(data = loch_minidot, aes(x = date_time, y = do_obs, color = depth))+
   geom_point(aes(color = depth))
 loch_do
 
-fern_do <- ggplot(data = fern_minidot, aes(x = new_date, y = do_obs, color = depth)) +
+fern_do <- ggplot(data = fern_minidot, aes(x = date_time, y = do_obs, color = depth)) +
   geom_point(aes(color = depth))
 fern_do
 #wondering where the rest of the surface data is?
@@ -109,15 +109,15 @@ fern_do
 #this needs to be calculated prior to be being plotted
 
 #temp####
-sky_temp <- ggplot(data = sky_minidot, aes(x = new_date, y = temp, color = depth))+
+sky_temp <- ggplot(data = sky_minidot, aes(x = date_time, y = temp, color = depth))+
   geom_point(aes(color = depth))
 sky_temp
 
-loch_temp <- ggplot(data = loch_minidot, aes(x = new_date, y = temp, color = depth))+
+loch_temp <- ggplot(data = loch_minidot, aes(x = date_time, y = temp, color = depth))+
   geom_point(aes(color = depth))
 loch_temp
 
-fern_temp <- ggplot(data = fern_minidot, aes(x = new_date, y = temp, color = depth)) +
+fern_temp <- ggplot(data = fern_minidot, aes(x = date_time, y = temp, color = depth)) +
   geom_point(aes(color = depth))
 fern_temp
 
@@ -160,14 +160,14 @@ loch_temp_scaled
 
 
 fern_do_scaled <- ggplot(data = fern_flag %>%
-                      filter(name == "do_obs"), aes(x = new_date, y = value_scale, color = flag))+
+                      filter(name == "do_obs"), aes(x = date_time, y = value_scale, color = flag))+
                       geom_point(aes(shape = flag))+
                       facet_wrap(~depth, scales = "free_y")
 fern_do_scaled
 
 
 fern_temp_scaled <- ggplot(data = fern_flag %>%
-                      filter(name == "temp"), aes(x = new_date, y = value_scale, color = flag)) +
+                      filter(name == "temp"), aes(x = date_time, y = value_scale, color = flag)) +
                       geom_point(aes(shape = flag)) + 
                       facet_wrap(~ depth, scales = "free_y")
 
@@ -175,20 +175,20 @@ fern_temp_scaled
 
 
 #xbar to visualize outliers - this isn't great but it's functional. AGK
-xbar_sky <- ggplot(sky_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
+xbar_sky <- ggplot(sky_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
   stat_summary(fun = mean, geom = "point") +
   stat_summary(fun = mean, geom = "line") +
   stat_QC(method = "XmR") 
 xbar_sky
 
 
-xbar_loch <- ggplot(loch_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
+xbar_loch <- ggplot(loch_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
   stat_summary(fun = mean, geom = "point") +
   stat_summary(fun = mean, geom = "line") +
   stat_QC(method = "XmR") 
 xbar_loch
 
-xbar_fern <- ggplot(fern_minidot, aes(x = new_date, y = do_obs, group = 1)) + 
+xbar_fern <- ggplot(fern_minidot, aes(x = date_time, y = do_obs, group = 1)) + 
   stat_summary(fun = mean, geom = "point") +
   stat_summary(fun = mean, geom = "line") +
   stat_QC(method = "XmR") 
