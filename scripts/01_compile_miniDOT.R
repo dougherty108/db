@@ -20,7 +20,10 @@ sky_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/s
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-    mutate(date_time = as_datetime(`date_time`)))
+    mutate(date_time = as_datetime(`date_time`))) %>%
+  mutate(salinity = 0,
+         do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)) #last term is atm pressure
+#Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
 
 #loch database####
 loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch/loch_0.5", regexp = "\\.txt$") %>%
@@ -34,7 +37,11 @@ loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
-    mutate(date_time = as_datetime(`date_time`)))
+    mutate(date_time = as_datetime(`date_time`))) %>%
+  mutate(salinity = 0,
+         do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)) #last term is atm pressure
+#Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
+
 #this is generating some NA values when converting unix to date_time. not sure why, will fix -AGK
 
 #Check where the NAs are:
@@ -55,5 +62,8 @@ fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
-    mutate(date_time = as_datetime(`date_time`)))
+    mutate(date_time = as_datetime(`date_time`)))%>%
+  mutate(salinity = 0,
+         do_sat = 100 * do_obs/oxySol(temp, salinity, 0.7)) #last term is atm pressure
+#Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
 
