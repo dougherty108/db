@@ -1,8 +1,6 @@
 source("scripts/00_libraries.R")
 
-#read in files from OneDrive and compile miniDOT data for Sky, Loch, Fern
-#I couldn't get this to run (at least not in a reasonable timeframe) until files had been synced locally -AGK
-  #this should all run fairly quickly. if not, it's likely a OneDrive issue
+#Compile miniDOT data for Sky, Loch, Fern
 
 #sky pond database####
 sky_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_0.5", regexp = "\\.txt$") %>%
@@ -10,19 +8,19 @@ sky_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/s
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-    mutate(new_date = as_datetime(`date_time`))), 
+    mutate(date_time = as_datetime(`date_time`))), 
   fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_3.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
-    mutate(new_date = as_datetime(`date_time`)),
+    mutate(date_time = as_datetime(`date_time`)),
   fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Sky/sky_6", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-    mutate(new_date = as_datetime(`date_time`)))
+    mutate(date_time = as_datetime(`date_time`)))
 
 #loch database####
 loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch/loch_0.5", regexp = "\\.txt$") %>%
@@ -30,14 +28,20 @@ loch_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-    mutate(new_date = as_datetime(`date_time`))), 
+    mutate(date_time = as_datetime(`date_time`))), 
   fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Loch/loch_4", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
-    mutate(new_date = as_datetime(`date_time`)))
+    mutate(date_time = as_datetime(`date_time`)))
 #this is generating some NA values when converting unix to date_time. not sure why, will fix -AGK
+
+#Check where the NAs are:
+# loch_minidot %>% filter(if_any(everything(), is.na))
+# Did not find any NAs with the function above so just overriding new_date with date_time
+
+
 
 #fern database####
 fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_0.5", regexp = "\\.txt$") %>%
@@ -45,28 +49,13 @@ fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-    mutate(new_date = as_datetime(`date_time`))), 
+    mutate(date_time = as_datetime(`date_time`))), 
   fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
-    mutate(new_date = as_datetime(`date_time`)))
-
-#factor & change date formatting####
-#depth as a factor for all data frames, date in ymd_hms
-sky_minidot$depth <- as.factor(sky_minidot$depth)
-sky_minidot <- sky_minidot %>%
-  mutate(new_date = ymd_hms(`new_date`))
-
-loch_minidot$depth <- as.factor(loch_minidot$depth)
-loch_minidot <- loch_minidot %>%
-  mutate(new_date = ymd_hms(`new_date`))
-#failing to parse - some NAs generated in database collection
-
-fern_minidot$depth <- as.factor(fern_minidot$depth)
-fern_minidot <- fern_minidot %>%
-  mutate(new_date = ymd_hms(`new_date`))
+    mutate(date_time = as_datetime(`date_time`)))
 
 #this section has not been updated as of 11/8 -AGK
 #flag outliers
