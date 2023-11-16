@@ -1,0 +1,16 @@
+---
+title: "Mountain Limnology Lab Handbook"
+author: "Bella Oleksy and Adeline Kelly"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+link-citations: yes
+github-repo: rstudio/MLL_db
+description: "This is the handbook for the Mountain Limnology Lab led by Dr. Isabella Oleksy housed in the Institute of Arctic and Alpine Research at CU Boulder."
+
+---
+# Introduction 
+
+This is our lab handbook. 
+
