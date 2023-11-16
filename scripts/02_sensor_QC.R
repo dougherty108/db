@@ -46,7 +46,7 @@ sky_do <- ggplot(data = sky_flag %>%
                    filter(name == "do_obs"),
                  aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_4sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -59,7 +59,7 @@ loch_do <-
            filter(name == "do_obs"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -72,7 +72,7 @@ fern_do <-
            filter(name == "do_obs"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -86,7 +86,7 @@ sky_do_sat <- ggplot(data = sky_flag %>%
                        filter(name == "do_sat"),
                      aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -99,7 +99,7 @@ loch_do_sat <-
            filter(name == "do_sat"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -113,7 +113,7 @@ fern_do_sat <-
            filter(name == "do_sat"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -127,7 +127,7 @@ sky_temp <- ggplot(data = sky_flag %>%
                        filter(name == "temp"),
                      aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -140,7 +140,7 @@ loch_temp <-
            filter(name == "temp"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
@@ -154,7 +154,7 @@ fern_temp <-
            filter(name == "temp"),
          aes(x = date_time, y = value)) +
   geom_point(aes(color = flag_3sd, shape = flag_3sd)) +
-  facet_wrap2(depth ~ year, scales = "free") +
+  facet_wrap(depth ~ year, scales = "free") +
   scale_x_datetime(
     date_breaks = "3 months",
     date_minor_breaks = "1 month",
