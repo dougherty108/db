@@ -106,13 +106,13 @@ loch_minidot <- bind_rows(loch_raw, loch_concat)
 
 
 #fern database####
-fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_0.5", regexp = "\\.txt$") %>%
+fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/miniDOT/raw/Fern/fern_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(date_time = as_datetime(`date_time`))), 
-  fs::dir_ls("Data/Loch Vale/LVWS_data/miniDOT/raw/Fern/fern_5", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/Loch Vale/miniDOT/raw/Fern/fern_5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
