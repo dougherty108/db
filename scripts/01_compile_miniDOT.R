@@ -51,7 +51,7 @@ sky_concat <- bind_rows(read.table("Data/Loch Vale/miniDOT/concat/Sky/2016_17_Sk
 # 'corrected' hypolimnion depth to 6m. will look through field notebooks and fix later -AGK
 
 #build database
-sky_minidot <- bind_rows(sky_minidot, sky_concat)
+sky_minidot <- bind_rows(sky_raw, sky_concat)
 
 #loch database####
 #raw files first, manually concatenating do_sat
