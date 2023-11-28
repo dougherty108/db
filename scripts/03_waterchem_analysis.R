@@ -14,7 +14,7 @@ water_chem <-
     na.strings=c(""," ","NA")
   ) %>%
   select(1:19, 21:47) %>%
-  dplyr::rename(
+  rename(
     site_id = SITE.ID,
     "NA" = NA.,
     NH4_calc = NH4.calc,
@@ -65,32 +65,17 @@ loch_o_chem %>%
 #Not good. I would guess that in more recent years, a different correction
 #factor was used? 
 
+loch_o_chem %>%
+  ggplot(aes(x=DATE, y=NO3))+
+  geom_point() +
 
+loch_o_chem %>%
+  ggplot(aes(x=DATE, y=NO3_calc))+
+  geom_point()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#What years are we missing NO3 data?
+years <- loch_o_chem %>%
+  select(YEAR, NO3) %>%
+  group_by(YEAR) %>%
+  summarize(n = length(unique(NO3)))
+#Missing 2019 and 2020 data. 
