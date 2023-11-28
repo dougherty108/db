@@ -1,11 +1,11 @@
-#water chem sensitivity analysis 20231127
 
-#source other script
 source("scripts/00_libraries.R")
 
 #read in file, rename some columns to remove spaces in column names. could all be renamed to be lowercase, i don't have a preference -AGK
 #there's one blank column for whatever reason - using select() to drop it
-water_chem <-
+
+#read in "master" file - missing 19/20
+chem1 <-
   read.csv(
     "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
     sep = ",",
@@ -23,13 +23,33 @@ water_chem <-
     PO4_NREL_calc = PO4_NREL.calc,
     TP_NREL_calc = TP_NREL.calc
   ) %>%
-  mutate(DATE = mdy(`DATE`)) 
+  mutate(DATE = mdy(`DATE`))
+  
+#read in 19_20 data
+chem2 <- read.csv("Data/Loch Vale/water_chemistry/master_data/LVWS_2019_2020_master.csv",
+                             sep = ",", skip = 1, header = TRUE, na.strings=c(""," ","NA"), strip.white = TRUE) %>%
+    rename(
+      site_id = SITE.ID, 
+      "NA" = NA., 
+      NH4_calc = NH4.calc, 
+      NO3_calc = NO3.calc, 
+      TDN_calc = TDN.calc, 
+      PO4_NREL_calc = PO4_NREL.calc, 
+      TP_NREL_calc = TP_NREL.calc) %>% 
+    mutate(DATE = mdy(`DATE`))
 
-str(water_chem) #tons of columns coding as character; fix.
+str(chem1) #tons of columns coding as character; fix.
+str(chem2)
 
-water_chem <- water_chem %>%
+chem1 <- chem1 %>%
   mutate(across(TEMP:TP_CSU, as.numeric))
 #You'll get a bunch of warnings, but I think it's fine.
+chem2 <- chem2 %>%
+  mutate(across(TEMP:CHL_A, as.numeric))
+
+#combine chem1 and chem2 to build dataframe - wanted to bind_rows upfront but R didn't want to.
+water_chem <- bind_rows(chem1, chem2)
+#this seems to work, but is adding a blank column at the end? not sure what's up with that
 
 #quick notes on sampling below, can move elsewhere -AGK
   #sampling in 1981 is weekly through october, resumes in may 1982 - weekly throughout most of 1982
@@ -79,3 +99,20 @@ years <- loch_o_chem %>%
   group_by(YEAR) %>%
   summarize(n = length(unique(NO3)))
 #Missing 2019 and 2020 data. 
+  #fixed - has been added! 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
