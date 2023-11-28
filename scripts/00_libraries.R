@@ -26,3 +26,6 @@ pacman::p_load("lubridate",
 # if (!require('renv')) install.packages('renv'); library('renv')
 # renv::restore()
 
+rename <- dplyr::rename
+select <- dplyr::select
+summarize <- dplyr::summarize
