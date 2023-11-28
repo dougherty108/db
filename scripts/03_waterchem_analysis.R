@@ -5,10 +5,24 @@ source("scripts/00_libraries.R")
 
 #read in file, rename some columns to remove spaces in column names. could all be renamed to be lowercase, i don't have a preference -AGK
 #there's one blank column for whatever reason - using select() to drop it
-water_chem <- read.csv("Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv", sep = ",", header = TRUE, skip = 1) %>%
+water_chem <-
+  read.csv(
+    "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
+    sep = ",",
+    header = TRUE,
+    skip = 1,
+    na.strings=c("","NA")
+  ) %>%
   select(1:19, 21:47) %>%
-  dplyr::rename(site_id = SITE.ID, "NA" = NA., NH4_calc = NH4.calc, NO3_calc = NO3.calc, TDN_calc = TDN.calc, 
-                PO4_NREL_calc = PO4_NREL.calc, TP_NREL_calc = TP_NREL.calc) %>%
+  dplyr::rename(
+    site_id = SITE.ID,
+    "NA" = NA.,
+    NH4_calc = NH4.calc,
+    NO3_calc = NO3.calc,
+    TDN_calc = TDN.calc,
+    PO4_NREL_calc = PO4_NREL.calc,
+    TP_NREL_calc = TP_NREL.calc
+  ) %>%
   mutate(DATE = mdy(`DATE`))
 
 #quick notes on sampling below, can move elsewhere -AGK
