@@ -11,7 +11,7 @@ water_chem <-
     sep = ",",
     header = TRUE,
     skip = 1,
-    na.strings=c("","NA")
+    na.strings=c(""," ","NA")
   ) %>%
   select(1:19, 21:47) %>%
   dplyr::rename(
@@ -23,7 +23,13 @@ water_chem <-
     PO4_NREL_calc = PO4_NREL.calc,
     TP_NREL_calc = TP_NREL.calc
   ) %>%
-  mutate(DATE = mdy(`DATE`))
+  mutate(DATE = mdy(`DATE`)) 
+
+str(water_chem) #tons of columns coding as character; fix.
+
+water_chem <- water_chem %>%
+  mutate(across(TEMP:TP_CSU, as.numeric))
+#You'll get a bunch of warnings, but I think it's fine.
 
 #quick notes on sampling below, can move elsewhere -AGK
   #sampling in 1981 is weekly through october, resumes in may 1982 - weekly throughout most of 1982
@@ -43,23 +49,21 @@ NO3_compare <- water_chem %>%
   select(1:7, 21:22, 34)
 #looks like there's only NREL data for 2015 & 2016
 
+# Are NO3 and NO3_calc correlated?
+loch_o_chem %>%
+  ggplot(aes(x=NO3_calc, y=NO3))+
+  geom_abline(y=1,x=0,color="green")+ #1:1 line
+  geom_point() +
+#1:1 relationship for all samples but not all. WHY?
 
+loch_o_chem %>%
+  filter(NO3_calc < 1) %>%
+  ggplot(aes(x=NO3_calc, y=NO3, color=YEAR))+
+  geom_abline(y=1,x=0,color="green")+ #1:1 line
+  geom_jitter(width = 0.1) #jittered the points to make it easier to see
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#Not good. I would guess that in more recent years, a different correction
+#factor was used? 
 
 
 
