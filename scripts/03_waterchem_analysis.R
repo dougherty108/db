@@ -88,24 +88,112 @@ water_chem <- bind_rows(chem1, chem2)
   #nearly complete weekly sampling through 1987 and 1988
   #no sampling between march and august 1989
   #weekly sampling begins in 1991
+  #but starting in 1996 we consistently had at least 2 samples a month
 
 loch_o_chem <- water_chem %>%
-  filter(SITE == "LOCH.O" & TYPE == "NORMAL")
+  filter(SITE == "LOCH.O" & TYPE == "NORMAL" & YEAR > 1995) 
 
 NO3_compare <- water_chem %>%
   filter(TYPE == "NORMAL") %>%
   select(1:7, 21:22, 34, 47)
 #looks like there's only NO3_NREL data for 2015 & 2016
 
-#Plot a basic timeseries of nitrate
-loch_o_chem %>%
-  ggplot(aes(x=DATE, y=NO3))+
-  geom_point()+
-  geom_line()
 
-#Plot a basic timeseries of nitrate post-1990
+
+# Nitrate -----------------------------------------------------------------
+
+
+#Plot a basic timeseries of nitrate
 ggplotly(loch_o_chem %>%
-           filter(YEAR > 1990) %>%
            ggplot(aes(x = DATE, y = NO3_calc)) +
            geom_point() +
            geom_line())
+
+#Same as above but sample bimonthly
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=2, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = NO3_calc)) +
+           geom_point() +
+           geom_line())
+
+#Same as above but sample monthly
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=1, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = NO3_calc)) +
+           geom_point() +
+           geom_line())
+
+#IAO- Originally I was thinking of running linear models but clearly
+#if there was a trend it is not linear. Need to mull that over.
+#Something like a generalized additive model might be better but
+#not sure the best way to compare across models
+
+gam1_NO3 <- mgcv::gam(NO3_calc ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_NO3)
+gratia::draw(gam1_NO3)
+
+gam2_NO3 <- mgcv::gam(NO3_calc ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_NO3)
+gratia::draw(gam2_NO3)
+
+gam3_NO3 <- mgcv::gam(NO3_calc ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_NO3) 
+gratia::draw(gam3_NO3)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_NO3) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_NO3) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_NO3) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
+#Need to make predictions based on these models and compare across. 
+#Will finish later.
+
+
+# Calcium -----------------------------------------------------------------
+
+#Plot a basic timeseries of CA
+ggplotly(loch_o_chem %>%
+           ggplot(aes(x = DATE, y = CA)) +
+           geom_point() +
+           geom_line() +
+           facet_wrap(~MONTH, scales="free_y") +
+           geom_smooth(method="lm"))
+
+
+
+# Acid Neutralizing Capacity -----------------------------------------------------------------
+
+#Plot a basic time series of ANC
+ggplotly(loch_o_chem %>%
+           ggplot(aes(x = DATE, y = SiO2)) +
+           geom_point() +
+           geom_line() +
+           facet_wrap(~MONTH))
