@@ -184,16 +184,17 @@ ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = CA)) +
            geom_point() +
            geom_line() +
-           facet_wrap(~MONTH, scales="free_y") +
+           # facet_wrap(~MONTH, scales="free_y") +
            geom_smooth(method="lm"))
 
 
 
-# Acid Neutralizing Capacity -----------------------------------------------------------------
+# Silica -----------------------------------------------------------------
 
 #Plot a basic time series of ANC
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = SiO2)) +
            geom_point() +
-           geom_line() +
-           facet_wrap(~MONTH))
+           geom_line() 
+           # facet_wrap(~MONTH)
+         )
