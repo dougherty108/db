@@ -5,7 +5,9 @@ source("scripts/00_libraries.R")
 #there's one blank column for whatever reason - using select() to drop it
 
 #read in "master" file - missing 19/20
-#adding new column for NO3_calc - overriding the if_else statement in the original excel file. 
+#adding new column for NO3_calc - overriding the if_else statement in the original excel file.
+#AK and IAO found an issue in the Excel formula
+
 chem1 <-
   read.csv(
     "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
@@ -26,7 +28,7 @@ chem1 <-
   ) %>%
   mutate(
     DATE = mdy(`DATE`),
-    NO3_calc_new = case_when(
+    NO3_calc = case_when( #override old column
       NO3 == "<0.01" ~ 0.005,
       NO3 == "<0.02" ~ 0.01,
       NO3 == "<0.03" ~ 0.015,
@@ -55,7 +57,7 @@ chem2 <-
   ) %>%
   mutate(
     DATE = mdy(`DATE`),
-    NO3_calc_new = case_when(
+    NO3_calc = case_when( #override old column
       NO3 == "<0.01" ~ 0.005,
       NO3 == "<0.02" ~ 0.01,
       NO3 == "<0.03" ~ 0.015,
@@ -67,10 +69,11 @@ str(chem2)
 
 #have to run this section or bind_rows won't work
 chem1 <- chem1 %>%
-  mutate(across(TEMP:NO3_calc_new, as.numeric))
+  mutate(across(TEMP:ncol(chem1), as.numeric))
+
 #You'll get a bunch of warnings, but I think it's fine.
 chem2 <- chem2 %>%
-  mutate(across(TEMP:NO3_calc_new, as.numeric))
+  mutate(across(TEMP:ncol(chem2), as.numeric))
 
 #combine chem1 and chem2 to build dataframe - wanted to bind_rows upfront but R didn't want to.
 water_chem <- bind_rows(chem1, chem2)
@@ -92,39 +95,17 @@ loch_o_chem <- water_chem %>%
 NO3_compare <- water_chem %>%
   filter(TYPE == "NORMAL") %>%
   select(1:7, 21:22, 34, 47)
-#looks like there's only NREL data for 2015 & 2016
+#looks like there's only NO3_NREL data for 2015 & 2016
 
-#compare new and old nitrate calc column
-
-# Are NO3 and NO3_calc correlated?
-loch_o_chem %>%
-  ggplot(aes(x=NO3_calc_new, y=NO3))+
-  geom_abline(y=1,x=0,color="green")+ #1:1 line
-  geom_point() 
-#1:1 relationship for all samples but not all. WHY?
-
-loch_o_chem %>%
-  filter(NO3_calc < 1) %>%
-  filter(YEAR >=2017) %>%
-  ggplot(aes(x=NO3_calc_new, y=NO3, color=factor(YEAR)))+
-  geom_abline(y=1,x=0,color="green")+ #1:1 line
-  geom_smooth(method="lm",se=F)+
-  geom_jitter() #jittered the points to make it easier to see
-
-
+#Plot a basic timeseries of nitrate
 loch_o_chem %>%
   ggplot(aes(x=DATE, y=NO3))+
-  geom_point() +
+  geom_point()+
+  geom_line()
 
-loch_o_chem %>%
-  ggplot(aes(x=DATE, y=NO3_calc_new))+
-  geom_point()
-
-#What years are we missing NO3 data?
-years <- loch_o_chem %>%
-  select(YEAR, NO3) %>%
-  group_by(YEAR) %>%
-  summarize(n = length(unique(NO3)))
-#Missing 2019 and 2020 data. 
-  #fixed - has been added! 
-
+#Plot a basic timeseries of nitrate post-1990
+ggplotly(loch_o_chem %>%
+           filter(YEAR > 1990) %>%
+           ggplot(aes(x = DATE, y = NO3_calc)) +
+           geom_point() +
+           geom_line())
