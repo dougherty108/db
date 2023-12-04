@@ -182,7 +182,10 @@ bind_rows(
   arrange(term, FREQ)
 
 #linear model
-#yeah it's pasting weird af will deal with later
+
+
+stat_cor(aes(label = paste(..rr.label, ..p.label, sep = "~`, `~")), label.y = 2.0, 
+         digits = 2, stat_regline_equation(label.y = 385))
 
 
 #Need to make predictions based on these models and compare across. 
