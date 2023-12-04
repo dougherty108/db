@@ -91,13 +91,15 @@ water_chem <- bind_rows(chem1, chem2)
   #but starting in 1996 we consistently had at least 2 samples a month
 
 loch_o_chem <- water_chem %>%
-  filter(SITE == "LOCH.O" & TYPE == "NORMAL" & YEAR > 1995) 
+  filter(SITE == "LOCH.O" & TYPE == "NORMAL" & YEAR > 1995) %>%
+  mutate(MONTH = as.factor(MONTH)) #%>%
+  # mutate(YEAR = as.factor(YEAR))
+
 
 NO3_compare <- water_chem %>%
   filter(TYPE == "NORMAL") %>%
   select(1:7, 21:22, 34, 47)
 #looks like there's only NO3_NREL data for 2015 & 2016
-
 
 
 # Nitrate -----------------------------------------------------------------
@@ -124,6 +126,13 @@ ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = NO3_calc)) +
            geom_point() +
            geom_line())
+
+#facet by month
+#color isn't really needed, can remove
+ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #IAO- Originally I was thinking of running linear models but clearly
 #if there was a trend it is not linear. Need to mull that over.
@@ -172,6 +181,9 @@ bind_rows(
 ) %>%
   arrange(term, FREQ)
 
+#linear model
+#yeah it's pasting weird af will deal with later
+
 
 #Need to make predictions based on these models and compare across. 
 #Will finish later.
@@ -187,7 +199,26 @@ ggplotly(loch_o_chem %>%
            # facet_wrap(~MONTH, scales="free_y") +
            geom_smooth(method="lm"))
 
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=2, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = CA)) +
+           geom_point() +
+           geom_line())
 
+#Same as above but sample monthly
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=1, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = NO3_calc)) +
+           geom_point() +
+           geom_line())
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = CA, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 # Silica -----------------------------------------------------------------
 
@@ -199,7 +230,26 @@ ggplotly(loch_o_chem %>%
            # facet_wrap(~MONTH)
          )
 
-#add other solutes @AGK
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=2, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = SiO2)) +
+           geom_point() +
+           geom_line())
+
+#Same as above but sample monthly
+ggplotly(loch_o_chem %>%
+           group_by(MONTH,YEAR) %>%
+           sample_n(size=1, replace=FALSE) %>%
+           ggplot(aes(x = DATE, y = SiO2)) +
+           geom_point() +
+           geom_line())
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #Temperature --------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -226,8 +276,14 @@ ggplotly(loch_o_chem %>%
            geom_point() +
            geom_line() +
            geom_smooth(method = "lm"))
-#increasing trend in temperature isn't shown as much (at lesat visually) when sampling is only monthly - 
+#increasing trend in temperature isn't shown as much (at least visually) when sampling is only monthly - 
   #trend is preserved with biweekly sampling
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #ANC ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -255,6 +311,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = ANC, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #Conductivity (field) ------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = FLDCOND)) +
@@ -281,6 +343,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #Conductivity (lab) -------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = LABCOND)) +
@@ -306,6 +374,12 @@ ggplotly(loch_o_chem %>%
            geom_point() +
            geom_line() +
            geom_smooth(method = "lm"))
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #pH (field)
 ggplotly(loch_o_chem %>%
@@ -334,6 +408,12 @@ ggplotly(loch_o_chem %>%
            geom_smooth(method = "lm"))
 #no pH data post-2010 😕
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #pH (lab) -----------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = LABPH)) +
@@ -361,6 +441,12 @@ ggplotly(loch_o_chem %>%
            geom_smooth(method = "lm"))
 #all of the lab pH data is there - not sure what happened with the field pH data. 
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #Mg --------------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = MG)) +
@@ -386,6 +472,12 @@ ggplotly(loch_o_chem %>%
            geom_point() +
            geom_line() +
            geom_smooth(method = "lm"))
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = MG, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #Sulfate ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -413,6 +505,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = SO4, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #Chlorine ----------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = CL)) +
@@ -439,6 +537,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = CL, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #DOC -----------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = DOC)) +
@@ -464,6 +568,12 @@ ggplotly(loch_o_chem %>%
            geom_point() +
            geom_line() +
            geom_smooth(method = "lm"))
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = DOC, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #TDN --------------------------------------------------------------
 # not sure if this should be TDN or TDN_calc
@@ -492,6 +602,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = TDN, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #Ammonium -------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = NH4_calc)) +
@@ -518,6 +634,12 @@ ggplotly(loch_o_chem %>%
            geom_line() +
            geom_smooth(method = "lm"))
 
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = NH4_calc, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
+
 #TIN ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = TIN)) +
@@ -543,6 +665,12 @@ ggplotly(loch_o_chem %>%
            geom_point() +
            geom_line() +
            geom_smooth(method = "lm"))
+
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = TIN, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 #DON -------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -571,22 +699,11 @@ ggplotly(loch_o_chem %>%
            geom_smooth(method = "lm"))
 #DON starts in 1999
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#facet by month
+ggplot(data = loch_o_chem, aes(x = DATE, y = DON, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free") 
 
 
 
