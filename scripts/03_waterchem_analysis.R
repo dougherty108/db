@@ -101,6 +101,30 @@ NO3_compare <- water_chem %>%
   select(1:7, 21:22, 34, 47)
 #looks like there's only NO3_NREL data for 2015 & 2016
 
+#filter by loch_outlet; compare with published USGS NWIS data
+NO3_locho <- NO3_compare %>%
+  filter(SITE == "LOCH.O")
+
+#read in NWIS data for loch_outlet
+usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_chem.txt", 
+                       sep = "\t", header = TRUE, skip = 250) %>%
+  rename(nitrate = p00618, nitrate_nitrite = p00631, nitrate_mg_L = p71851, 
+         nitrate_micro = p91003) %>%
+  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro)
+
+#delete first row - could pipe this to above if you'd like, I couldn't figure it out. 
+
+usgs_locho <- usgs_locho[-1,]
+
+# "nitrate" is reported as mg/L as nitrogen, nitrate_mg_L is reported as nitrate mg/L as nitrate. 
+# the I'm not entirely sure of the difference; neither seems to match up with our data
+# nitrate_micro == micrograms per liter as nitrate
+
+#I'm sure there's a slick way to compare these two dataframes; purely visually, these nitrate values
+  # do not match what we have. it's entirely possible that I may have pulled the wrong parameter code 
+    # or that I'm comparing values that are not equal. 
+
+
 
 # Nitrate -----------------------------------------------------------------
 
