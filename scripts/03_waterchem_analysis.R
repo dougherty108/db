@@ -153,10 +153,21 @@ ggplotly(loch_o_chem %>%
 
 #facet by month
 #color isn't really needed, can remove
+
+#creating month labels 
+month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April", 
+                  "5" = "May", "6" = "June", "7" = "July", "8" = "August",
+                  "9" = "September", "10" = "October", "11" = "November", "12" = "December")
+
 ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+#need to reposition R2 and p
+# okay that's marginally better
 
 #IAO- Originally I was thinking of running linear models but clearly
 #if there was a trend it is not linear. Need to mull that over.
@@ -261,13 +272,17 @@ ggplotly(loch_o_chem %>%
            sample_n(size=1, replace=FALSE) %>%
            ggplot(aes(x = DATE, y = NO3_calc)) +
            geom_point() +
-           geom_line())
+           geom_line()) 
+  
 
 #facet by month
 ggplot(data = loch_o_chem, aes(x = DATE, y = CA, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
 
 # linear model 
 lm1_CA <- ggplot(data = loch_o_chem, aes(x = DATE, y = CA)) + 
@@ -296,6 +311,50 @@ lm3_CA <- ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_CA
+
+# GAM
+
+gam1_CA <- mgcv::gam(CA ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_CA)
+gratia::draw(gam1_CA)
+
+gam2_CA <- mgcv::gam(CA ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_CA)
+gratia::draw(gam2_CA)
+
+gam3_CA <- mgcv::gam(CA ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_CA) 
+gratia::draw(gam3_CA)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_NO3) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_NO3) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_NO3) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 # Silica -----------------------------------------------------------------
 
@@ -326,7 +385,11 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+  
 
 #linear model
 lm1_SiO2 <- ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2)) + 
@@ -388,7 +451,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_temp <- ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) + 
@@ -448,7 +514,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = ANC, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_anc <- ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) + 
@@ -511,7 +580,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model 
 lm1_fcond <- ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) + 
@@ -572,7 +644,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
 
 #linear model
 lm1_lcond <- ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND)) + 
@@ -633,7 +708,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_fpH <- ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) + 
@@ -694,7 +772,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_lpH <- ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH)) + 
@@ -754,7 +835,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = MG, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_Mg <- ggplot(data = loch_o_chem, aes(x = DATE, y = MG)) + 
@@ -814,7 +898,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = SO4, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_sulf <- ggplot(data = loch_o_chem, aes(x = DATE, y = SO4)) + 
@@ -874,7 +961,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = CL, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center") 
 
 #linear model
 lm1_Cl <- ggplot(data = loch_o_chem, aes(x = DATE, y = CL)) + 
@@ -935,7 +1025,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = DOC, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")  
 
 #linear model
 lm1_DOC <- ggplot(data = loch_o_chem, aes(x = DATE, y = DOC)) + 
@@ -996,7 +1089,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = TDN, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")  
 
 #linear model
 lm1_TDN <- ggplot(data = loch_o_chem, aes(x = DATE, y = TDN)) + 
@@ -1056,7 +1152,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = NH4_calc, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")  
 
 #linear model 
 lm1_amm <- ggplot(data = loch_o_chem, aes(x = DATE, y = NH4_calc)) + 
@@ -1116,7 +1215,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = TIN, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")  
 
 #linear model
 lm1_TIN <- ggplot(data = loch_o_chem, aes(x = DATE, y = TIN)) + 
@@ -1177,7 +1279,10 @@ ggplotly(loch_o_chem %>%
 ggplot(data = loch_o_chem, aes(x = DATE, y = DON, color = YEAR)) +
   geom_point() + 
   geom_line() + 
-  facet_wrap(~ MONTH, scales = "free") 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")  
 
 #linear model
 lm1_DON <- ggplot(data = loch_o_chem, aes(x = DATE, y = DON)) + 
