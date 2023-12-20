@@ -347,11 +347,11 @@ gratia::draw(gam3_CA)
 
 #Pull together all the model results
 bind_rows(
-  broom::tidy(gam1_NO3) %>%
+  broom::tidy(gam1_CA) %>%
     mutate(FREQ = "weekly"),
-  broom::tidy(gam2_NO3) %>%
+  broom::tidy(gam2_CA) %>%
     mutate(FREQ = "bimonthly"),
-  broom::tidy(gam3_NO3) %>%
+  broom::tidy(gam3_CA) %>%
     mutate(FREQ = "monthly")
 ) %>%
   arrange(term, FREQ)
@@ -390,6 +390,48 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2, color = YEAR)) +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
   
+# GAM
+gam1_SiO2 <- mgcv::gam(SiO2 ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_SiO2)
+gratia::draw(gam1_SiO2)
+
+gam2_SiO2 <- mgcv::gam(SiO2 ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_SiO2)
+gratia::draw(gam2_SiO2)
+
+gam3_SiO2 <- mgcv::gam(SiO2 ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_SiO2) 
+gratia::draw(gam3_SiO2)
+
+bind_rows(
+  broom::tidy(gam1_SiO2) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_SiO2) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_SiO2) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
 
 #linear model
 lm1_SiO2 <- ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2)) + 
@@ -484,6 +526,50 @@ lm3_temp <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_temp
 
+# GAM
+gam1_temp <- mgcv::gam(TEMP ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_temp)
+gratia::draw(gam1_temp)
+
+# error - non-positive values not allowed for the gamma family
+
+gam2_temp <- mgcv::gam(TEMP ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_temp)
+gratia::draw(gam2_temp)
+
+gam3_temp <- mgcv::gam(TEMP ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_temp) 
+gratia::draw(gam3_temp)
+
+bind_rows(
+  broom::tidy(gam1_temp) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_temp) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_temp) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
 #ANC ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = ANC)) +
@@ -549,6 +635,47 @@ lm3_anc
 
 #trend seems to be artifically more linear when sampling monthly rather than weekly/biweekly
 
+# GAM
+gam1_anc <- mgcv::gam(ANC ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_anc)
+gratia::draw(gam1_anc)
+
+gam2_anc <- mgcv::gam(ANC ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_anc)
+gratia::draw(gam2_anc)
+
+gam3_anc <- mgcv::gam(ANC ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_anc) 
+gratia::draw(gam3_anc)
+
+bind_rows(
+  broom::tidy(gam1_anc) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_anc) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_anc) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 #Conductivity (field) ------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -613,6 +740,48 @@ lm3_fcond <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_fcond
 
+# GAM
+
+gam1_fcond <- mgcv::gam(FLDCOND ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_fcond)
+gratia::draw(gam1_fcond)
+
+gam2_fcond <- mgcv::gam(FLDCOND ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_fcond)
+gratia::draw(gam2_fcond)
+
+gam3_fcond <- mgcv::gam(FLDCOND ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_fcond) 
+gratia::draw(gam3_fcond)
+
+bind_rows(
+  broom::tidy(gam1_fcond) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_fcond) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_fcond) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 #Conductivity (lab) -------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -676,6 +845,48 @@ lm3_lcond <- ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_lcond
+
+# GAM
+gam1_lcond <- mgcv::gam(LABCOND ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_lcond)
+gratia::draw(gam1_lcond)
+
+gam2_lcond <- mgcv::gam(LABCOND ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_lcond)
+gratia::draw(gam2_lcond)
+
+gam3_lcond <- mgcv::gam(LABCOND ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_lcond) 
+gratia::draw(gam3_lcond)
+
+bind_rows(
+  broom::tidy(gam1_lcond) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_lcond) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_lcond) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 #pH (field) -----------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -741,6 +952,51 @@ lm3_fpH <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_fpH
 
+# GAM
+
+gam1_fpH <- mgcv::gam(FLDPH ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_fpH)
+gratia::draw(gam1_fpH)
+
+gam2_NO3 <- mgcv::gam(FLDPH ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_fpH)
+gratia::draw(gam2_fpH)
+
+gam3_fpH <- mgcv::gam(FLDPH ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_fpH) 
+gratia::draw(gam3_fpH)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_fpH) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_fpH) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_fpH) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #pH (lab) -----------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = LABPH)) +
@@ -805,6 +1061,50 @@ lm3_lpH <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_lpH
 
+# GAM
+gam1_lpH <- mgcv::gam(LABPH ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_lpH)
+gratia::draw(gam1_lpH)
+
+gam2_lpH <- mgcv::gam(LABPH ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_lpH)
+gratia::draw(gam2_lpH)
+
+gam3_lpH <- mgcv::gam(LABPH ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_lpH) 
+gratia::draw(gam3_lpH)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_lpH) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_lpH) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_lpH) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #Mg --------------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = MG)) +
@@ -867,6 +1167,51 @@ lm3_Mg <- ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_Mg
+
+# GAM
+
+gam1_Mg <- mgcv::gam(MG ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_Mg)
+gratia::draw(gam1_Mg)
+
+gam2_Mg <- mgcv::gam(MG ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_Mg)
+gratia::draw(gam2_Mg)
+
+gam3_Mg <- mgcv::gam(MG ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_Mg) 
+gratia::draw(gam3_Mg)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_Mg) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_Mg) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_Mg) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
 
 #Sulfate ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -931,6 +1276,51 @@ lm3_sulf <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_sulf
 
+# GAM
+
+gam1_sulf <- mgcv::gam(SO4 ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_sulf)
+gratia::draw(gam1_sulf)
+
+gam2_sulf <- mgcv::gam(SO4 ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_sulf)
+gratia::draw(gam2_sulf)
+
+gam3_sulf <- mgcv::gam(SO4 ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_sulf) 
+gratia::draw(gam3_sulf)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_sulf) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_sulf) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_sulf) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #Chlorine ----------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = CL)) +
@@ -993,6 +1383,50 @@ lm3_Cl <- ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_Cl
+
+# GAM
+
+gam1_Cl <- mgcv::gam(CL ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_Cl)
+gratia::draw(gam1_Cl)
+
+gam2_Cl <- mgcv::gam(CL ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_Cl)
+gratia::draw(gam2_Cl)
+
+gam3_Cl <- mgcv::gam(CL ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_Cl) 
+gratia::draw(gam3_Cl)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_Cl) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_Cl) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_Cl) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 
 #DOC -----------------------------------------------------
@@ -1058,6 +1492,51 @@ lm3_DOC <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_DOC
 
+# GAM
+
+gam1_DOC <- mgcv::gam(DOC ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_DOC)
+gratia::draw(gam1_DOC)
+
+gam2_DOC <- mgcv::gam(DOC ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_DOC)
+gratia::draw(gam2_DOC)
+
+gam3_DOC <- mgcv::gam(DOC ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_DOC) 
+gratia::draw(gam3_DOC)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_DOC) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_DOC) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_DOC) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #TDN --------------------------------------------------------------
 # not sure if this should be TDN or TDN_calc
 ggplotly(loch_o_chem %>%
@@ -1122,6 +1601,50 @@ lm3_TDN <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_TDN
 
+# GAM
+gam1_TDN <- mgcv::gam(TDN ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_TDN)
+gratia::draw(gam1_TDN)
+
+gam2_TDN <- mgcv::gam(TDN ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_TDN)
+gratia::draw(gam2_TDN)
+
+gam3_TDN <- mgcv::gam(TDN ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_TDN) 
+gratia::draw(gam3_TDN)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_TDN) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_TDN) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_TDN) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #Ammonium -------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = NH4_calc)) +
@@ -1185,6 +1708,51 @@ lm3_amm <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_amm
 
+# GAM
+
+gam1_amm <- mgcv::gam(NH4_calc ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_amm)
+gratia::draw(gam1_amm)
+
+gam2_amm <- mgcv::gam(NH4_calc ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_amm)
+gratia::draw(gam2_amm)
+
+gam3_amm <- mgcv::gam(NH4_calc ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_amm) 
+gratia::draw(gam3_amm)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_amm) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_amm) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_amm) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+
 #TIN ------------------------------------------------------------------
 ggplotly(loch_o_chem %>%
            ggplot(aes(x = DATE, y = TIN)) +
@@ -1247,6 +1815,51 @@ lm3_TIN <- ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_TIN
+
+# GAM
+
+gam1_TIN <- mgcv::gam(TIN ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_TIN)
+gratia::draw(gam1_TIN)
+
+gam2_TIN <- mgcv::gam(TIN ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_TIN)
+gratia::draw(gam2_TIN)
+
+gam3_TIN <- mgcv::gam(TIN ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_TIN) 
+gratia::draw(gam3_TIN)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_TIN) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_TIN) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_TIN) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
 
 #DON -------------------------------------------------------------
 ggplotly(loch_o_chem %>%
@@ -1312,6 +1925,48 @@ lm3_DON <- ggplot(data = loch_o_chem %>%
                        p.accuracy = 0.001, r.accuracy = 0.01)
 lm3_DON
 
+# GAM
+gam1_DON <- mgcv::gam(DON ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_DON)
+gratia::draw(gam1_DON)
+
+gam2_DON <- mgcv::gam(DON ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_DON)
+gratia::draw(gam2_DON)
+
+gam3_DON <- mgcv::gam(DON ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_DON) 
+gratia::draw(gam3_DON)
+
+#Pull together all the model results
+bind_rows(
+  broom::tidy(gam1_DON) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_DON) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_DON) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
 
 
 
