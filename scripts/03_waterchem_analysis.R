@@ -124,13 +124,46 @@ usgs_locho <- usgs_locho[-1,]
   # do not match what we have. it's entirely possible that I may have pulled the wrong parameter code 
     # or that I'm comparing values that are not equal. 
 
+str(usgs_locho)
+usgs_locho %>%
+  mutate(sample_dt=dmy(sample_dt),
+         nitrate=as.numeric(as.character(nitrate))) %>%
+  ggplot(aes(x=sample_dt,y=nitrate))+
+  geom_point()
 
+no3_lvws <- water_chem %>%
+  select(DATE, NO3_calc, NO3) %>%
+  mutate(NO3_calc = NO3_calc*0.2259)
+no3_usgs <- usgs_locho %>%
+    mutate(sample_dt=mdy(sample_dt),
+         nitrate=as.numeric(as.character(nitrate))) %>%
+  select(sample_dt, nitrate)
+
+no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
+
+no3_all %>%
+  ggplot(aes(x=nitrate, y=NO3))+
+  geom_point()+
+  geom_abline(slope=1, intercept=0)
+
+no3_all %>%
+  mutate(year=year(DATE)) %>%
+  filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x=nitrate, y=NO3_calc, color=factor(year)))+
+  geom_point()+
+  geom_abline(slope=1, intercept=0)
+
+no3_all %>%
+  filter(DATE > "2018-01-01") %>%
+  ggplot()+
+  geom_point(aes(x=DATE, y=nitrate), color="blue", alpha=0.5)+
+  geom_point(aes(x=DATE, y=NO3_calc), color="red", alpha=0.5)
 
 # Nitrate -----------------------------------------------------------------
 
 #Plot a basic timeseries of nitrate
 ggplotly(loch_o_chem %>%
-           ggplot(aes(x = DATE, y = NO3_calc)) +
+           ggplot(aes(x = DATE, y = NO3_calc*0.2259)) + #convert to NO3-N
            geom_point() +
            geom_line()) 
            # geom_smooth(method = "lm"))
@@ -139,7 +172,7 @@ ggplotly(loch_o_chem %>%
 ggplotly(loch_o_chem %>%
            group_by(MONTH,YEAR) %>%
            sample_n(size=2, replace=FALSE) %>%
-           ggplot(aes(x = DATE, y = NO3_calc)) +
+           ggplot(aes(x = DATE, y = NO3_calc*0.2259)) + #convert to NO3-N
            geom_point() +
            geom_line())
 
@@ -158,8 +191,9 @@ ggplotly(loch_o_chem %>%
 month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April", 
                   "5" = "May", "6" = "June", "7" = "July", "8" = "August",
                   "9" = "September", "10" = "October", "11" = "November", "12" = "December")
+# plot by month with linear trendlines / r squared
 
-ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
+nitrate_linear_month <- ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
