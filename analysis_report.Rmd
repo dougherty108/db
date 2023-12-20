@@ -1,0 +1,25 @@
+---
+title: "lvws_sensitivity_analysis"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loch Vale Water Chemistry Sensitivity Analysis
+
+##### What trends exist within the data? Do these trends changed based on sampling frequency?  
+Examining all post-1995 data for all major ions and parameters using both a linear and general additive model.    
+
+Are major ions increasing in concentration in a linear manner over time? 
+
+Are there certain months in which said increase in linear? 
+
+Is a general additive model representative of the trend within the data? 
+
+
+
+
+
