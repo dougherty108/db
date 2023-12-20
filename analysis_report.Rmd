@@ -5,7 +5,14 @@ date: "`r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+``` {r, include = FALSE}
+
+source("scripts/04_analysis_intermediate.R")
+
 ```
 
 ## Loch Vale Water Chemistry Sensitivity Analysis
@@ -15,7 +22,21 @@ Examining all post-1995 data for all major ions and parameters using both a line
 
 Are major ions increasing in concentration in a linear manner over time? 
 
-Are there certain months in which said increase in linear? 
+Are there certain months in which said increase is linear? 
+
+##### For which months do we see linear trends? 
+
+```{r, echo = FALSE}
+library(ggplot2)
+
+ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+```
 
 Is a general additive model representative of the trend within the data? 
 
