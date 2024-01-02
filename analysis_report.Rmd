@@ -1,7 +1,7 @@
 ---
 title: "lvws_sensitivity_analysis"
-output: html_document
 date: "`r Sys.Date()`"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -25,18 +25,389 @@ Are major ions increasing in concentration in a linear manner over time?
 Are there certain months in which said increase is linear? 
 
 ##### For which months do we see linear trends? 
+Linear trend by month - nitrate
 
-```{r, echo = FALSE}
+```{r, fig.width=12, fig.height=9, echo = FALSE}
+
 library(ggplot2)
+library(ggpubr)
 
-ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
+ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", colour = "deeppink") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Nitrate") +
+  theme_pubclean()
+
 ```
+
+GAM - Nitrate
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+gam1_NO3 <- mgcv::gam(NO3_calc ~ s(DATE) + s(WEEK, bs = "cc", k = 52),
+                       family=Gamma(link="log"),
+                       data = loch_o_chem %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                       method = "REML")
+broom::tidy(gam1_NO3)
+gratia::draw(gam1_NO3)
+
+gam2_NO3 <- mgcv::gam(NO3_calc ~  s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam2_NO3)
+gratia::draw(gam2_NO3)
+
+gam3_NO3 <- mgcv::gam(NO3_calc ~ s(DATE) + s(WEEK, bs ="cc", k=26),
+                      family=Gamma(link="log"),
+                      data = loch_o_chem %>%
+                        group_by(MONTH,YEAR) %>%
+                        sample_n(size=2, replace=FALSE) %>%
+                        mutate(WEEK = isoweek(DATE),
+                               DATE = decimal_date(DATE)),
+                      method = "REML")
+broom::tidy(gam3_NO3) 
+gratia::draw(gam3_NO3)
+
+bind_rows(
+  broom::tidy(gam1_NO3) %>%
+    mutate(FREQ = "weekly"),
+  broom::tidy(gam2_NO3) %>%
+    mutate(FREQ = "bimonthly"),
+  broom::tidy(gam3_NO3) %>%
+    mutate(FREQ = "monthly")
+) %>%
+  arrange(term, FREQ)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Linear trend by month - calcium
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = CA)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Calcium") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - silica
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Silica") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - temperature
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - ANC
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "ANC") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - conductivity (field)
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Conductivity (field)") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - conductivity (lab)
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Conductivity (lab)") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - pH (field)
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "pH (field)") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - pH (lab)
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "pH (lab)") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - Mg
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = MG)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Magnesium") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - Sulfate
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = SO4)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Sulfate") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - chlorine
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = CL)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Chlorine") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - DOC
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = DOC)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "DOC") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - TDN
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = TDN)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "TDN") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - ammonium
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = NH4_calc)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "Ammonium") +
+  theme_pubclean()
+
+```
+
+Linear trend by month - TIN
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = TIN)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "TIN") +
+  theme_pubclean()
+
+```
+
+
+Linear trend by month - DON
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+
+ggplot(data = loch_o_chem, aes(x = DATE, y = DON)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  labs(x = "Year", y = "DON") +
+  theme_pubclean()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 Is a general additive model representative of the trend within the data? 
 
