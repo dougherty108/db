@@ -193,7 +193,19 @@ month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April
                   "9" = "September", "10" = "October", "11" = "November", "12" = "December")
 # plot by month with linear trendlines / r squared
 
-nitrate_linear_month <- ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, color = YEAR)) +
+nitrate_linear_month <- ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+
+
+ggplot(data = loch_o_chem %>%
+                    group_by(MONTH, YEAR) %>%
+                    sample_n(size = 2, replace = FALSE), 
+       aes(x = DATE, y = NO3_calc)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
@@ -203,20 +215,16 @@ nitrate_linear_month <- ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc, c
 
 ggplot(data = loch_o_chem %>%
                     group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-                  aes(x = DATE, y = NO3_calc)) +
-
-# this is adding a weird blank plot to the left of the facets. not sure why
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = NO3_calc, color = YEAR)) +
+                    sample_n(size = 1, replace = FALSE), 
+       aes(x = DATE, y = NO3_calc)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = "center")
+
+
 
 
 #need to reposition R2 and p
