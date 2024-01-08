@@ -36,8 +36,9 @@ ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Nitrate") +
   theme_pubclean()
 
@@ -58,8 +59,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Nitrate") +
   theme_pubclean()
   
@@ -79,8 +81,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Nitrate") +
   theme_pubclean()
 
@@ -97,8 +100,9 @@ ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = CA)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Calcium") +
   theme_pubclean()
 
@@ -118,8 +122,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Calcium") +
   theme_pubclean()
   
@@ -139,8 +144,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Calcium") +
   theme_pubclean()
 
@@ -157,8 +163,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Silica") +
   theme_pubclean()
 
@@ -179,8 +186,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Silica") +
   theme_pubclean()
   
@@ -200,8 +208,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Silica") +
   theme_pubclean()
 
@@ -218,8 +227,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Temperature") +
   theme_pubclean()
 
@@ -240,8 +250,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Temperature") +
   theme_pubclean()
   
@@ -261,8 +272,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Temperature") +
   theme_pubclean()
 
@@ -279,8 +291,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "ANC") +
   theme_pubclean()
 
@@ -301,8 +314,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "ANC") +
   theme_pubclean()
   
@@ -322,8 +336,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "ANC") +
   theme_pubclean()
 
@@ -340,8 +355,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (field)") +
   theme_pubclean()
 
@@ -362,8 +378,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (field)") +
   theme_pubclean()
   
@@ -383,8 +400,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (field") +
   theme_pubclean()
 
@@ -401,8 +419,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (lab)") +
   theme_pubclean()
 
@@ -423,8 +442,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (lab)") +
   theme_pubclean()
   
@@ -444,8 +464,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Conductivity (lab)") +
   theme_pubclean()
 
@@ -462,8 +483,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "pH (field)") +
   theme_pubclean()
 
@@ -484,8 +506,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "pH (field)") +
   theme_pubclean()
   
@@ -505,8 +528,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "pH (field)") +
   theme_pubclean()
 
@@ -523,8 +547,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "pH (lab)") +
   theme_pubclean()
 
@@ -545,8 +570,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "pH (lab)") +
   theme_pubclean()
   
@@ -566,8 +592,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "pH (lab)") +
   theme_pubclean()
 
@@ -584,8 +611,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = MG)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Magnesium") +
   theme_pubclean()
 
@@ -605,8 +633,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Magnesium") +
   theme_pubclean()
   
@@ -626,8 +655,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Magnesium") +
   theme_pubclean()
 
@@ -644,8 +674,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = SO4)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Sulfate") +
   theme_pubclean()
 
@@ -666,8 +697,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Sulfate") +
   theme_pubclean()
   
@@ -687,8 +719,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Sulfate") +
   theme_pubclean()
 
@@ -705,8 +738,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = CL)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Chlorine") +
   theme_pubclean()
 
@@ -727,8 +761,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Chlorine") +
   theme_pubclean()
   
@@ -748,8 +783,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Chlorine") +
   theme_pubclean()
 
@@ -766,8 +802,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = DOC)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "DOC") +
   theme_pubclean()
 
@@ -788,8 +825,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "DOC") +
   theme_pubclean()
   
@@ -809,8 +847,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "DOC") +
   theme_pubclean()
 
@@ -827,8 +866,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TDN)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "TDN") +
   theme_pubclean()
 
@@ -849,8 +889,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "TDN") +
   theme_pubclean()
   
@@ -870,8 +911,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "TDN") +
   theme_pubclean()
 
@@ -888,8 +930,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = NH4_calc)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "Ammonium") +
   theme_pubclean()
 
@@ -909,8 +952,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Ammonium") +
   theme_pubclean()
   
@@ -930,8 +974,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "Ammonium") +
   theme_pubclean()
 
@@ -948,8 +993,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TIN)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "TIN") +
   theme_pubclean()
 
@@ -970,8 +1016,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "TIN") +
   theme_pubclean()
   
@@ -991,8 +1038,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "TIN") +
   theme_pubclean()
 
@@ -1009,8 +1057,9 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = DON)) +
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
   labs(x = "Year", y = "DON") +
   theme_pubclean()
 
@@ -1031,8 +1080,9 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "DON") +
   theme_pubclean()
   
@@ -1052,24 +1102,14 @@ ggplot(data = loch_o_chem %>%
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
   geom_smooth(method = "lm", colour = "deeppink") +
+  geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "DON") +
   theme_pubclean()
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-Is a general additive model representative of the trend within the data? 
 
 
 
