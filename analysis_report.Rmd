@@ -26,7 +26,6 @@ Are there certain months in which said increase is linear?
 
 ##### For which months do we see linear trends? 
 Linear trend by month - nitrate
-
 ```{r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -43,6 +42,7 @@ ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc)) +
   theme_pubclean()
 
 ```
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -65,6 +65,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -84,8 +85,6 @@ ggplot(data = loch_o_chem %>%
   theme_pubclean()
 
 ```
-
-
 
 
 Linear trend by month - calcium
@@ -126,6 +125,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -146,6 +146,7 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+
 Linear trend by month - silica
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -163,6 +164,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = SiO2)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -184,6 +186,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -204,8 +207,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - temperature
 
+Linear trend by month - temperature
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -222,6 +225,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -243,6 +247,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -263,8 +268,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - ANC
 
+Linear trend by month - ANC
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -281,6 +286,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -302,6 +308,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -322,8 +329,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - conductivity (field)
 
+Linear trend by month - conductivity (field)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -339,6 +346,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) +
   theme_pubclean()
 
 ```
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -360,6 +368,7 @@ ggplot(data = loch_o_chem %>%
   theme_pubclean()
   
 ```
+
 
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -381,8 +390,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - conductivity (lab)
 
+Linear trend by month - conductivity (lab)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -399,6 +408,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -420,6 +430,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -440,8 +451,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - pH (field)
 
+Linear trend by month - pH (field)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -458,6 +469,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -479,6 +491,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -499,8 +512,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - pH (lab)
 
+Linear trend by month - pH (lab)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -516,6 +529,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH)) +
   theme_pubclean()
 
 ```
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -537,6 +551,7 @@ ggplot(data = loch_o_chem %>%
   theme_pubclean()
   
 ```
+
 
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -560,7 +575,6 @@ ggplot(data = loch_o_chem %>%
 
 
 Linear trend by month - Mg
-
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -598,6 +612,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -618,8 +633,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - Sulfate
 
+Linear trend by month - Sulfate
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -636,6 +651,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = SO4)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -657,6 +673,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -677,8 +694,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - chlorine
 
+Linear trend by month - chlorine
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -695,6 +712,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = CL)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -716,6 +734,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -736,8 +755,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - DOC
 
+Linear trend by month - DOC
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -754,6 +773,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = DOC)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -775,6 +795,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -795,8 +816,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - TDN
 
+Linear trend by month - TDN
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -813,6 +834,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TDN)) +
 
 ```
 
+
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -834,6 +856,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -854,8 +877,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - ammonium
 
+Linear trend by month - ammonium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -893,6 +916,7 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
+
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -913,8 +937,8 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
-Linear trend by month - TIN
 
+Linear trend by month - TIN
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -930,6 +954,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = TIN)) +
   theme_pubclean()
 
 ``` 
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -951,6 +976,7 @@ ggplot(data = loch_o_chem %>%
   theme_pubclean()
   
 ```
+
 
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -974,7 +1000,6 @@ ggplot(data = loch_o_chem %>%
 
 
 Linear trend by month - DON
-
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -990,6 +1015,7 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = DON)) +
   theme_pubclean()
 
 ```
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -1011,6 +1037,7 @@ ggplot(data = loch_o_chem %>%
   theme_pubclean()
   
 ```
+
 
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
