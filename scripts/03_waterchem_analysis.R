@@ -110,19 +110,21 @@ usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_
                        sep = "\t", header = TRUE, skip = 250) %>%
   rename(nitrate = p00618, nitrate_nitrite = p00631, nitrate_mg_L = p71851, 
          nitrate_micro = p91003) %>%
-  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro)
+  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro) %>%
+  filter(!row_number() %in% c(1))
 
-#delete first row - could pipe this to above if you'd like, I couldn't figure it out. 
+#P00618 - nitrate - Nitrate, water, filtered, milligrams per liter as nitrogen
+#P00631 - nitrate_nitrite - Nitrate plus nitrite, water, filtered, milligrams per liter as nitrogen
+#P71851 - nitrate_mg_L -  Nitrate, water, filtered, milligrams per liter as nitrate
 
-usgs_locho <- usgs_locho[-1,]
-
+#
 # "nitrate" is reported as mg/L as nitrogen, nitrate_mg_L is reported as nitrate mg/L as nitrate. 
 # the I'm not entirely sure of the difference; neither seems to match up with our data
 # nitrate_micro == micrograms per liter as nitrate
 
 #I'm sure there's a slick way to compare these two dataframes; purely visually, these nitrate values
-  # do not match what we have. it's entirely possible that I may have pulled the wrong parameter code 
-    # or that I'm comparing values that are not equal. 
+# do not match what we have. it's entirely possible that I may have pulled the wrong parameter code 
+# or that I'm comparing values that are not equal. 
 
 str(usgs_locho)
 usgs_locho %>%
@@ -133,31 +135,48 @@ usgs_locho %>%
 
 no3_lvws <- water_chem %>%
   select(DATE, NO3_calc, NO3) %>%
-  mutate(NO3_calc = NO3_calc*0.2259)
+  mutate(NO3_N = NO3_calc*0.2259) #To convert Nitrate (NO3) to Nitrate-Nitrogen (NO3-N), multiply by 0.2259
+#Therefore, now NO3_N should be equivalent to nitrage_mg_L from the USGS database.
+
 no3_usgs <- usgs_locho %>%
     mutate(sample_dt=mdy(sample_dt),
-         nitrate=as.numeric(as.character(nitrate))) %>%
-  select(sample_dt, nitrate)
+         nitrate=as.numeric(as.character(nitrate)),
+         nitrate_mg_L=as.numeric(as.character(nitrate_mg_L))) %>%
+  select(sample_dt, nitrate, nitrate_mg_L)
 
 no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 
 no3_all %>%
-  ggplot(aes(x=nitrate, y=NO3))+
-  geom_point()+
-  geom_abline(slope=1, intercept=0)
+  ggplot(aes(x=nitrate, y=NO3_N))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: NO3-N (mg/l)",
+       x="USGS: Nitrate, milligrams per liter as N")
+ggsave("plots/USGS_LVWSexcel_comparisons.png")
+
+
+no3_all %>%
+  ggplot(aes(x=nitrate_mg_L, y=NO3_calc))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: NO3 (mg/l)",
+       x="USGS: Nitrate, milligrams per liter as NO3")
 
 no3_all %>%
   mutate(year=year(DATE)) %>%
-  filter(DATE > "2016-01-01") %>%
-  ggplot(aes(x=nitrate, y=NO3_calc, color=factor(year)))+
-  geom_point()+
-  geom_abline(slope=1, intercept=0)
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x=nitrate, y=NO3_N, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y="LVWS: NO3-N (mg/l)",
+       x="USGS: Nitrate, milligrams per liter as N")
 
 no3_all %>%
   filter(DATE > "2018-01-01") %>%
   ggplot()+
-  geom_point(aes(x=DATE, y=nitrate), color="blue", alpha=0.5)+
-  geom_point(aes(x=DATE, y=NO3_calc), color="red", alpha=0.5)
+  geom_point(aes(x=DATE, y=NO3_N), shape=21, fill="red", alpha=0.5)+
+  geom_point(aes(x=DATE, y=nitrate), shape=21, fill="blue", alpha=0.5)
 
 # Nitrate -----------------------------------------------------------------
 
