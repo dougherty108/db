@@ -110,11 +110,9 @@ usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_
                        sep = "\t", header = TRUE, skip = 250) %>%
   rename(nitrate = p00618, nitrate_nitrite = p00631, nitrate_mg_L = p71851, 
          nitrate_micro = p91003) %>%
-  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro)
+  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro) %>%
+  filter(!row_number() %in% c(1))
 
-#delete first row - could pipe this to above if you'd like, I couldn't figure it out. 
-
-usgs_locho <- usgs_locho[-1,]
 
 # "nitrate" is reported as mg/L as nitrogen, nitrate_mg_L is reported as nitrate mg/L as nitrate. 
 # the I'm not entirely sure of the difference; neither seems to match up with our data
