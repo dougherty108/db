@@ -117,14 +117,9 @@ usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_
 #P00631 - nitrate_nitrite - Nitrate plus nitrite, water, filtered, milligrams per liter as nitrogen
 #P71851 - nitrate_mg_L -  Nitrate, water, filtered, milligrams per liter as nitrate
 
-#
 # "nitrate" is reported as mg/L as nitrogen, nitrate_mg_L is reported as nitrate mg/L as nitrate. 
 # the I'm not entirely sure of the difference; neither seems to match up with our data
 # nitrate_micro == micrograms per liter as nitrate
-
-#I'm sure there's a slick way to compare these two dataframes; purely visually, these nitrate values
-# do not match what we have. it's entirely possible that I may have pulled the wrong parameter code 
-# or that I'm comparing values that are not equal. 
 
 str(usgs_locho)
 usgs_locho %>%
@@ -133,10 +128,18 @@ usgs_locho %>%
   ggplot(aes(x=sample_dt,y=nitrate))+
   geom_point()
 
+#filtering by site - USGS data is only for the loch outlet
+no3_lvws1 <- water_chem %>%
+  filter(SITE == "LOCH.O")
+
+no3_lvws2 <- no3_lvws1 %>%
+  select(DATE, NO3_calc, NO3) %>%
+  mutate(NO3_N = NO3_calc*0.2259)
+
 no3_lvws <- water_chem %>%
   select(DATE, NO3_calc, NO3) %>%
   mutate(NO3_N = NO3_calc*0.2259) #To convert Nitrate (NO3) to Nitrate-Nitrogen (NO3-N), multiply by 0.2259
-#Therefore, now NO3_N should be equivalent to nitrage_mg_L from the USGS database.
+#Therefore, now NO3_N should be equivalent to nitrate_mg_L from the USGS database.
 
 no3_usgs <- usgs_locho %>%
     mutate(sample_dt=mdy(sample_dt),
@@ -146,6 +149,8 @@ no3_usgs <- usgs_locho %>%
 
 no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 
+no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
+
 no3_all %>%
   ggplot(aes(x=nitrate, y=NO3_N))+
   geom_point(color="black",shape=21, alpha=0.5)+
@@ -154,8 +159,23 @@ no3_all %>%
        x="USGS: Nitrate, milligrams per liter as N")
 ggsave("plots/USGS_LVWSexcel_comparisons.png")
 
+no3_all1 %>%
+  ggplot(aes(x=nitrate, y=NO3_N))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: NO3-N (mg/l)",
+       x="USGS: Nitrate, milligrams per liter as N")
+ggsave("plots/USGS_LVWSexcel_comparisons_locho.png")
+
 
 no3_all %>%
+  ggplot(aes(x=nitrate_mg_L, y=NO3_calc))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: NO3 (mg/l)",
+       x="USGS: Nitrate, milligrams per liter as NO3")
+
+no3_all1 %>%
   ggplot(aes(x=nitrate_mg_L, y=NO3_calc))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
@@ -177,6 +197,52 @@ no3_all %>%
   ggplot()+
   geom_point(aes(x=DATE, y=NO3_N), shape=21, fill="red", alpha=0.5)+
   geom_point(aes(x=DATE, y=nitrate), shape=21, fill="blue", alpha=0.5)
+
+no3_all1 %>%
+  filter(DATE > "2018-01-01") %>%
+  ggplot()+
+  geom_point(aes(x=DATE, y=NO3_N), shape=21, fill="red", alpha=0.5)+
+  geom_point(aes(x=DATE, y=nitrate), shape=21, fill="blue", alpha=0.5)
+
+# doing the same for calcium 
+usgs_ca <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_chem.txt", 
+                       sep = "\t", header = TRUE, skip = 250) %>%
+  rename(calcium = p00915) %>%
+  select(1:5, calcium) %>%
+  filter(!row_number() %in% c(1))
+
+#filtering by site - USGS data is only for the loch outlet
+ca_lvws <- water_chem %>%
+  filter(SITE == "LOCH.O") %>%
+  select(DATE, CA)
+
+ca_usgs <- usgs_ca %>%
+  mutate(sample_dt=mdy(sample_dt)) %>%
+  select(sample_dt, calcium) %>%
+  mutate(calcium = as.numeric(calcium))
+
+ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
+
+ca_all %>%
+  ggplot(aes(x=calcium, y=CA))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: CA",
+       x="USGS: Calcium")
+
+
+
+ca_all %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x=calcium, y=CA, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y="LVWS: CA",
+       x="USGS: Calcium")
+
+
 
 # Nitrate -----------------------------------------------------------------
 
