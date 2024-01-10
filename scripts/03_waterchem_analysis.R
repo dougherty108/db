@@ -8,6 +8,7 @@ source("scripts/00_libraries.R")
 #adding new column for NO3_calc - overriding the if_else statement in the original excel file.
 #AGK and IAO found an issue in the Excel formula
 
+# master LVWS data --------------------------------------
 chem1 <-
   read.csv(
     "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
@@ -105,21 +106,156 @@ NO3_compare <- water_chem %>%
 NO3_locho <- NO3_compare %>%
   filter(SITE == "LOCH.O")
 
+# USGS data ------------------------------------------------
+
 #read in NWIS data for loch_outlet
 usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_chem.txt", 
                        sep = "\t", header = TRUE, skip = 250) %>%
   rename(nitrate = p00618, nitrate_nitrite = p00631, nitrate_mg_L = p71851, 
-         nitrate_micro = p91003) %>%
-  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro) %>%
-  filter(!row_number() %in% c(1))
+         nitrate_micro = p91003, calcium = p00915) %>%
+  select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro, calcium) %>%
+  filter(!row_number() %in% c(1)) %>%
+  mutate(sample_dt = mdy(`sample_dt`))
 
-#P00618 - nitrate - Nitrate, water, filtered, milligrams per liter as nitrogen
-#P00631 - nitrate_nitrite - Nitrate plus nitrite, water, filtered, milligrams per liter as nitrogen
-#P71851 - nitrate_mg_L -  Nitrate, water, filtered, milligrams per liter as nitrate
+# RMRS data ----------------------------------------------
 
-# "nitrate" is reported as mg/L as nitrogen, nitrate_mg_L is reported as nitrate mg/L as nitrate. 
-# the I'm not entirely sure of the difference; neither seems to match up with our data
-# nitrate_micro == micrograms per liter as nitrate
+rmrs_db <- rbind(read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2017_RMRS.csv", 
+                      sep = ",", header = TRUE, skip = 4) %>%
+    rename(calcium = Ca, nitrate = NO3, nitrate_n = NO3.N) %>%
+    select(1:4, calcium, nitrate, nitrate_n) %>%
+    separate(col = SITE, into = c("site", "type"), sep = " "), 
+  read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2018_RMRS.csv", 
+                      sep = ",", header = TRUE, skip = 3) %>%
+    rename(calcium = Ca, nitrate = NO3, nitrate_n = NO3.N) %>%
+    select(1:4, calcium, nitrate, nitrate_n) %>%
+    separate(col = SITE, into = c("site", "type"), sep = " "), 
+  read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2018_RMRS.csv", 
+                      sep = ",", header = TRUE, skip = 3) %>%
+    rename(calcium = Ca, nitrate = NO3, nitrate_n = NO3.N) %>%
+    select(1:4, calcium, nitrate, nitrate_n) %>%
+    separate(col = SITE, into = c("site", "type"), sep = " ")) %>%
+  filter(site == "LOCH.O" & type == "NORM") %>%
+  mutate(DATE = mdy(`DATE`)) 
+# processing usgs and rmrs data below
+
+# prepate rmrs db for joining
+rmrs_join <- rmrs_db %>%
+  select(DATE, calcium, nitrate, nitrate_n) %>%
+  mutate_if(is.character, as.numeric) %>%
+  mutate(year = year(DATE)) %>%
+  rename(calcium_rmrs = calcium, nitrate_rmrs = nitrate, nitrate_n_rmrs = nitrate_n)
+
+# prepare usgs db for joining
+usgs_join <- usgs_locho %>%
+  select(sample_dt, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro, calcium) %>%
+  mutate_if(is.character, as.numeric) %>%
+  mutate(year = year(sample_dt)) %>%
+  filter(year >= "2016" & year < "2019") %>%
+  rename(nitrate_usgs = nitrate, nitrate_nitrite_usgs = nitrate_nitrite, 
+         nitrate_mg_L_usgs = nitrate_mg_L, nitrate_micro_sgs = nitrate_micro, 
+         calcium_usgs = calcium)
+
+# join rmrs and usgs db, remove year column
+rmrs_usgs <- full_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt")) %>%
+  select(-5, -11)
+
+# compare rmrs and usgs data
+
+# calcium
+rmrs_usgs %>%
+  ggplot(aes(x = calcium_usgs, y = calcium_rmrs))+
+  geom_point(color = "black",shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(y = "RMRS: Calcium",
+       x = "USGS: Calcium")
+
+rmrs_usgs %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x=calcium_usgs, y=calcium_rmrs, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y="RMRS: Calcium",
+       x="USGS: Calcium")
+
+# nitrate
+rmrs_usgs %>%
+  ggplot(aes(x = nitrate_usgs, y = nitrate_n_rmrs))+
+  geom_point(color = "black",shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(y = "RMRS: Nitrate",
+       x = "USGS: Nitrate")
+
+rmrs_usgs %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x = nitrate_usgs, y = nitrate_n_rmrs, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y = "RMRS: Nitrate",
+       x = "USGS: Nitrate")
+
+# rmrs and lvws data 
+
+str(rmrs_join)
+
+lvws_join <- loch_o_chem %>%
+  select(DATE, CA, NO3, NO3_calc) %>%
+  rename(calcium_lvws = CA, nitrate_lvws = NO3, nitrate_calc_lvws = NO3_calc, date = DATE) %>%
+  mutate(year = year(date)) %>%
+  filter(year >= "2016" & year < "2019")
+
+
+rmrs_lvws <- full_join(rmrs_join, lvws_join, by = c("DATE" =  "date")) %>%
+   select(-5, -9) %>%
+   mutate(nitrate_n_lvws = nitrate_calc_lvws*0.2259)
+
+
+rmrs_lvws %>%
+  ggplot(aes(x = calcium_lvws, y = calcium_rmrs))+
+  geom_point(color = "black",shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(y = "RMRS: Calcium",
+       x = "LVWS: Calcium")
+
+rmrs_lvws %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x=calcium_lvws, y=calcium_rmrs, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y="RMRS: Calcium",
+       x="LVWS: Calcium")
+
+# nitrate
+rmrs_lvws %>%
+  ggplot(aes(x = nitrate_n_lvws, y = nitrate_n_rmrs))+
+  geom_point(color = "black",shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(y = "RMRS: Nitrate",
+       x = "LVWS: Nitrate")
+
+rmrs_lvws %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x = nitrate_n_lvws, y = nitrate_n_rmrs, fill=factor(year)))+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)+
+  labs(y = "RMRS: Nitrate",
+       x = "LVWS: Nitrate")
+
+
+
+
+
+
+
+
+ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
 
 str(usgs_locho)
 usgs_locho %>%
