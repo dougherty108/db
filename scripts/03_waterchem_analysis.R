@@ -248,9 +248,40 @@ rmrs_lvws %>%
   labs(y = "RMRS: Nitrate",
        x = "LVWS: Nitrate")
 
+# join all 3 compare databases
+
+full_compare <- full_join(rmrs_usgs, lvws_join, by = c("DATE" = "date")) %>%
+  select(-13) %>%
+  select(1:2, 4:5, 9:11) %>%
+  mutate(nitrate_lvws = nitrate_lvws*0.2259) %>%
+  pivot_longer(c(calcium_rmrs, nitrate_n_rmrs, calcium_lvws, nitrate_lvws))
 
 
 
+full_compare %>%
+  filter(name == "nitrate_lvws" | name == "nitrate_n_rmrs") %>%
+  ggplot(aes(x = nitrate_usgs, y = value, color = name))+
+  geom_point(shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)
+
+full_compare %>%
+  filter(name == "calcium_lvws" | name == "calcium_rmrs") %>%
+  ggplot(aes(x = calcium_usgs, y = value, color = name))+
+  geom_point(shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)
+
+
+full_compare %>%
+  mutate(year=year(DATE)) %>%
+  # filter(DATE > "2016-01-01") %>%
+  ggplot(aes(x = nitrate_usgs, y = value, color = name, fill=factor(year)))+
+  geom_point(shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  facet_wrap(~year)
+
+#pivot_longer with rmrs and lvws
+# usgs on x axis, rmrs and lvws overlain 
+#color = name
 
 
 
