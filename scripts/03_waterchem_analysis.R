@@ -121,12 +121,33 @@ usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_
          nitrate_micro = p91003, calcium = p00915) %>%
   select(1:5, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro, calcium) %>%
   filter(!row_number() %in% c(1)) %>%
-  mutate(sample_dt = mdy(`sample_dt`))
+  mutate(sample_dt = mdy(`sample_dt`),
+         weekday = wday(sample_dt, label=TRUE),
+         week = week(sample_dt),
+         year = year(sample_dt)) #Sunday = 1, Monday =2, Tuesday =3, etc...
 
 #Check for duplicates
 usgs_locho %>% group_by_all() %>% filter(n()>1) %>% ungroup()
 #good here
 
+
+#It seems there are quite a few times when there is a corresponding Monday value
+#when there is also a Tuesday sample. Are these real?
+usgs_locho_qaqc <- usgs_locho %>%
+  select(1:4,year,week, weekday, nitrate) %>%
+  group_by(year,week) %>%
+  add_count()
+
+usgs_locho_qaqc %>%
+  filter(n>=2) %>%
+  filter(year>2010) %>%
+  # filter(weekday %in% c("Mon","Tue")) %>%
+  ggplot(aes(x=sample_dt, y=as.numeric(nitrate), color=weekday))+
+  geom_point(alpha=0.5)+
+  facet_wrap(~year, scales="free_x")+
+  labs(x="Date",
+       y="NWIS nitrate-N (mg/l)",
+       title="Weeks where multiple samples are reported")
 
 # RMRS data ----------------------------------------------
 
