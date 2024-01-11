@@ -9,6 +9,8 @@ source("scripts/00_libraries.R")
 #AGK and IAO found an issue in the Excel formula
 
 # master LVWS data --------------------------------------
+
+# this is read in in two parts - chem1 goes through 2018, chem2 is 19-20.
 chem1 <-
   read.csv(
     "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
@@ -77,6 +79,8 @@ chem2 <- chem2 %>%
   mutate(across(TEMP:ncol(chem2), as.numeric))
 
 #combine chem1 and chem2 to build dataframe - wanted to bind_rows upfront but R didn't want to.
+
+# water_chem is the main working dataframe for all the loch vale data
 water_chem <- bind_rows(chem1, chem2)
 #this seems to work, but is adding a blank column at the end? not sure what's up with that
 
@@ -90,6 +94,8 @@ water_chem <- bind_rows(chem1, chem2)
   #no sampling between march and august 1989
   #weekly sampling begins in 1991
   #but starting in 1996 we consistently had at least 2 samples a month
+
+#filter water_chem
 
 loch_o_chem <- water_chem %>%
   filter(SITE == "LOCH.O" & TYPE == "NORMAL" & YEAR > 1995) %>%
@@ -136,6 +142,7 @@ rmrs_db <- rbind(read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2017_RMRS.c
     separate(col = SITE, into = c("site", "type"), sep = " ")) %>%
   filter(site == "LOCH.O" & type == "NORM") %>%
   mutate(DATE = mdy(`DATE`)) 
+
 # processing usgs and rmrs data below
 
 # prepate rmrs db for joining
@@ -143,7 +150,8 @@ rmrs_join <- rmrs_db %>%
   select(DATE, calcium, nitrate, nitrate_n) %>%
   mutate_if(is.character, as.numeric) %>%
   mutate(year = year(DATE)) %>%
-  rename(calcium_rmrs = calcium, nitrate_rmrs = nitrate, nitrate_n_rmrs = nitrate_n)
+  rename(calcium_rmrs = calcium, nitrate_rmrs = nitrate, nitrate_n_rmrs = nitrate_n) %>%
+  select(-5)
 
 # prepare usgs db for joining
 usgs_join <- usgs_locho %>%
@@ -153,11 +161,24 @@ usgs_join <- usgs_locho %>%
   filter(year >= "2016" & year < "2019") %>%
   rename(nitrate_usgs = nitrate, nitrate_nitrite_usgs = nitrate_nitrite, 
          nitrate_mg_L_usgs = nitrate_mg_L, nitrate_micro_sgs = nitrate_micro, 
-         calcium_usgs = calcium)
+         calcium_usgs = calcium) %>%
+  select(-7)
 
-# join rmrs and usgs db, remove year column
-rmrs_usgs <- full_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt")) %>%
-  select(-5, -11)
+# join rmrs and usgs db 
+  # I tried full, left, right, and inner join, each yields different results 🫠
+rmrs_usgs <- full_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+rmrs_usgs_left <- left_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+rmrs_usgs_right <- right_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+rmrs_usgs_inner <- inner_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+# returns all rows from rmrs without a match in usgs
+anti_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+# returns all rows from usgs without a match in rmrs - there's A LOT
+anti_join(usgs_join, rmrs_join, by = c("sample_dt" =  "DATE"))
 
 # compare rmrs and usgs data
 
@@ -211,6 +232,28 @@ lvws_join <- loch_o_chem %>%
 rmrs_lvws <- full_join(rmrs_join, lvws_join, by = c("DATE" =  "date")) %>%
    select(-5, -9) %>%
    mutate(nitrate_n_lvws = nitrate_calc_lvws*0.2259)
+
+
+# returns all rows from rmrs without a match in usgs
+anti_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+
+# returns all rows from usgs without a match in rmrs - there's A LOT
+anti_join(usgs_join, rmrs_join, by = c("sample_dt" =  "DATE"))
+
+# returns all rows from lvws without a match in rmrs
+anti_join(lvws_join, rmrs_join, by = c("date" =  "DATE"))
+
+# returns all rows from rmrs without a match in lvws 
+anti_join(rmrs_join, lvws_join, by = c("DATE" =  "date"))
+
+# returns all rows from lvws without a match in usgs
+anti_join(lvws_join, usgs_join, by = c("date" =  "sample_dt"))
+
+# returns all rows from usgs without a match in lvws 
+anti_join(usgs_join, lvws_join, by = c("sample_dt" =  "date"))
+
+
+
 
 
 rmrs_lvws %>%
@@ -309,7 +352,7 @@ no3_lvws <- water_chem %>%
 #Therefore, now NO3_N should be equivalent to nitrate_mg_L from the USGS database.
 
 no3_usgs <- usgs_locho %>%
-    mutate(sample_dt=mdy(sample_dt),
+    mutate(sample_dt=ymd(sample_dt),
          nitrate=as.numeric(as.character(nitrate)),
          nitrate_mg_L=as.numeric(as.character(nitrate_mg_L))) %>%
   select(sample_dt, nitrate, nitrate_mg_L)
@@ -348,6 +391,8 @@ no3_all1 %>%
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3 (mg/l)",
        x="USGS: Nitrate, milligrams per liter as NO3")
+
+# I might've fucked something up here, not entirely sure. -AGK
 
 no3_all %>%
   mutate(year=year(DATE)) %>%
