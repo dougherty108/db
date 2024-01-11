@@ -388,22 +388,25 @@ no3_lvws <- no3_lvws %>%
   distinct(DATE, .keep_all = TRUE)
 
 no3_usgs <- usgs_locho %>%
-  filter()
-    mutate(nitrate=as.numeric(as.character(nitrate)),
-         nitrate_mg_L=as.numeric(as.character(nitrate_mg_L))) %>%
-  select(sample_dt, nitrate, nitrate_mg_L)
-
+  select(sample_dt, nitrate, nitrate_mg_L) %>%
+  mutate(across(nitrate:nitrate_mg_L, as.numeric))
 
 #Check for duplicates
 no3_usgs %>% group_by_all() %>% filter(n()>1) %>% ungroup()
-#good here, after deleting line that created the date column again
-#in the creation of no3_usgs dataframe - IAO
+#duplicates are showing up because of identical dates but time is
+#off by a few minutes. Weird. Using 'distinct' to filter these out
+#since the values are identical
 
+no3_usgs <- no3_usgs %>%
+  distinct(sample_dt, .keep_all = TRUE)
+
+#Check for duplicates
+no3_usgs %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#Fixed
 
 
 no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 #Got rid of the 'many-to-many' error message
-
 
 
 # no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
@@ -438,7 +441,8 @@ no3_all %>%
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
        x="USGS: Nitrate, milligrams per liter as N",
-       title="Values are flagged if |diff| > 0.1")
+       title="Values are flagged if |diff| > 0.1",
+       subtitle="Rounded values to nearest 10th decimal place")
 #Somewhat, but still a lot of scatter around this line
 
 
