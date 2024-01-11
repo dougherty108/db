@@ -123,6 +123,11 @@ usgs_locho <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_
   filter(!row_number() %in% c(1)) %>%
   mutate(sample_dt = mdy(`sample_dt`))
 
+#Check for duplicates
+usgs_locho %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#good here
+
+
 # RMRS data ----------------------------------------------
 
 rmrs_db <- rbind(read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2017_RMRS.csv", 
@@ -143,8 +148,18 @@ rmrs_db <- rbind(read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2017_RMRS.c
   filter(site == "LOCH.O" & type == "NORM") %>%
   mutate(DATE = mdy(`DATE`)) 
 
+#Check for duplicates
+rmrs_db %>% group_by_all() %>% filter(n()>1) %>% ungroup() %>% arrange(DATE)
+#A bunch of duplicate dates. Spent some time trying to figure out
+#why this is happening when we mutate(DATE...) but given that the values
+#are identical I am just going to remove the duplicates with the distinct ftn.
 
-names(usgs_locho)
+rmrs_db <- rmrs_db %>%
+  distinct(DATE, .keep_all=TRUE)
+
+#Check for duplicates
+rmrs_db %>% group_by_all() %>% filter(n()>1) %>% ungroup() %>% arrange(DATE)
+#good now
 
 
 # processing usgs and rmrs data below
@@ -156,7 +171,7 @@ rmrs_join <- rmrs_db %>%
   mutate_if(is.character, as.numeric) %>%
   mutate(year = year(DATE)) %>% 
   rename(calcium_rmrs = calcium, nitrate_rmrs = nitrate, nitrate_n_rmrs = nitrate_n) %>%
-  select(-5) 
+  select(-year) 
 
 # prepare usgs db for joining
 usgs_join <- usgs_locho %>%
@@ -168,6 +183,10 @@ usgs_join <- usgs_locho %>%
          nitrate_mg_L_usgs = nitrate_mg_L, nitrate_micro_sgs = nitrate_micro, 
          calcium_usgs = calcium) %>%
   select(-7)
+
+#Check for duplicates
+usgs_join %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#good here
 
 # join rmrs and usgs db 
   # I tried full, left, right, and inner join, each yields different results 🫠
@@ -207,7 +226,11 @@ rmrs_usgs %>%
 
 # nitrate
 rmrs_usgs %>%
-  ggplot(aes(x = nitrate_usgs, y = nitrate_n_rmrs))+
+  mutate(flag = case_when(abs(nitrate_n_rmrs-nitrate_usgs)>0.1 ~ "yes",
+                          TRUE ~ "no")) %>%
+  ggplot(aes(x = nitrate_usgs, y = nitrate_n_rmrs,
+             label=as.character(DATE), fill=flag))+
+  geom_text_repel(max.overlaps = 3)+
   geom_point(color = "black",shape = 21, alpha = 0.5)+
   geom_abline(slope = 1, intercept = 0)+
   labs(y = "RMRS: Nitrate",
@@ -309,28 +332,27 @@ full_compare <- full_join(rmrs_usgs, lvws_join, by = c("DATE" = "date")) %>%
 
 full_compare %>%
   filter(name == "nitrate_lvws" | name == "nitrate_n_rmrs") %>%
-  ggplot(aes(x = nitrate_usgs, y = value, color = name))+
-  geom_point(shape = 21, alpha = 0.5)+
-  geom_abline(slope = 1, intercept = 0)
+  mutate(name = factor(name,
+                       labels=c("LVWS",
+                                "RMRS"))) %>%
+  ggplot(aes(x = nitrate_usgs, y = value, fill = name))+
+  geom_point(color="black", shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(x="NWIS  NO3-N values",
+       y="LVWS or RMRS NO3-N values")
+ggsave("plots/USGS_RMRS_LVWSexcel_comparisons_nitrate_2017-2018.png")
 
 full_compare %>%
   filter(name == "calcium_lvws" | name == "calcium_rmrs") %>%
-  ggplot(aes(x = calcium_usgs, y = value, color = name))+
-  geom_point(shape = 21, alpha = 0.5)+
-  geom_abline(slope = 1, intercept = 0)
-
-
-full_compare %>%
-  mutate(year=year(DATE)) %>%
-  # filter(DATE > "2016-01-01") %>%
-  ggplot(aes(x = nitrate_usgs, y = value, color = name, fill=factor(year)))+
-  geom_point(shape=21, alpha=0.5)+
-  geom_abline(slope=1, intercept=0)+
-  facet_wrap(~year)
-
-#pivot_longer with rmrs and lvws
-# usgs on x axis, rmrs and lvws overlain 
-#color = name
+  mutate(name = factor(name,
+                       labels=c("LVWS",
+                                "RMRS"))) %>%
+  ggplot(aes(x = calcium_usgs, y = value, fill = name))+
+  geom_point(color="black", shape = 21, alpha = 0.5)+
+  geom_abline(slope = 1, intercept = 0)+
+  labs(x="NWIS calcium values",
+       y="LVWS or RMRS calcium values")
+ggsave("plots/USGS_RMRS_LVWSexcel_comparisons_calcium_2017-2018.png")
 
 
 
@@ -339,8 +361,7 @@ ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
 
 str(usgs_locho)
 usgs_locho %>%
-  mutate(sample_dt=dmy(sample_dt),
-         nitrate=as.numeric(as.character(nitrate))) %>%
+  mutate(nitrate=as.numeric(as.character(nitrate))) %>%
   ggplot(aes(x=sample_dt,y=nitrate))+
   geom_point()
 
@@ -359,59 +380,65 @@ no3_lvws <- water_chem %>%
   mutate(NO3_N = NO3_calc*0.2259) #To convert Nitrate (NO3) to Nitrate-Nitrogen (NO3-N), multiply by 0.2259
 #Therefore, now NO3_N should be equivalent to nitrate_mg_L from the USGS database.
 
+#Check for duplicates
+no3_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+# a few duplicates from the 1980s. Cut these
+
+no3_lvws <- no3_lvws %>%
+  distinct(DATE, .keep_all = TRUE)
+
 no3_usgs <- usgs_locho %>%
-    mutate(sample_dt=ymd(sample_dt),
-         nitrate=as.numeric(as.character(nitrate)),
+  filter()
+    mutate(nitrate=as.numeric(as.character(nitrate)),
          nitrate_mg_L=as.numeric(as.character(nitrate_mg_L))) %>%
   select(sample_dt, nitrate, nitrate_mg_L)
 
 
 #Check for duplicates
-no3_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
-#For whatever reason there are TONS of duplicate dates.
-#As far as I can tell, the values for nitrate are all identical,
-#so will use `distinct` to get rid of them
+no3_usgs %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#good here, after deleting line that created the date column again
+#in the creation of no3_usgs dataframe - IAO
 
-no3_lvws <- no3_lvws %>%
-  distinct(DATE, .keep_all=TRUE)
-#Check for duplicates
-no3_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
-#Fixed
+
 
 no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 #Got rid of the 'many-to-many' error message
+
+
 
 # no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
 # IAO - delete? 
 
 no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
                           TRUE ~ "no")) %>%
   ggplot(aes(x=nitrate, y=NO3_N, fill=flag))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
        x="USGS: Nitrate, milligrams per liter as N",
-       title="Values are flagged if |diff| > 0.05")
+       title="Values are flagged if |diff| > 0.1")
 
-ggsave("plots/USGS_LVWSexcel_comparisons.png")
+ggsave("plots/USGS_LVWSexcel_comparisons_nitrate.png")
 
 no3_flags <- no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes"),
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
+                          TRUE ~ "no"),
          diff = nitrate-NO3_N,
          year = year(DATE)) %>%
-  select(DATE, year, nitrate, NO3_N, diff, flag)
+  select(DATE, year, nitrate, NO3_N, diff, flag) %>%
+  filter(flag=="yes")
 
 #Do things look better if we account for rounding error?
 no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
                           TRUE ~ "no")) %>%
   ggplot(aes(x=round(nitrate,2), y=round(NO3_N,2), fill=flag))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
        x="USGS: Nitrate, milligrams per liter as N",
-       title="Values are flagged if |diff| > 0.05")
+       title="Values are flagged if |diff| > 0.1")
 #Somewhat, but still a lot of scatter around this line
 
 
@@ -496,12 +523,19 @@ ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
 #Now we don't have a 'many-to-many' warning
 
 ca_all %>%
-  ggplot(aes(x=calcium, y=CA, label=as.character(DATE)))+
+  mutate(flag = case_when(abs(CA-calcium)>0.1 ~ "yes",
+                          TRUE ~ "no")) %>%
+  ggplot(aes(x=calcium, y=CA, label=as.character(DATE), fill=flag))+
   geom_text_repel(max.overlaps=4)+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: CA",
-       x="USGS: Calcium")
+       x="USGS: Calcium",
+       title="Values are flagged if |diff| > 0.1")
+ggsave("plots/USGS_LVWSexcel_comparisons_calcium.png")
+
+
+
 
 #Can the variation around the line be explained by rounding error?
 ca_all %>%
