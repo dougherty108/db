@@ -19,7 +19,8 @@ pacman::p_load("lubridate",
                "here",
                "wql",
                "patchwork",
-               "plotly")
+               "plotly",
+               "ggrepel")
 
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
