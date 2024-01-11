@@ -143,22 +143,27 @@ rmrs_db <- rbind(read.csv("Data/Loch Vale/water_chemistry/rmrs_files/2017_RMRS.c
   filter(site == "LOCH.O" & type == "NORM") %>%
   mutate(DATE = mdy(`DATE`)) 
 
+
+names(usgs_locho)
+
+
 # processing usgs and rmrs data below
 
 # prepate rmrs db for joining
 rmrs_join <- rmrs_db %>%
+  filter(!Type=="2016 TDN/DOC") %>% #Drop these dates since RMRS only analyzed TDN/DOC
   select(DATE, calcium, nitrate, nitrate_n) %>%
   mutate_if(is.character, as.numeric) %>%
-  mutate(year = year(DATE)) %>%
+  mutate(year = year(DATE)) %>% 
   rename(calcium_rmrs = calcium, nitrate_rmrs = nitrate, nitrate_n_rmrs = nitrate_n) %>%
-  select(-5)
+  select(-5) 
 
 # prepare usgs db for joining
 usgs_join <- usgs_locho %>%
   select(sample_dt, nitrate, nitrate_nitrite, nitrate_mg_L, nitrate_micro, calcium) %>%
   mutate_if(is.character, as.numeric) %>%
   mutate(year = year(sample_dt)) %>%
-  filter(year >= "2016" & year < "2019") %>%
+  filter(year >= "2017" & year < "2019") %>%
   rename(nitrate_usgs = nitrate, nitrate_nitrite_usgs = nitrate_nitrite, 
          nitrate_mg_L_usgs = nitrate_mg_L, nitrate_micro_sgs = nitrate_micro, 
          calcium_usgs = calcium) %>%
@@ -166,7 +171,7 @@ usgs_join <- usgs_locho %>%
 
 # join rmrs and usgs db 
   # I tried full, left, right, and inner join, each yields different results 🫠
-rmrs_usgs <- full_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
+rmrs_usgs <- full_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt")) 
 
 rmrs_usgs_left <- left_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
 
@@ -222,15 +227,14 @@ rmrs_usgs %>%
 
 str(rmrs_join)
 
-lvws_join <- loch_o_chem %>%
+lvws_join <- loch_o_chem %>% #confirmed these are all NORMs
   select(DATE, CA, NO3, NO3_calc) %>%
   rename(calcium_lvws = CA, nitrate_lvws = NO3, nitrate_calc_lvws = NO3_calc, date = DATE) %>%
   mutate(year = year(date)) %>%
-  filter(year >= "2016" & year < "2019")
+  filter(year >= "2017" & year < "2019")
 
 
 rmrs_lvws <- full_join(rmrs_join, lvws_join, by = c("DATE" =  "date")) %>%
-   select(-5, -9) %>%
    mutate(nitrate_n_lvws = nitrate_calc_lvws*0.2259)
 
 
@@ -239,9 +243,11 @@ anti_join(rmrs_join, usgs_join, by = c("DATE" =  "sample_dt"))
 
 # returns all rows from usgs without a match in rmrs - there's A LOT
 anti_join(usgs_join, rmrs_join, by = c("sample_dt" =  "DATE"))
+#IAO - as far as I can tell, these are all the preceeding MONDAY of a TUES sample
 
 # returns all rows from lvws without a match in rmrs
 anti_join(lvws_join, rmrs_join, by = c("date" =  "DATE"))
+#Good
 
 # returns all rows from rmrs without a match in lvws 
 anti_join(rmrs_join, lvws_join, by = c("DATE" =  "date"))
@@ -339,14 +345,16 @@ usgs_locho %>%
   geom_point()
 
 #filtering by site - USGS data is only for the loch outlet
-no3_lvws1 <- water_chem %>%
-  filter(SITE == "LOCH.O")
-
-no3_lvws2 <- no3_lvws1 %>%
-  select(DATE, NO3_calc, NO3) %>%
-  mutate(NO3_N = NO3_calc*0.2259)
+# no3_lvws1 <- water_chem %>%
+#   filter(SITE == "LOCH.O")
+# 
+# no3_lvws2 <- no3_lvws1 %>%
+#   select(DATE, NO3_calc, NO3) %>%
+#   mutate(NO3_N = NO3_calc*0.2259)
+# ^ IAO -- delete above? I think this was AGK's test script
 
 no3_lvws <- water_chem %>%
+  filter(SITE=="LOCH.O" & TYPE =="NORMAL") %>% # Need to filter out blanks!!
   select(DATE, NO3_calc, NO3) %>%
   mutate(NO3_N = NO3_calc*0.2259) #To convert Nitrate (NO3) to Nitrate-Nitrogen (NO3-N), multiply by 0.2259
 #Therefore, now NO3_N should be equivalent to nitrate_mg_L from the USGS database.
@@ -357,25 +365,63 @@ no3_usgs <- usgs_locho %>%
          nitrate_mg_L=as.numeric(as.character(nitrate_mg_L))) %>%
   select(sample_dt, nitrate, nitrate_mg_L)
 
-no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 
-no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
+#Check for duplicates
+no3_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#For whatever reason there are TONS of duplicate dates.
+#As far as I can tell, the values for nitrate are all identical,
+#so will use `distinct` to get rid of them
+
+no3_lvws <- no3_lvws %>%
+  distinct(DATE, .keep_all=TRUE)
+#Check for duplicates
+no3_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#Fixed
+
+no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
+#Got rid of the 'many-to-many' error message
+
+# no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
+# IAO - delete? 
 
 no3_all %>%
-  ggplot(aes(x=nitrate, y=NO3_N))+
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
+                          TRUE ~ "no")) %>%
+  ggplot(aes(x=nitrate, y=NO3_N, fill=flag))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
-       x="USGS: Nitrate, milligrams per liter as N")
+       x="USGS: Nitrate, milligrams per liter as N",
+       title="Values are flagged if |diff| > 0.05")
+
 ggsave("plots/USGS_LVWSexcel_comparisons.png")
 
-no3_all1 %>%
-  ggplot(aes(x=nitrate, y=NO3_N))+
+no3_flags <- no3_all %>%
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes"),
+         diff = nitrate-NO3_N,
+         year = year(DATE)) %>%
+  select(DATE, year, nitrate, NO3_N, diff, flag)
+
+#Do things look better if we account for rounding error?
+no3_all %>%
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
+                          TRUE ~ "no")) %>%
+  ggplot(aes(x=round(nitrate,2), y=round(NO3_N,2), fill=flag))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
-       x="USGS: Nitrate, milligrams per liter as N")
-ggsave("plots/USGS_LVWSexcel_comparisons_locho.png")
+       x="USGS: Nitrate, milligrams per liter as N",
+       title="Values are flagged if |diff| > 0.05")
+#Somewhat, but still a lot of scatter around this line
+
+
+# no3_all1 %>%
+#   ggplot(aes(x=nitrate, y=NO3_N))+
+#   geom_point(color="black",shape=21, alpha=0.5)+
+#   geom_abline(slope=1, intercept=0)+
+#   labs(y="LVWS: NO3-N (mg/l)",
+#        x="USGS: Nitrate, milligrams per liter as N")
+# ggsave("plots/USGS_LVWSexcel_comparisons_locho.png")
 
 
 no3_all %>%
@@ -385,14 +431,15 @@ no3_all %>%
   labs(y="LVWS: NO3 (mg/l)",
        x="USGS: Nitrate, milligrams per liter as NO3")
 
-no3_all1 %>%
-  ggplot(aes(x=nitrate_mg_L, y=NO3_calc))+
-  geom_point(color="black",shape=21, alpha=0.5)+
-  geom_abline(slope=1, intercept=0)+
-  labs(y="LVWS: NO3 (mg/l)",
-       x="USGS: Nitrate, milligrams per liter as NO3")
+# no3_all1 %>%
+#   ggplot(aes(x=nitrate_mg_L, y=NO3_calc))+
+#   geom_point(color="black",shape=21, alpha=0.5)+
+#   geom_abline(slope=1, intercept=0)+
+#   labs(y="LVWS: NO3 (mg/l)",
+#        x="USGS: Nitrate, milligrams per liter as NO3")
 
 # I might've fucked something up here, not entirely sure. -AGK
+# I don't think so-- I think NWIS only has nitrate_mg_L for earlier than ~1992 or so
 
 no3_all %>%
   mutate(year=year(DATE)) %>%
@@ -425,8 +472,20 @@ usgs_ca <- read.table("Data/Loch Vale/water_chemistry/master_data/usgs_locho_che
 
 #filtering by site - USGS data is only for the loch outlet
 ca_lvws <- water_chem %>%
-  filter(SITE == "LOCH.O") %>%
+  filter(SITE == "LOCH.O" & TYPE =="NORMAL") %>% 
   select(DATE, CA)
+
+#Check for duplicates
+ca_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#For whatever reason there are some duplicate dates, but the CA values are identical
+#therefore I'm going to delete the duplicates for joining purposes
+
+ca_lvws <- ca_lvws %>%
+  distinct(DATE, .keep_all=TRUE)
+#Check for duplicates
+ca_lvws %>% group_by_all() %>% filter(n()>1) %>% ungroup()
+#Fixed
+
 
 ca_usgs <- usgs_ca %>%
   mutate(sample_dt=mdy(sample_dt)) %>%
@@ -434,14 +493,26 @@ ca_usgs <- usgs_ca %>%
   mutate(calcium = as.numeric(calcium))
 
 ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
+#Now we don't have a 'many-to-many' warning
 
 ca_all %>%
-  ggplot(aes(x=calcium, y=CA))+
+  ggplot(aes(x=calcium, y=CA, label=as.character(DATE)))+
+  geom_text_repel(max.overlaps=4)+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: CA",
        x="USGS: Calcium")
 
+#Can the variation around the line be explained by rounding error?
+ca_all %>%
+  ggplot(aes(x=round(calcium,1), y=round(CA,1), label=as.character(DATE)))+
+  geom_text_repel(max.overlaps=4)+
+  geom_point(color="black",shape=21, alpha=0.5)+
+  geom_abline(slope=1, intercept=0)+
+  labs(y="LVWS: CA",
+       x="USGS: Calcium")
+#To some extent, but it doesn't fix it all. And there's still some high Calcium values
+#in the LVWS spreadsheet that are reported as very low values in NWIS
 
 
 ca_all %>%
