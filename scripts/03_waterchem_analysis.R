@@ -303,7 +303,30 @@ anti_join(lvws_join, usgs_join, by = c("date" =  "sample_dt"))
 anti_join(usgs_join, lvws_join, by = c("sample_dt" =  "date"))
 
 
+#Find the Mon-Tues pairs
+rmrs_usgs_test <- full_join(usgs_join, rmrs_join, by = c("sample_dt" =  "DATE")) %>%
+  mutate(day = wday(sample_dt, label=TRUE), 
+         week = week(sample_dt),
+         year = year(sample_dt)) %>%
+  filter(day %in% c("Mon","Tue")) %>%
+  group_by(year, week) %>%
+  mutate(n = length(unique(day)))
 
+#How do the values compare?
+rmrs_usgs_test %>%
+  filter(n==2) %>%
+  filter(day %in% c("Mon","Tue")) %>%
+  ggplot(aes(x=sample_dt, y=nitrate_usgs, fill=day))+
+  geom_point(shape=21, color="black",alpha=0.5)+
+  scale_fill_manual(values=c("yellow","blue"))
+
+rmrs_usgs_test %>%
+  filter(n==2) %>%
+  select(day, nitrate_usgs) %>%
+  pivot_wider(names_from=day, values_from = nitrate_usgs) %>%
+  mutate(diff = Mon-Tue, 
+         flag = case_when(abs(diff) > 0.05 ~ "yes",
+                          TRUE ~ "no"))
 
 
 rmrs_lvws %>%
@@ -350,32 +373,43 @@ full_compare <- full_join(rmrs_usgs, lvws_join, by = c("DATE" = "date")) %>%
   pivot_longer(c(calcium_rmrs, nitrate_n_rmrs, calcium_lvws, nitrate_lvws))
 
 
-
-full_compare %>%
+ggplotly(full_compare %>%
   filter(name == "nitrate_lvws" | name == "nitrate_n_rmrs") %>%
   mutate(name = factor(name,
                        labels=c("LVWS",
                                 "RMRS"))) %>%
-  ggplot(aes(x = nitrate_usgs, y = value, fill = name))+
+  mutate(flag = case_when(abs(value-nitrate_usgs)>0.05 ~ "yes",
+                            TRUE ~ "no")) %>%
+  ggplot(aes(x = nitrate_usgs, y = value, fill = flag, label=DATE))+
   geom_point(color="black", shape = 21, alpha = 0.5)+
   geom_abline(slope = 1, intercept = 0)+
   labs(x="NWIS  NO3-N values",
-       y="LVWS or RMRS NO3-N values")
-ggsave("plots/USGS_RMRS_LVWSexcel_comparisons_nitrate_2017-2018.png")
+       y="LVWS or RMRS NO3-N values")+
+  facet_wrap(~name))
+no3_lvwsggsave("plots/USGS_RMRS_LVWSexcel_comparisons_nitrate_2017-2018.png")
 
-full_compare %>%
+ggplotly(full_compare %>%
   filter(name == "calcium_lvws" | name == "calcium_rmrs") %>%
   mutate(name = factor(name,
                        labels=c("LVWS",
                                 "RMRS"))) %>%
-  ggplot(aes(x = calcium_usgs, y = value, fill = name))+
-  geom_point(color="black", shape = 21, alpha = 0.5)+
+  mutate(flag = case_when(abs(value-calcium_usgs)>0.05 ~ "yes",
+                          TRUE ~ "no")) %>%
+  ggplot(aes(x = calcium_usgs, y = value,fill=flag, label=DATE))+
+  geom_point(color="black", shape=21, alpha = 0.5)+
   geom_abline(slope = 1, intercept = 0)+
+  # scale_shape_manual(values=c(21,25))+
   labs(x="NWIS calcium values",
-       y="LVWS or RMRS calcium values")
+       y="LVWS or RMRS calcium values",
+       title="LVWS vs RMRS values are a 1:1 match",
+       subtitle="Years= 2017 & 2018")+
+  facet_wrap(~name))
 ggsave("plots/USGS_RMRS_LVWSexcel_comparisons_calcium_2017-2018.png")
 
-
+rmrs_lvws %>%
+  ggplot(aes(x=calcium_rmrs,y=calcium_lvws))+
+  geom_point()+
+  geom_abline(intercept=0,slope=1)
 
 
 ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
@@ -433,20 +467,20 @@ no3_all <- full_join(no3_lvws, no3_usgs, by = c("DATE"="sample_dt"))
 # no3_all1 <- full_join(no3_lvws2, no3_usgs, by = c("DATE"="sample_dt"))
 # IAO - delete? 
 
-no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
+ggplotly(no3_all %>%
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
                           TRUE ~ "no")) %>%
-  ggplot(aes(x=nitrate, y=NO3_N, fill=flag))+
+  #0.05 is the practical quantification limit
+  ggplot(aes(x=nitrate, y=NO3_N, fill=flag, label=DATE))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
        x="USGS: Nitrate, milligrams per liter as N",
-       title="Values are flagged if |diff| > 0.1")
-
+       title="Values are flagged if |diff| > 0.05"))
 ggsave("plots/USGS_LVWSexcel_comparisons_nitrate.png")
 
 no3_flags <- no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
                           TRUE ~ "no"),
          diff = nitrate-NO3_N,
          year = year(DATE)) %>%
@@ -454,15 +488,16 @@ no3_flags <- no3_all %>%
   filter(flag=="yes")
 
 #Do things look better if we account for rounding error?
+
 no3_all %>%
-  mutate(flag = case_when(abs(NO3_N-nitrate)>0.1 ~ "yes",
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
                           TRUE ~ "no")) %>%
   ggplot(aes(x=round(nitrate,2), y=round(NO3_N,2), fill=flag))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: NO3-N (mg/l)",
        x="USGS: Nitrate, milligrams per liter as N",
-       title="Values are flagged if |diff| > 0.1",
+       title="Values are flagged if |diff| > 0.05",
        subtitle="Rounded values to nearest 10th decimal place")
 #Somewhat, but still a lot of scatter around this line
 
@@ -493,15 +528,19 @@ no3_all %>%
 # I might've fucked something up here, not entirely sure. -AGK
 # I don't think so-- I think NWIS only has nitrate_mg_L for earlier than ~1992 or so
 
-no3_all %>%
+ggplotly(no3_all %>%
+  mutate(flag = case_when(abs(NO3_N-nitrate)>0.05 ~ "yes",
+                          TRUE ~ "no")) %>%
   mutate(year=year(DATE)) %>%
-  # filter(DATE > "2016-01-01") %>%
-  ggplot(aes(x=nitrate, y=NO3_N, fill=factor(year)))+
+  filter(flag=="yes") %>%
+  ggplot(aes(x=nitrate, y=NO3_N, fill=factor(flag)))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   facet_wrap(~year)+
   labs(y="LVWS: NO3-N (mg/l)",
-       x="USGS: Nitrate, milligrams per liter as N")
+       x="USGS: Nitrate, milligrams per liter as N"))
+ggsave("plots/USGS_LVWSexcel_by_year_comparisons_nitrate.png")
+
 
 no3_all %>%
   filter(DATE > "2018-01-01") %>%
@@ -548,7 +587,7 @@ ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
 #Now we don't have a 'many-to-many' warning
 
 ca_all %>%
-  mutate(flag = case_when(abs(CA-calcium)>0.1 ~ "yes",
+  mutate(flag = case_when(abs(CA-calcium)>0.05 ~ "yes",
                           TRUE ~ "no")) %>%
   ggplot(aes(x=calcium, y=CA, label=as.character(DATE), fill=flag))+
   geom_text_repel(max.overlaps=4)+
@@ -556,7 +595,7 @@ ca_all %>%
   geom_abline(slope=1, intercept=0)+
   labs(y="LVWS: CA",
        x="USGS: Calcium",
-       title="Values are flagged if |diff| > 0.1")
+       title="Values are flagged if |diff| > 0.05")
 ggsave("plots/USGS_LVWSexcel_comparisons_calcium.png")
 
 
@@ -574,15 +613,18 @@ ca_all %>%
 #in the LVWS spreadsheet that are reported as very low values in NWIS
 
 
-ca_all %>%
+ggplotly(ca_all %>%
+  mutate(flag = case_when(abs(CA-calcium)>0.05 ~ "yes",
+                          TRUE ~ "no")) %>%
   mutate(year=year(DATE)) %>%
-  # filter(DATE > "2016-01-01") %>%
-  ggplot(aes(x=calcium, y=CA, fill=factor(year)))+
+  filter(flag=="yes") %>%
+  ggplot(aes(x=calcium, y=CA, fill=factor(flag), label=DATE))+
   geom_point(color="black",shape=21, alpha=0.5)+
   geom_abline(slope=1, intercept=0)+
   facet_wrap(~year)+
   labs(y="LVWS: CA",
-       x="USGS: Calcium")
+       x="USGS: Calcium"))
+ggsave("plots/USGS_LVWSexcel_by_year_comparisons_calcium.png")
 
 
 
