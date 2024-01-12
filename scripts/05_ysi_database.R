@@ -19,17 +19,77 @@ locho_ysi <- bind_rows(fs::dir_ls("Data/On Thin Ice/YSI/loch_outlet", regexp = "
 #process db ---------------------------------------------------
 #pivot to long format for funsies
 loch_long <- loch_ysi %>% 
-  pivot_longer(cols = "cond":"temp", names_to = "parameter")
+  pivot_longer(cols = c(cond, do_per:temp), names_to = "parameter")
 
 locho_long <- locho_ysi %>% 
-  pivot_longer(cols = "cond":"temp", names_to = "parameter")
+  pivot_longer(cols = c(cond, do_per:temp), names_to = "parameter")
 
-#plot ------------------------------------------------------
+#plot all variables at once  ------------------------------------------------------
+
+ggplot(data = loch_long, aes(x = value, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(parameter~date, scales="free_x")
+
+#plot temperature ------------------------------------------------------
 ggplot(data = loch_ysi, aes(x = temp, y = depth)) + 
   geom_point() + 
   geom_path() +
-  scale_y_reverse()
+  scale_y_reverse()+
+  facet_wrap(~date)
 
+#plot conductivity ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = cond, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+#plot %DO ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = do_per, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+
+#plot %DO ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = do_per, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+#plot DO mg/L ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = do_mg, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+
+#plot DO mg/L ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = do_mg, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+#plot orp = oxidation-reduction potential ------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = orp, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
+
+
+#plot pH------------------------------------------------------
+ggplot(data = loch_ysi, aes(x = pH, y = depth)) + 
+  geom_point() + 
+  geom_path() +
+  scale_y_reverse()+
+  facet_wrap(~date)
 
 
 
