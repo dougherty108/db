@@ -331,6 +331,10 @@ full_compare %>%
 
 ca_all <- full_join(ca_lvws, ca_usgs, by = c("DATE"="sample_dt"))
 
+anti_join(ca_lvws, ca_usgs, by = c("DATE" = "sample_dt"))
+
+anti_join(ca_usgs, ca_lvws, by = c("sample_dt" = "DATE"))
+
 str(usgs_locho)
 usgs_locho %>%
   mutate(sample_dt=dmy(sample_dt),
