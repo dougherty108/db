@@ -199,41 +199,58 @@ linear_results <- bind_rows(linear_mod_all_data, linear_mod_bi_monthly,
 
 # filter by solute --------------------------------------
 ca_linear <- linear_results %>%
-  filter(name == "CA")
+  filter(name == "CA") %>%
+  relocate(frequency, .after = MONTH) 
 
 mg_linear <- linear_results %>%
-  filter(name == "MG")
+  filter(name == "MG") %>%
+  relocate(frequency, .after = MONTH) 
 
 na_linear <- linear_results %>%
-  filter(name == "NA")
+  filter(name == "NA") %>%
+  relocate(frequency, .after = MONTH) 
 
 k_linear <- linear_results %>%
-  filter(name == "K")
+  filter(name == "K") %>%
+  relocate(frequency, .after = MONTH) 
 
 nh4_linear <- linear_results %>%
-  filter(name == "NH4")
+  filter(name == "NH4") %>%
+  relocate(frequency, .after = MONTH) 
 
 so4_linear <- linear_results %>%
-  filter(name == "SO4")
+  filter(name == "SO4") %>%
+  relocate(frequency, .after = MONTH) 
 
 cl_linear <- linear_results %>%
-  filter(name == "CL")
+  filter(name == "CL") %>%
+  relocate(frequency, .after = MONTH) 
 
 sio2_linear <- linear_results %>%
-  filter(name == "SiO2")
+  filter(name == "SiO2") %>%
+  relocate(frequency, .after = MONTH) 
 
 doc_linear <- linear_results %>%
-  filter(name == "DOC")
+  filter(name == "DOC") %>%
+  relocate(frequency, .after = MONTH) 
 
 nh4_calc_linear <- linear_results %>%
-  filter(name == "NH4_calc")
+  filter(name == "NH4_calc") %>%
+  relocate(frequency, .after = MONTH) 
 
 no3_calc_linear <- linear_results %>%
-  filter(name == "NO3_calc")
-
-
-
-
+  filter(name == "NO3_calc") %>%
+  relocate(frequency, .after = MONTH) 
+# 
+# # set column names
+# col_names <- c("Month", "Sampling Frequency", "Estimate", "p value", "Significance")
+# 
+# # convert to table using huxtable
+# ca_table <- ca_linear %>%
+#   select(MONTH, frequency, estimate, p.value, Significance) %>%
+#   as_hux(colnames(col_names))
+# 
+# 
 
 
 
