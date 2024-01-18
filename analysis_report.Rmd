@@ -89,6 +89,13 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+Linear trend results - nitrate
+``` {r, echo = FALSE}
+no3_table <- no3_calc_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+no3_table
+```
 
 Linear trend by month - calcium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -150,6 +157,14 @@ ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "Calcium") +
   theme_pubclean()
 
+```
+
+Linear trend results - calcium
+``` {r, echo = FALSE}
+ca_table <- ca_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+ca_table
 ```
 
 
@@ -216,6 +231,13 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+Linear trend results - silica
+``` {r, echo = FALSE}
+sio2_table <- sio2_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+sio2_table
+```
 
 Linear trend by month - temperature
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -641,7 +663,6 @@ ggplot(data = loch_o_chem %>%
   
 ```
 
-
 Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -661,6 +682,14 @@ ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "Magnesium") +
   theme_pubclean()
 
+```
+
+Linear trend results - magnesium
+``` {r, echo = FALSE}
+mg_table <- mg_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+mg_table
 ```
 
 
@@ -727,6 +756,14 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+Linear trend results - sulfate
+``` {r, echo = FALSE}
+so4_table <- so4_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+so4_table
+```
+
 
 Linear trend by month - chlorine
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -791,6 +828,14 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+Linear trend results - chlorine
+``` {r, echo = FALSE}
+cl_table <- cl_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+cl_table
+```
+
 
 Linear trend by month - DOC
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -853,6 +898,14 @@ ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "DOC") +
   theme_pubclean()
 
+```
+
+Linear trend results - DOC
+``` {r, echo = FALSE}
+doc_table <- doc_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+doc_table
 ```
 
 
@@ -980,6 +1033,14 @@ ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "Ammonium") +
   theme_pubclean()
 
+```
+
+Linear trend results - ammonium
+``` {r, echo = FALSE}
+nh4_table <- nh4_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+nh4_table
 ```
 
 
