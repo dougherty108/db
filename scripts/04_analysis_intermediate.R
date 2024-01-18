@@ -118,7 +118,7 @@ linear_mod_all_data <- loch_o_chem %>%
          Significance=case_when(p.value<0.05 & p.value >0.01 ~ "*",
                                 p.value<= 0.01 & p.value > 0.001 ~ "**",
                                 p.value<= 0.001 ~ "***",
-                                TRUE ~"NA")) %>% #Add asterisks to denote trend significant strength
+                                TRUE ~"N.S.")) %>% #Add asterisks to denote trend significant strength
   mutate(frequency = "weekly")
 
 # filter by solute
@@ -163,7 +163,7 @@ linear_mod_bi_monthly <- bi_monthly %>%
          Significance=case_when(p.value<0.05 & p.value >0.01 ~ "*",
                                 p.value<= 0.01 & p.value > 0.001 ~ "**",
                                 p.value<= 0.001 ~ "***",
-                                TRUE ~"NA")) %>%
+                                TRUE ~"N.S.")) %>%
   mutate(frequency = "bi-monthly")
 
 #monthly
@@ -186,7 +186,7 @@ linear_mod_monthly <- monthly %>%
          Significance=case_when(p.value<0.05 & p.value >0.01 ~ "*",
                                 p.value<= 0.01 & p.value > 0.001 ~ "**",
                                 p.value<= 0.001 ~ "***",
-                                TRUE ~"NA")) %>%
+                                TRUE ~"N.S.")) %>%
   mutate(frequency = "monthly")
 
 # progressively more warnings as data decrease. i'm assuming it's just because 
