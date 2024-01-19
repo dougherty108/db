@@ -91,7 +91,7 @@ month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April
 
 
 linear_mod_all_data <- loch_o_chem %>%
-  select(DATE, MONTH, CA:SO4, PO4:MN, DOC:NO3_calc) %>% #select only the columns we want to analyze. 
+  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% #select only the columns we want to analyze. 
   #I'm ignoring a lot of the trailing columns because I don't think we have good coverage but feel
   #free to modify if I'm wrong
   mutate(DATE_DEC = decimal_date(DATE)) %>% #Convert date to a decimal to get some sensible model output
@@ -145,7 +145,7 @@ monthly <- loch_o_chem %>%
 
 #bimonthly
 linear_mod_bi_monthly <- bi_monthly %>%
-  select(DATE, MONTH, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
+  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
   mutate(DATE_DEC = decimal_date(DATE)) %>% 
   select(-DATE) %>%
   pivot_longer(-c(DATE_DEC, MONTH)) %>%
@@ -168,7 +168,7 @@ linear_mod_bi_monthly <- bi_monthly %>%
 
 #monthly
 linear_mod_monthly <- monthly %>%
-  select(DATE, MONTH, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
+  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
   mutate(DATE_DEC = decimal_date(DATE)) %>% 
   select(-DATE) %>%
   pivot_longer(-c(DATE_DEC, MONTH)) %>%
@@ -198,6 +198,10 @@ linear_results <- bind_rows(linear_mod_all_data, linear_mod_bi_monthly,
                             linear_mod_monthly)
 
 # filter by solute --------------------------------------
+temp_linear <- linear_results %>%
+  filter(name == "TEMP") %>%
+  relocate(frequency, .after = MONTH)
+
 ca_linear <- linear_results %>%
   filter(name == "CA") %>%
   relocate(frequency, .after = MONTH) 
