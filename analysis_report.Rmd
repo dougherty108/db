@@ -2,7 +2,6 @@
 title: "lvws_sensitivity_analysis"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
 ---
 
@@ -312,6 +311,14 @@ ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "Temperature") +
   theme_pubclean()
 
+```
+
+Table of linear results - Temp
+``` {r, echo = FALSE}
+temp_table <- temp_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  as_hux() 
+temp_table
 ```
 
 
