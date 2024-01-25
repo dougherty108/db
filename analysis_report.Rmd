@@ -18,14 +18,14 @@ source("scripts/04_analysis_intermediate.R")
 
 # Loch Vale Water Chemistry Sensitivity Analysis
 
-## What trends exist within the data? Do these trends changed based on sampling frequency?  
+**What trends exist within the data? Do these trends changed based on sampling frequency?**  
 Examining all post-1995 data for all major ions and parameters using both a linear and general additive model.    
 
 Are major ions increasing in concentration in a linear manner over time? 
 
 Are there certain months in which said increase is linear? 
 
-# For which months do we see linear trends? 
+# Testing for linear trends by month 
 ## Nitrate
 ```{r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -93,7 +93,11 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - nitrate
 ``` {r, echo = FALSE}
 no3_table <- no3_calc_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   # set_background_color(evens,everywhere, "grey95") %>%
@@ -173,7 +177,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - calcium
 ``` {r, echo = FALSE}
 ca_table <- ca_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -255,7 +259,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - silica
 ``` {r, echo = FALSE}
 sio2_table <- sio2_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -336,7 +340,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - Temperature
 ``` {r, echo = FALSE}
 temp_table <- temp_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -416,70 +420,6 @@ ggplot(data = loch_o_chem %>%
 ```
 
 
-## Conductivity (field)
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-
-ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field)") +
-  theme_pubclean()
-
-```
-
-
-Biweekly sampling frequency
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field)") +
-  theme_pubclean()
-  
-```
-
-
-Sampling once a month
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field") +
-  theme_pubclean()
-
-```
-
-
 ## Conductivity (lab)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -544,68 +484,6 @@ ggplot(data = loch_o_chem %>%
 ```
 
 
-## pH (field)
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-
-ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-
-```
-
-
-Biweekly sampling frequency
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-  
-```
-
-
-Sampling once a month
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-
-```
 
 
 ## pH (lab)
@@ -737,7 +615,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - magnesium
 ``` {r, echo = FALSE}
 mg_table <- mg_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -819,7 +697,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - sulfate
 ``` {r, echo = FALSE}
 so4_table <- so4_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -901,7 +779,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - chlorine
 ``` {r, echo = FALSE}
 cl_table <- cl_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -983,7 +861,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - DOC
 ``` {r, echo = FALSE}
 doc_table <- doc_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -1128,7 +1006,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - ammonium
 ``` {r, echo = FALSE}
 nh4_table <- nh4_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
