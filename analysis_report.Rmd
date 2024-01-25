@@ -93,7 +93,7 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - nitrate
 ``` {r, echo = FALSE}
 no3_table <- no3_calc_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
   mutate(frequency = factor(frequency,
                             levels=c("weekly",
                                      "bi-monthly",
@@ -177,7 +177,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - calcium
 ``` {r, echo = FALSE}
 ca_table <- ca_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -259,7 +261,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - silica
 ``` {r, echo = FALSE}
 sio2_table <- sio2_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -340,7 +344,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - Temperature
 ``` {r, echo = FALSE}
 temp_table <- temp_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -615,7 +621,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - magnesium
 ``` {r, echo = FALSE}
 mg_table <- mg_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -697,7 +705,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - sulfate
 ``` {r, echo = FALSE}
 so4_table <- so4_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -779,7 +789,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - chlorine
 ``` {r, echo = FALSE}
 cl_table <- cl_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -861,7 +873,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - DOC
 ``` {r, echo = FALSE}
 doc_table <- doc_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -1006,7 +1020,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - ammonium
 ``` {r, echo = FALSE}
 nh4_table <- nh4_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%   mutate(frequency = factor(frequency,                             levels=c("weekly",                                      "bi-monthly",                                      "monthly"))) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
