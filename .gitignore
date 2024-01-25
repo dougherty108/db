@@ -53,3 +53,6 @@ rsconnect/
 #Ignore data
 /data
 /data_copy 
+
+#Produced Rmarkdown reports
+*.html
