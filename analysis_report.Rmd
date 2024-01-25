@@ -1,8 +1,13 @@
 ---
-title: "lvws_sensitivity_analysis"
-date: "`r Sys.Date()`"
-output:
-  html_document: default
+title: "Loch Outlet Water Chemistry Sensitivity Analysis"
+author: "By Adeline Kelly w input from Bella Oleksy"
+date: "Last compiled `r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: true
 ---
 
 ```{r setup, include=FALSE}
@@ -16,9 +21,9 @@ source("scripts/04_analysis_intermediate.R")
 
 ```
 
-# Loch Vale Water Chemistry Sensitivity Analysis
 
 **What trends exist within the data? Do these trends changed based on sampling frequency?**  
+
 Examining all post-1995 data for all major ions and parameters using both a linear and general additive model.    
 
 Are major ions increasing in concentration in a linear manner over time? 
@@ -112,12 +117,102 @@ no3_table <- no3_calc_linear %>%
 no3_table
 ```
 
+### Density distributions - nitrate
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+NO3_all <- bind_rows(loch_o_chem %>%
+  select(NO3, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(NO3) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(NO3) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Nitrate",
+       title="All samples")
+
+#Plot by month
+ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Nitrate",
+       title="All samples")
+```
+
+### Ridgelines - nitrate
+This plot now include all data (unfiltered) for the full LVWS record.
+
+```{r}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Nitrate",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Nitrate",
+       y="Year",
+       title="Summer only (July-August)")
+```
+
 ## Calcium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
 
 ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = CA)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
+  geom_smooth(method = "lm", colour = "deeppink") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
+  labs(x = "Year", y = "Calcium") +
+  theme_pubclean()
+
+ggplot2::ggplot(data = loch_o_chem %>%
+                  group_by(YEAR, MONTH) %>%
+                  summarize(CA = mean(CA, na.rm=TRUE)), aes(x = YEAR, y = CA)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
