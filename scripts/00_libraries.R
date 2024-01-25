@@ -21,7 +21,8 @@ pacman::p_load("lubridate",
                "patchwork",
                "plotly",
                "ggrepel", 
-               "huxtable")
+               "huxtable",
+               "ggridges")
 
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
