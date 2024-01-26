@@ -194,6 +194,26 @@ ggplot(water_chem %>%
        title="Summer only (July-August)")
 ```
 
+### Intra-annual trends - nitrate
+
+```{r}
+## Here I'm taking all the unfiltered data than getting an average for every MONTH*YEAR combination. Tried to find a diverging colorblind friendly color scheme to make it easier to view the extreme years. 
+water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL") %>%
+  group_by(YEAR, MONTH) %>%
+  summarize(NO3_calc = mean(NO3_calc, na.rm=TRUE)) %>%
+  ggplot(aes(x = MONTH, y = NO3_calc, group=YEAR)) +
+  geom_line(aes(color=YEAR))+
+  geom_point(shape=21, aes(fill=YEAR))+
+  scale_fill_gradientn(colours = viridis(256, option = "B"))+
+  scale_color_gradientn(colours = viridis(256, option = "B"))+
+  scale_x_continuous(limits = c(1,12), breaks=c(1:12))+
+  theme_few()+
+  theme(panel.background = element_rect(fill="grey95"))
+
+```
+
+
 ## Calcium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -374,6 +394,8 @@ sio2_table
 ```
 
 ## Temperature
+
+Something to discuss at some point-- how do we want to deal with temperature values less than zero?
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
