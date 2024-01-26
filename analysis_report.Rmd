@@ -160,7 +160,7 @@ ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
 ### Ridgelines - nitrate
 This plot now include all data (unfiltered) for the full LVWS record.
 
-```{r}
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
 ## I pulled in the full time series here to make these pretty ridgeline plots
 ## that Jill was excited about
 ggplot(water_chem %>%
@@ -196,9 +196,13 @@ ggplot(water_chem %>%
 
 ### Intra-annual trends - nitrate
 
-```{r}
+``` {r, fig.width=10, fig.height=9, echo = FALSE}
 ## Here I'm taking all the unfiltered data than getting an average for every MONTH*YEAR combination. Tried to find a diverging colorblind friendly color scheme to make it easier to view the extreme years. 
-water_chem %>%
+
+##And then I got fancy and messed around with gganimate. Comment out that part if you're having a hard time knitting the file or rendering the plots
+devtools::install_github('thomasp85/gganimate')
+
+gg_intra_annual_NO3 <- water_chem %>%
          filter(SITE=="LOCH.O" & TYPE=="NORMAL") %>%
   group_by(YEAR, MONTH) %>%
   summarize(NO3_calc = mean(NO3_calc, na.rm=TRUE)) %>%
@@ -211,6 +215,11 @@ water_chem %>%
   theme_few()+
   theme(panel.background = element_rect(fill="grey95"))
 
+# Here comes the gganimate specific bits
+gg_intra_annual_NO3 +
+  transition_time(YEAR) +
+  labs(title = 'Year: {frame_time}', x = 'Month', y = 'NO3 (mg/L)') +
+  shadow_mark()
 ```
 
 
