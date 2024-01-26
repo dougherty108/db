@@ -89,9 +89,11 @@ month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April
 
 # running linear model, producing table of output results -----------------
 
+# 
+
 
 linear_mod_all_data <- loch_o_chem %>%
-  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% #select only the columns we want to analyze. 
+  select(DATE, MONTH, TEMP, LABCOND, LABPH, ANC:SO4, PO4:MN, DOC:NO3_calc, TIN, DON) %>% #select only the columns we want to analyze. 
   #I'm ignoring a lot of the trailing columns because I don't think we have good coverage but feel
   #free to modify if I'm wrong
   mutate(DATE_DEC = decimal_date(DATE)) %>% #Convert date to a decimal to get some sensible model output
@@ -145,7 +147,7 @@ monthly <- loch_o_chem %>%
 
 #bimonthly
 linear_mod_bi_monthly <- bi_monthly %>%
-  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
+  select(DATE, MONTH, TEMP, LABCOND, LABPH, ANC:SO4, PO4:MN, DOC:NO3_calc, TIN, DON) %>% 
   mutate(DATE_DEC = decimal_date(DATE)) %>% 
   select(-DATE) %>%
   pivot_longer(-c(DATE_DEC, MONTH)) %>%
@@ -168,7 +170,7 @@ linear_mod_bi_monthly <- bi_monthly %>%
 
 #monthly
 linear_mod_monthly <- monthly %>%
-  select(DATE, MONTH, TEMP, CA:SO4, PO4:MN, DOC:NO3_calc) %>% 
+  select(DATE, MONTH, TEMP, LABCOND, LABPH, ANC:SO4, PO4:MN, DOC:NO3_calc, TIN, DON) %>% 
   mutate(DATE_DEC = decimal_date(DATE)) %>% 
   select(-DATE) %>%
   pivot_longer(-c(DATE_DEC, MONTH)) %>%
@@ -245,6 +247,33 @@ nh4_calc_linear <- linear_results %>%
 no3_calc_linear <- linear_results %>%
   filter(name == "NO3_calc") %>%
   relocate(frequency, .after = MONTH) 
+
+anc_linear <- linear_results %>%
+  filter(name == "ANC") %>%
+  relocate(frequency, .after = MONTH) 
+
+cond_linear <- linear_results %>%
+  filter(name == "LABCOND") %>%
+  relocate(frequency, .after = MONTH) 
+
+pH_linear <- linear_results %>%
+  filter(name == "LABPH") %>%
+  relocate(frequency, .after = MONTH) 
+
+tdn_linear <- linear_results %>%
+  filter(name == "TDN") %>%
+  relocate(frequency, .after = MONTH) 
+
+tin_linear <- linear_results %>%
+  filter(name == "TIN") %>%
+  relocate(frequency, .after = MONTH) 
+
+don_linear <- linear_results %>%
+  filter(name == "DON") %>%
+  relocate(frequency, .after = MONTH) 
+
+
+
 # 
 # # set column names
 # col_names <- c("Month", "Sampling Frequency", "Estimate", "p value", "Significance")
