@@ -1,8 +1,13 @@
 ---
-title: "lvws_sensitivity_analysis"
-date: "`r Sys.Date()`"
-output:
-  html_document: default
+title: "Loch Outlet Water Chemistry Sensitivity Analysis"
+author: "By Adeline Kelly w input from Bella Oleksy"
+date: "Last compiled `r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: true
 ---
 
 ```{r setup, include=FALSE}
@@ -16,16 +21,16 @@ source("scripts/04_analysis_intermediate.R")
 
 ```
 
-# Loch Vale Water Chemistry Sensitivity Analysis
 
-## What trends exist within the data? Do these trends changed based on sampling frequency?  
+**What trends exist within the data? Do these trends changed based on sampling frequency?**  
+
 Examining all post-1995 data for all major ions and parameters using both a linear and general additive model.    
 
 Are major ions increasing in concentration in a linear manner over time? 
 
 Are there certain months in which said increase is linear? 
 
-# For which months do we see linear trends? 
+# Testing for linear trends by month 
 ## Nitrate
 ```{r, fig.width=12, fig.height=9, echo = FALSE}
 
@@ -94,6 +99,10 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 no3_table <- no3_calc_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   # set_background_color(evens,everywhere, "grey95") %>%
@@ -108,12 +117,131 @@ no3_table <- no3_calc_linear %>%
 no3_table
 ```
 
+### Density distributions - nitrate
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+NO3_all <- bind_rows(loch_o_chem %>%
+  select(NO3, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(NO3) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(NO3) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Nitrate",
+       title="All samples")
+
+#Plot by month
+ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Nitrate",
+       title="All samples")
+```
+
+### Ridgelines - nitrate
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Nitrate",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Nitrate",
+       y="Year",
+       title="Summer only (July-August)")
+```
+
+### Intra-annual trends - nitrate
+
+``` {r, fig.width=10, fig.height=9, echo = FALSE}
+## Here I'm taking all the unfiltered data than getting an average for every MONTH*YEAR combination. Tried to find a diverging colorblind friendly color scheme to make it easier to view the extreme years. 
+
+##And then I got fancy and messed around with gganimate. Comment out that part if you're having a hard time knitting the file or rendering the plots
+#devtools::install_github('thomasp85/gganimate')
+
+gg_intra_annual_NO3 <- water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL") %>%
+  group_by(YEAR, MONTH) %>%
+  summarize(NO3_calc = mean(NO3_calc, na.rm=TRUE)) %>%
+  ggplot(aes(x = MONTH, y = NO3_calc, group=YEAR)) +
+  geom_line(aes(color=YEAR))+
+  geom_point(shape=21, aes(fill=YEAR))+
+  scale_fill_gradientn(colours = viridis(256, option = "B"))+
+  scale_color_gradientn(colours = viridis(256, option = "B"))+
+  scale_x_continuous(limits = c(1,12), breaks=c(1:12))+
+  theme_few()+
+  theme(panel.background = element_rect(fill="grey95"))
+
+# Here comes the gganimate specific bits
+#gg_intra_annual_NO3 +
+  # transition_time(YEAR) +
+  # labs(title = 'Year: {frame_time}', x = 'Month', y = 'NO3 (mg/L)') +
+  # shadow_mark()
+```
+
+
 ## Calcium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
 
 ggplot2::ggplot(data = loch_o_chem, aes(x = DATE, y = CA)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
+  geom_smooth(method = "lm", colour = "deeppink") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
+  labs(x = "Year", y = "Calcium") +
+  theme_pubclean()
+
+ggplot2::ggplot(data = loch_o_chem %>%
+                  group_by(YEAR, MONTH) %>%
+                  summarize(CA = mean(CA, na.rm=TRUE)), aes(x = YEAR, y = CA)) +
   geom_point() + 
   geom_line() + 
   facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
@@ -174,6 +302,8 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 ca_table <- ca_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -188,6 +318,82 @@ ca_table
 
 ```
 
+### Density distributions - calcium
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+ca_all <- bind_rows(loch_o_chem %>%
+  select(CA, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(CA) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(CA) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(ca_all, aes(CA, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Calcium",
+       title="All samples")
+
+#Plot by month
+ggplot(ca_all, aes(CA, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Calcium",
+       title="All samples")
+```
+
+### Ridgelines - calcium
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = CA, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Calcium",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = CA, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Calcium",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## Silica
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -255,7 +461,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - silica
 ``` {r, echo = FALSE}
 sio2_table <- sio2_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -270,7 +478,86 @@ sio2_table
 
 ```
 
+### Density distributions - silica
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+sio2_all <- bind_rows(loch_o_chem %>%
+  select(SiO2, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(SiO2) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(SiO2) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(sio2_all, aes(SiO2, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Silica",
+       title="All samples")
+
+#Plot by month
+ggplot(sio2_all, aes(SiO2, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Silica",
+       title="All samples")
+```
+
+### Ridgelines - silica
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = SiO2, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Silica",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = SiO2, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Silica",
+       y="Year",
+       title="Summer only (July-August)")
+```
+
 ## Temperature
+
+Something to discuss at some point-- how do we want to deal with temperature values less than zero?
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
 library(ggplot2)
@@ -336,7 +623,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - Temperature
 ``` {r, echo = FALSE}
 temp_table <- temp_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -351,6 +640,83 @@ temp_table
 
 ```
 
+
+### Density distributions - temperature
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+temp_all <- bind_rows(loch_o_chem %>%
+  select(TEMP, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(TEMP) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(TEMP) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(temp_all, aes(TEMP, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Temperature (ºC)",
+       title="All samples")
+
+#Plot by month
+ggplot(temp_all, aes(TEMP, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Temperature (ºC)",
+       title="All samples")
+```
+
+### Ridgelines - temperature
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = TEMP, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Temperature (ºC)",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = TEMP, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Temperature (ºC)",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## ANC
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -370,6 +736,105 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
 
 ```
 
+### Table of results - ANC
+``` {r, echo = FALSE}
+anc_table <- anc_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+anc_table
+```
+
+### Density distributions - ANC
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+anc_all <- bind_rows(loch_o_chem %>%
+  select(ANC, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(ANC) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(ANC) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(anc_all, aes(ANC, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="ANC",
+       title="All samples")
+
+#Plot by month
+ggplot(anc_all, aes(ANC, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="ANC",
+       title="All samples")
+```
+
+### Ridgelines - ANC
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = ANC, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="ANC",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = ANC, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="ANC",
+       y="Year",
+       title="Summer only (July-August)")
+```
+
 
 Biweekly sampling frequency
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -411,70 +876,6 @@ ggplot(data = loch_o_chem %>%
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
   labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-
-```
-
-
-## Conductivity (field)
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-
-ggplot(data = loch_o_chem, aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field)") +
-  theme_pubclean()
-
-```
-
-
-Biweekly sampling frequency
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field)") +
-  theme_pubclean()
-  
-```
-
-
-Sampling once a month
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = FLDCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (field") +
   theme_pubclean()
 
 ```
@@ -544,69 +945,104 @@ ggplot(data = loch_o_chem %>%
 ```
 
 
-## pH (field)
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-
-ggplot(data = loch_o_chem, aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-
+### Table of results - conductivity
+``` {r, echo = FALSE}
+cond_table <- cond_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+cond_table
 ```
 
+### Density distributions - conductivity
 
-Biweekly sampling frequency
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
 
-library(ggplot2)
-library(ggpubr)
+#Bind all the samples together into new dataframe
+lcond_all <- bind_rows(loch_o_chem %>%
+  select(LABCOND, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(LABCOND) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(LABCOND) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
 
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-  
+#Plot all samples regardless of month
+ggplot(lcond_all, aes(LABCOND, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Conductivity",
+       title="All samples")
+
+#Plot by month
+ggplot(lcond_all, aes(LABCOND, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Conductivity",
+       title="All samples")
 ```
 
+### Ridgelines - conductivity
+This plot now include all data (unfiltered) for the full LVWS record.
 
-Sampling once a month
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = LABCOND, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Conductivity",
+       y="Year",
+       title="Year-round samples")
 
-library(ggplot2)
-library(ggpubr)
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = FLDPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (field)") +
-  theme_pubclean()
-
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = LABCOND, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Conductivity",
+       y="Year",
+       title="Summer only (July-August)")
 ```
-
 
 ## pH (lab)
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -671,6 +1107,104 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+### Table of results - pH
+``` {r, echo = FALSE}
+ph_table <- pH_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+ph_table
+```
+
+### Density distributions - pH
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+pH_all <- bind_rows(loch_o_chem %>%
+  select(LABPH, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(LABPH) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(LABPH) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(pH_all, aes(LABPH, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="pH",
+       title="All samples")
+
+#Plot by month
+ggplot(pH_all, aes(LABPH, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="pH",
+       title="All samples")
+```
+
+### Ridgelines - pH
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = LABPH, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="pH",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = LABPH, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="pH",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## Magnesium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -738,6 +1272,8 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 mg_table <- mg_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -752,6 +1288,82 @@ mg_table
 
 ```
 
+### Density distributions - magnesium
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+mg_all <- bind_rows(loch_o_chem %>%
+  select(MG, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(MG) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(MG) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(mg_all, aes(MG, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Magnesium",
+       title="All samples")
+
+#Plot by month
+ggplot(mg_all, aes(MG, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Magnesium",
+       title="All samples")
+```
+
+### Ridgelines - magnesium
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = MG, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Magnesium",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = MG, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Magnesium",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## Sulfate
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -820,6 +1432,8 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 so4_table <- so4_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -834,6 +1448,82 @@ so4_table
 
 ```
 
+### Density distributions - sulfate
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+so4_all <- bind_rows(loch_o_chem %>%
+  select(SO4, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(SO4) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(SO4) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(so4_all, aes(SO4, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Sulfate",
+       title="All samples")
+
+#Plot by month
+ggplot(so4_all, aes(SO4, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Sulfate",
+       title="All samples")
+```
+
+### Ridgelines - sulfate
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = SO4, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Sulfate",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = SO4, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Sulfate",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## Chlorine
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -902,6 +1592,8 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 cl_table <- cl_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -916,6 +1608,82 @@ cl_table
 
 ```
 
+### Density distributions - chlorine
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+cl_all <- bind_rows(loch_o_chem %>%
+  select(CL, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(CL) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(CL) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(cl_all, aes(CL, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Chlorine",
+       title="All samples")
+
+#Plot by month
+ggplot(cl_all, aes(CL, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Chlorine",
+       title="All samples")
+```
+
+### Ridgelines - chlorine
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = CL, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Chlorine",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = CL, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Chlorine",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## DOC
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -983,7 +1751,9 @@ ggplot(data = loch_o_chem %>%
 ### Table of results - DOC
 ``` {r, echo = FALSE}
 doc_table <- doc_linear %>%
-  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>% 
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -998,6 +1768,82 @@ doc_table
 
 ```
 
+### Density distributions - DOC
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+doc_all <- bind_rows(loch_o_chem %>%
+  select(DOC, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(DOC) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(DOC) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(doc_all, aes(DOC, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="DOC",
+       title="All samples")
+
+#Plot by month
+ggplot(doc_all, aes(DOC, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="DOC",
+       title="All samples")
+```
+
+### Ridgelines - DOC
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = DOC, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="DOC",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = DOC, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="DOC",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## TDN
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -1062,6 +1908,104 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+### Table of results - TDN
+``` {r, echo = FALSE}
+tdn_table <- tdn_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+tdn_table
+```
+
+### Density distributions - TDN
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+tdn_all <- bind_rows(loch_o_chem %>%
+  select(TDN, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(TDN) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(TDN) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(tdn_all, aes(TDN, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="TDN",
+       title="All samples")
+
+#Plot by month
+ggplot(tdn_all, aes(TDN, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="TDN",
+       title="All samples")
+```
+
+### Ridgelines - TDN
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = TDN, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="TDN",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = TDN, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="TDN",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## Ammonium
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -1129,6 +2073,8 @@ ggplot(data = loch_o_chem %>%
 ``` {r, echo = FALSE}
 nh4_table <- nh4_linear %>%
   select(MONTH, frequency, estimate, p.value, Significance) %>%
+    mutate(frequency = factor(frequency,
+                            levels=c("weekly","bi-monthly","monthly"))) %>%
   arrange(MONTH, frequency) %>%
   as_hux() %>%
   set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
@@ -1143,6 +2089,83 @@ nh4_table
 
 ```
 
+
+### Density distributions - ammonium
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+nh4_all <- bind_rows(loch_o_chem %>%
+  select(NH4, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(NH4) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(NH4) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(nh4_all, aes(NH4, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="Ammonium",
+       title="All samples")
+
+#Plot by month
+ggplot(nh4_all, aes(NH4, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Ammonium",
+       title="All samples")
+```
+
+### Ridgelines - ammonium
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = NH4, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Ammonium",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = NH4, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="Ammonium",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## TIN
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -1207,6 +2230,104 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+### Table of results - TIN
+``` {r, echo = FALSE}
+tin_table <- tin_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+tin_table
+```
+
+### Density distributions - TIN
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+tin_all <- bind_rows(loch_o_chem %>%
+  select(TIN, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(TIN) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(TIN) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(tin_all, aes(TIN, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="TIN",
+       title="All samples")
+
+#Plot by month
+ggplot(tin_all, aes(TIN, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="TIN",
+       title="All samples")
+```
+
+### Ridgelines - TIN
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = TIN, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="TIN",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = TIN, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="TIN",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 ## DON
 ``` {r, fig.width=12, fig.height=9, echo = FALSE}
@@ -1271,7 +2392,104 @@ ggplot(data = loch_o_chem %>%
 
 ```
 
+### Table of results - DON
+``` {r, echo = FALSE}
+don_table <- don_linear %>%
+  select(MONTH, frequency, estimate, p.value, Significance) %>%
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) %>%
+  arrange(MONTH, frequency) %>%
+  as_hux() %>%
+  # set_background_color(evens,everywhere, "grey95") %>%
+  set_background_color(evens,everywhere, "grey80") %>% set_background_color(odds,everywhere, "grey90") %>%
+  set_all_borders(brdr(0.4,"solid", "white")) %>%
+  set_outer_padding(4) %>%
+  set_markdown_contents(1, 1, "**Month**") %>%
+  set_markdown_contents(1, 2, "**Sampling Frequency**") %>%
+  set_markdown_contents(1, 3, "**Slope**") %>%
+  set_markdown_contents(1, 4, "**p-value**") %>%
+  set_markdown_contents(1, 5, "**Significance**") 
+don_table
+```
 
+### Density distributions - DON
+
+If the density plots overlap, that indicates that we are not losing any extreme values / natural variability with bi-monthly or monthly samples.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+#Bind all the samples together into new dataframe
+don_all <- bind_rows(loch_o_chem %>%
+  select(DON, MONTH, YEAR) %>%
+  mutate(frequency = "weekly"),  
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  select(DON) %>%
+  mutate(frequency = "bi-monthly"),
+loch_o_chem %>%
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  select(DON) %>%
+  mutate(frequency = "monthly")) %>%
+  #Arrange the frequency levels from most to least frequent
+  mutate(frequency = factor(frequency,
+                            levels=c("weekly",
+                                     "bi-monthly",
+                                     "monthly"))) 
+
+#Plot all samples regardless of month
+ggplot(don_all, aes(DON, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  labs(x="DON",
+       title="All samples")
+
+#Plot by month
+ggplot(don_all, aes(DON, color=frequency, fill=frequency))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="DON",
+       title="All samples")
+```
+
+### Ridgelines - DON
+This plot now include all data (unfiltered) for the full LVWS record.
+
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+## I pulled in the full time series here to make these pretty ridgeline plots
+## that Jill was excited about
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = DON, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#c26f8b",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="DON",
+       y="Year",
+       title="Year-round samples")
+
+ggplot(water_chem %>%
+         filter(SITE=="LOCH.O" &
+                  TYPE=="NORMAL" &
+                  MONTH %in% c(7,8)), aes(x = DON, y = YEAR, group=YEAR)) +
+  geom_density_ridges(
+    scale = 7,
+    size = 0.25,
+    rel_min_height = 0.01, #You can comment this out to keep the long tails
+    fill = "#b2df8a",
+    alpha = 0.4)+
+  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+  theme_minimal()+
+  labs(x="DON",
+       y="Year",
+       title="Summer only (July-August)")
+```
 
 
 
