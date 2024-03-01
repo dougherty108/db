@@ -736,6 +736,51 @@ ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
 
 ```
 
+Biweekly sampling frequency
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+library(ggpubr)
+
+ggplot(data = loch_o_chem %>%
+                    group_by(MONTH, YEAR) %>%
+                    sample_n(size = 2, replace = FALSE), 
+       aes(x = DATE, y = ANC)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
+  labs(x = "Year", y = "ANC") +
+  theme_pubclean()
+  
+```
+
+
+Sampling once a month
+``` {r, fig.width=12, fig.height=9, echo = FALSE}
+
+library(ggplot2)
+library(ggpubr)
+ggplot(data = loch_o_chem %>%
+                    group_by(MONTH, YEAR) %>%
+                    sample_n(size = 1, replace = FALSE), 
+       aes(x = DATE, y = ANC)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
+  labs(x = "Year", y = "ANC") +
+  theme_pubclean()
+
+```
+
+
 ### Table of results - ANC
 ``` {r, echo = FALSE}
 anc_table <- anc_linear %>%
@@ -833,51 +878,6 @@ ggplot(water_chem %>%
   labs(x="ANC",
        y="Year",
        title="Summer only (July-August)")
-```
-
-
-Biweekly sampling frequency
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = ANC)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-  
-```
-
-
-Sampling once a month
-``` {r, fig.width=12, fig.height=9, echo = FALSE}
-
-library(ggplot2)
-library(ggpubr)
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = ANC)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-
 ```
 
 
