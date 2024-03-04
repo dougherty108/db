@@ -102,7 +102,21 @@ loch_concat <- bind_rows(read.table("Data/Loch Vale/miniDOT/concat/Loch/2016_17_
 #adjusted hypo depth to 4m, will fix after checking field notebooks -AGK
 
 #build database
-loch_minidot <- bind_rows(loch_raw, loch_concat)
+# 
+loch_minidot <- bind_rows(loch_raw, loch_concat) %>%
+  mutate(month = month(date_time)) %>%
+  mutate(year = year(date_time)) %>%
+  mutate(year = as.factor(year)) %>%
+  mutate(month = as.factor(month))
+str(loch_minidot)
+
+# filter loch data to for August 2021 
+loch_082021 <- loch_minidot %>%
+  filter(year == 2021) %>%
+  filter(month == 8) %>%
+  rename(do_mg = do_obs) 
+
+write_csv(loch_082021, "Data/Loch Vale/miniDOT/export/Loch_Aug2021.csv", col_names = TRUE)
 
 
 #fern database####
