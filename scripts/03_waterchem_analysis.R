@@ -102,6 +102,16 @@ loch_o_chem <- water_chem %>%
   mutate(MONTH = as.factor(MONTH)) #%>%
   # mutate(YEAR = as.factor(YEAR))
 
+# export csv of loch outlet chemistry data 
+write_csv(loch_o_chem, "Data/Loch Vale/locho_chem.csv", col_names = TRUE)
+
+# filter for all loch data 
+loch_chem <- water_chem %>%
+  filter(grepl("LOCH", SITE))
+# export csv
+write_csv(loch_chem, "Data/Loch Vale/loch_chem.csv", col_names = TRUE)
+
+
 
 NO3_compare <- water_chem %>%
   filter(TYPE == "NORMAL") %>%
