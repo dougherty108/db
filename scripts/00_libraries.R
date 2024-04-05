@@ -26,8 +26,6 @@ pacman::p_load("lubridate",
                "viridis",
                "ggthemes")
 
-               "huxtable")
-
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
 
