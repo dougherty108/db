@@ -136,3 +136,11 @@ fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/miniDOT/raw/Fern/fern_0.5"
          do_sat = 100 * do_obs/oxySol(temp, salinity, 0.7)) #last term is atm pressure
 #Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
 
+# write to csv to share w mollie
+write_csv(fern_minidot, "Data/Loch Vale/miniDOT/export/fern_minidot.csv", col_names = TRUE)
+
+
+
+
+
+
