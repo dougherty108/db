@@ -4,6 +4,10 @@ source("scripts/00_libraries.R")
 
 #sky pond database####
 #raw files first, manually calculating do_sat
+
+# thinking about shortening file paths? either by writing to a variable or defining a global variable
+
+# this runs! -AGK 20240801
 sky_raw <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/SKY/raw/sky_0.5", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
@@ -28,6 +32,8 @@ sky_raw <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/SKY/raw/sky_0.5", regexp 
 
 #concatenated files - pulled from an earlier version. keeping do_sat, can also remove and calculate manually
 #have to convert date formatting in order to combine with dataframe of raw files
+
+# concatenated files still need to be moved & these paths need to be updated once we settle on a file structure -AGK
 sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/SKY/concat/2016_17_SkyLH/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(3, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
@@ -111,23 +117,23 @@ loch_minidot <- bind_rows(loch_raw, loch_concat) %>%
 str(loch_minidot)
 
 #fern database####
-fern_minidot <- bind_rows((fs::dir_ls("Data/Loch Vale/miniDOT/raw/Fern/fern_0.5", regexp = "\\.txt$") %>%
+fern_minidot <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/FERN/raw/FERN_LS", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
+    mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
     mutate(date_time = as_datetime(`date_time`))), 
-  fs::dir_ls("Data/Loch Vale/miniDOT/raw/Fern/fern_5", regexp = "\\.txt$") %>%
+  fs::dir_ls("Data/LVWS/05_miniDOT/FERN/raw/FERN_LH", regexp = "\\.txt$") %>%
     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
     select(1, 3, 4) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-    mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
+    mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
     mutate(date_time = as_datetime(`date_time`)))%>%
   mutate(salinity = 0,
          do_sat = 100 * do_obs/oxySol(temp, salinity, 0.7)) #last term is atm pressure
 #Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
 
-
+# file paths updated, this runs. need to trim based on pull date/time -AGK
 
 
 
