@@ -99,7 +99,7 @@ sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_a
 loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17_all.TXT", sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
     select(3, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
@@ -113,7 +113,7 @@ loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17
   read.table("Data/LVWS/05_miniDOT/concat/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(3, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
@@ -170,6 +170,59 @@ combined_data2 %>%
   geom_point(alpha=0.1)+
   facet_wrap(folder_name~depth)
 #Nope, must be real? 
+
+#Notes say that first deployment was 2016-07-19 to 2017-05-30.
+#Seems long. Does it look right?
+ggplotly(combined_data2 %>%
+  filter(lake_id=="loch") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  filter(year==2017) %>%
+  mutate(flag = case_when(date_time >= "2017-05-30 07:00:00" & date_time <= "2017-07-14 13:38:00"~ "out of water",
+                          date_time >= "2017-09-27 13:00" & date_time <= "2017-10-04 14:30" ~ "out of water",
+                          TRUE ~ "in water")) %>%
+  filter(year==2017) %>%
+  ggplot(aes(x=date_time, y=temp, color=flag))+
+  geom_point(alpha=0.1)+
+  facet_wrap(year~depth, scales="free_x")) 
+
+metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
+  mutate(deployment_date=mdy_hm(deployment_date),
+         retrieval_date=mdy_hm(retrieval_date),
+         depth=as.character(as.numeric(depth)),
+         depth_from=as.character(as.logical(depth_from))) %>%
+  filter(lake_id=='loch')
+
+combined_data2 %>%
+           filter(lake_id=="loch") %>%
+           mutate(year=year(date_time),
+                  date=date(date_time),
+                  doy_wy=hydro.day(date),
+                  water_year=calcWaterYear(date))%>%
+           filter(year==2017) %>%
+           left_join(., metadata, by=c("lake_id","depth","water_year"))%>%
+           # group_by(depth) %>%
+           mutate(flag = case_when(date_time >= retrieval_date & date_time <= deployment_date ~ "out of water",
+                                   # date_time >= "2017-09-27 13:00" & date_time <= "2017-10-04 14:30" ~ "out of water",
+                                   TRUE ~ "in water")) %>%
+           filter(year==2017) %>%
+           ggplot(aes(x=date_time, y=temp, color=flag))+
+           geom_point(alpha=0.1)+
+           facet_wrap(year~depth, scales="free_x")
+
+
+test <- combined_data2 %>%
+  filter(lake_id=="loch") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  filter(year==2017) %>%
+  slice(10)
+
+test2 <- left_join(test, metadata, by=c("lake_id","depth","water_year"))
 
 # Sky visual inspection --------------------------------------------------
 
