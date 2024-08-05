@@ -128,14 +128,14 @@ loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17
 # corrected the hypo to 4.5m from surface - IAO
 
 
-combined_data2 <- bind_rows(combined_data, sky_concat, loch_concat) %>%
+combined_data <- bind_rows(combined_data, sky_concat, loch_concat) %>%
   arrange(lake_id, depth, date_time)
 
 
 # Loch visual inspection --------------------------------------------------
 
 
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="loch") %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -146,7 +146,7 @@ combined_data2 %>%
   facet_wrap(water_year~depth, scales="free_x")
 
 #Potentially some overlap in the beginning of WY 2018?
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="loch") %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -158,7 +158,7 @@ combined_data2 %>%
   facet_wrap(folder_name~depth)
 
 #Does it go away if we only have distint date_times?
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="loch") %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -173,7 +173,7 @@ combined_data2 %>%
 
 #Notes say that first deployment was 2016-07-19 to 2017-05-30.
 #Seems long. Does it look right?
-ggplotly(combined_data2 %>%
+ggplotly(combined_data %>%
   filter(lake_id=="loch") %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -195,7 +195,7 @@ metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
          depth_from=as.character(as.logical(depth_from))) %>%
   filter(lake_id=='loch')
 
-combined_data2 %>%
+combined_data %>%
            filter(lake_id=="loch") %>%
            mutate(year=year(date_time),
                   date=date(date_time),
@@ -213,20 +213,10 @@ combined_data2 %>%
            facet_wrap(year~depth, scales="free_x")
 
 
-test <- combined_data2 %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(year==2017) %>%
-  slice(10)
-
-test2 <- left_join(test, metadata, by=c("lake_id","depth","water_year"))
 
 # Sky visual inspection --------------------------------------------------
 
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="sky" & do_obs<12) %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -237,7 +227,7 @@ combined_data2 %>%
   facet_wrap(water_year~depth, scales="free_x")
 
 #Potentially some overlap in WY 2018?
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="sky" & do_obs<12) %>%
   mutate(year=year(date_time),
          date=date(date_time),
@@ -251,7 +241,7 @@ combined_data2 %>%
                        guide = guide_colorbar(frame.colour = "black", ticks.colour = "black"))
 #Need to check my  old field notes to see if the DO drawdowns are real or correpsond w sensors coming out?- IAO
 
-combined_data2 %>%
+combined_data %>%
   filter(lake_id=="sky" & do_obs<12) %>%
   mutate(year=year(date_time),
          date=date(date_time),
