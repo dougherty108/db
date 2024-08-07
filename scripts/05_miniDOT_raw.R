@@ -35,7 +35,10 @@ process_file <- function(file_path) {
                   temp = `T..deg.C.`,
                   do_obs = `DO..mg.l.`) %>%
     mutate(local_tz = "Mountain", daylight_savings = "Yes") %>%
-    mutate(date_time = as_datetime(`date_time`)) %>%
+    mutate(date_time = as_datetime(`date_time`, tz="America/Denver"),
+           date_time = with_tz(date_time, tz="America/Denver")) %>%
+    # IAO---I THINK that UTC is the default with the minidot software? as_datetime defaults to UTC.
+    # I believe that "with_tz" changes how it prints, for our sanity
     mutate(
       folder_name = folder_name,
       lake_id = folder_info[1],
@@ -54,7 +57,8 @@ combined_data <- files %>%
   #Currently, these do_sat values are sus and aren't a 1:1 match with the old
   #dataframe (code preserved below). Need to troubleshoot this - IAO 20240802
   mutate(do_sat = case_when(lake_id=="loch" ~ 100 * do_obs/oxySol(temp, salinity, 0.68),
-                            lake_id=="sky" ~ 100 * do_obs/oxySol(temp, salinity, 0.66)))
+                            lake_id=="sky" ~ 100 * do_obs/oxySol(temp, salinity, 0.66))) 
+
 
 # View the combined data
 print(combined_data)
@@ -62,28 +66,28 @@ print(combined_data)
 
 # Append concatenated files for some early years in Sky Pond --------------
 sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_hypo_Oct17-Sept18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
@@ -97,28 +101,28 @@ sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_a
 # concatenated files - pulled from an earlier version. keeping do_sat, can also remove and calculate manually
 # have to convert date formatting in order to combine with dataframe of raw files
 loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17_all.TXT", sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-    select(3, 5:7) %>%
+    select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
@@ -127,11 +131,55 @@ loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17
 # adjusted hypo depth to 4m, will fix after checking field notebooks -AGK
 # corrected the hypo to 4.5m from surface - IAO
 
+lvws_concat <- bind_rows(sky_concat, loch_concat) %>%
+  mutate(date_time = as_datetime(`date_time`, tz="America/Denver"),
+         date_time = force_tz(date_time, tz="America/Denver"),
+         date_time = with_tz(date_time, tz="America/Denver"))
+
 
 combined_data <- bind_rows(combined_data, sky_concat, loch_concat) %>%
-  arrange(lake_id, depth, date_time)
+  arrange(lake_id, depth, date_time) 
 
 
+# Filtering out times when the sensors were above water -------------------
+
+metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
+  mutate(start_time=mdy_hm(start_time),
+         end_time=mdy_hm(end_time),
+         depth=as.character(as.numeric(depth)),
+         depth_from=as.character(as.logical(depth_from)))
+
+loch_metadata <- metadata %>%
+  select(lake_id, start_time, end_time) %>%
+  filter(lake_id=="loch")
+
+sky_metadata <- metadata %>%
+  select(lake_id, start_time, end_time) %>%
+  filter(lake_id=="sky")
+#eventually I want to be able to flag any intervals not included between any of the 
+#start_time - end_time intervals in the metadata above. Currently doing this manually, not ideal -IAO
+
+combined_data_clean <- combined_data %>%
+  mutate(flag = case_when(date_time > "2017-05-30 10:00:00" & date_time < "2017-07-14 13:38:00" ~ "above water",
+                          date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
+                          date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
+                          date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 13:50:00" ~ "above water",
+                          TRUE ~ "under water"))
+
+ggplotly(combined_data_clean %>%
+  filter(lake_id=="loch") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  filter(temp < 20) %>%
+  filter(water_year=='2018') %>%
+  ggplot(aes(x=date_time, y=temp, color=flag))+
+  geom_point(alpha=0.1)+
+  facet_wrap(water_year~depth, scales="free_x"))
+
+
+test <- combined_data %>% filter(date_time > "2018-06-18" & date_time < "2018-06-27")
 # Loch visual inspection --------------------------------------------------
 
 
@@ -141,9 +189,20 @@ combined_data %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  ggplot(aes(x=doy_wy, y=do_obs, color=folder_name))+
+  ggplot(aes(x=doy_wy, y=temp, color=folder_name))+
   geom_point(alpha=0.1)+
   facet_wrap(water_year~depth, scales="free_x")
+
+combined_data %>%
+  filter(lake_id=="loch") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  filter(temp < 20) %>%
+  ggplot(aes(x=date_time, y=temp, color=depth, shape=folder_name))+
+  geom_point(alpha=0.1)+
+  facet_wrap(water_year~., scales="free_x")
 
 #Potentially some overlap in the beginning of WY 2018?
 combined_data %>%
@@ -164,11 +223,11 @@ combined_data %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  filter(water_year=="2018")%>%
+  filter(water_year=="2021")%>%
   distinct(date_time, .keep_all = TRUE) %>%
-  ggplot(aes(x=doy_wy, y=do_obs, color=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(folder_name~depth)
+  ggplot(aes(x=doy_wy, y=temp, color=folder_name))+
+  geom_point(alpha=0.1)
+  # facet_wrap(folder_name~depth)
 #Nope, must be real? 
 
 #Notes say that first deployment was 2016-07-19 to 2017-05-30.
@@ -196,21 +255,20 @@ metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
   filter(lake_id=='loch')
 
 combined_data %>%
-           filter(lake_id=="loch") %>%
-           mutate(year=year(date_time),
-                  date=date(date_time),
-                  doy_wy=hydro.day(date),
-                  water_year=calcWaterYear(date))%>%
-           filter(year==2017) %>%
-           left_join(., metadata, by=c("lake_id","depth","water_year"))%>%
-           # group_by(depth) %>%
-           mutate(flag = case_when(date_time >= retrieval_date & date_time <= deployment_date ~ "out of water",
-                                   # date_time >= "2017-09-27 13:00" & date_time <= "2017-10-04 14:30" ~ "out of water",
-                                   TRUE ~ "in water")) %>%
-           filter(year==2017) %>%
-           ggplot(aes(x=date_time, y=temp, color=flag))+
-           geom_point(alpha=0.1)+
-           facet_wrap(year~depth, scales="free_x")
+  filter(lake_id == "loch") %>%
+  mutate(
+    year = year(date_time),
+    date = date(date_time),
+    doy_wy = hydro.day(date),
+    water_year = calcWaterYear(date)
+  ) %>%
+  filter(year == 2017) %>%
+  rowwise() %>%
+  mutate(flag = is_within_intervals(date_time, lake_id, intervals)) %>%
+  ungroup() %>%
+  ggplot(aes(x = date_time, y = temp, color = flag)) +
+  geom_point(alpha = 0.1) +
+  facet_wrap(year ~ depth, scales = "free_x")
 
 
 
