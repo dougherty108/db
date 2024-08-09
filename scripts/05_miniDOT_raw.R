@@ -169,18 +169,18 @@ combined_data_clean <- combined_data %>%
                           lake_id == "loch" & date_time > "2019-10-01 16:30" & date_time < "2019-10-15 09:00" ~ "above water",
                           TRUE ~ "under water"))
 
-ggplotly(combined_data_clean %>%
+combined_data_clean %>%
   filter(lake_id=="loch") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  filter(temp < 20) %>%
-  filter(year %in% c('2016','2017')) %>%
+  # filter(temp < 20) %>%
+  # filter(year %in% c('2016','2017')) %>%
   # filter(date_time > "2022-08-09")  %>%
   ggplot(aes(x=date_time, y=temp, color=flag))+
   geom_point(alpha=0.1)+
-  facet_wrap(.~depth))
+  facet_wrap(water_year~depth)
 
 
 
