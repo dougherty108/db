@@ -161,7 +161,8 @@ sky_metadata <- metadata %>%
 #start_time - end_time intervals in the metadata above. Currently doing this manually, not ideal -IAO
 
 combined_data_clean <- combined_data %>%
-  mutate(flag = case_when(lake_id == "loch" & date_time > "2017-05-30 10:00:00" & date_time < "2017-07-14 13:38:00" ~ "above water",
+  mutate(flag = case_when(lake_id == "loch" & date_time < "2016-07-19 13:39:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2017-05-30 12:00:00" & date_time < "2017-07-14 13:38:00" ~ "above water",
                           lake_id == "loch" & date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 13:50:00" ~ "above water",
@@ -175,7 +176,7 @@ ggplotly(combined_data_clean %>%
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
   filter(temp < 20) %>%
-  filter(year=='2023') %>%
+  filter(year %in% c('2016','2017')) %>%
   # filter(date_time > "2022-08-09")  %>%
   ggplot(aes(x=date_time, y=temp, color=flag))+
   geom_point(alpha=0.1)+
