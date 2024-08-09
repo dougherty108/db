@@ -183,138 +183,54 @@ ggplotly(combined_data_clean %>%
 
 
 
-test <- combined_data_clean %>% filter(date_time > "2022-08-01" & date_time < "2022-08-25")
-# Loch visual inspection --------------------------------------------------
+
+# Options for flagging data later -----------------------------------------
+
+#IAO to AGK -- I found this resource on stackoverflow that I think should work
+#for our data. I pasted the example code below. Give it a try? I also included
+#2 more resources in case this doesn't work
+#https://stackoverflow.com/questions/42371168/subset-time-series-by-groups-based-on-cutoff-date-data-frame
+
+date <- seq(as.POSIXct("2014-07-21 17:00:00", tz= "GMT"), as.POSIXct("2014-09-11 24:00:00", tz= "GMT"), by="hour") 
+group <- letters[1:4]             
+# group <- rep(letters[1:4],2)             
+datereps <- rep(date, length(group))                  
+attr(datereps, "tzone") <- "GMT"
+sitereps <- rep(group, each = length(date))    
+value  <- rnorm(length(datereps))
+df <- data.frame(DateTime = datereps, Group = group, Value = value)  
 
 
-combined_data %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  ggplot(aes(x=doy_wy, y=temp, color=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~depth, scales="free_x")
+start <- c("2014-08-01 00:00:00 GMT", "2014-07-26 00:00:00 GMT", "2014-07-21 17:00:00 GMT", "2014-08-03 24:00:00 GMT")
+end <- c("2014-09-11 24:00:00 GMT", "2014-09-01 24:00:00 GMT", "2014-09-07 24:00:00 GMT", "2014-09-11 24:00:00 GMT")
+cut <- data.frame(Group = group, Start = as.POSIXct(start), End = as.POSIXct(end))
 
-combined_data %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(temp < 20) %>%
-  ggplot(aes(x=date_time, y=temp, color=depth, shape=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~., scales="free_x")
+df2 <- merge(x = df,y = cut,by = "Group")
+df2$flagvar <- !(df2$DateTime <= df2$Start | df2$DateTime >= df2$End)
 
-#Potentially some overlap in the beginning of WY 2018?
-combined_data %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(water_year=="2018")%>%
-  ggplot(aes(x=doy_wy, y=do_obs, color=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(folder_name~depth)
+#Does it work the way I think it should?
+df2 %>%
+  ggplot(aes(x=DateTime, y=Value, color=flagvar))+
+  geom_point()+
+  facet_wrap(~Group)
+#Yes!
 
-#Does it go away if we only have distint date_times?
-combined_data %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(water_year=="2021")%>%
-  distinct(date_time, .keep_all = TRUE) %>%
-  ggplot(aes(x=doy_wy, y=temp, color=folder_name))+
-  geom_point(alpha=0.1)
-  # facet_wrap(folder_name~depth)
-#Nope, must be real? 
+#Then in practice we change just filter out the 'FALSE' values
+df2 %>%
+  filter(flagvar=="TRUE") %>%
+  ggplot(aes(x=DateTime, y=Value))+
+  geom_point()+
+  facet_wrap(~Group)
 
-#Notes say that first deployment was 2016-07-19 to 2017-05-30.
-#Seems long. Does it look right?
-ggplotly(combined_data %>%
-  filter(lake_id=="loch") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(year==2017) %>%
-  mutate(flag = case_when(date_time >= "2017-05-30 07:00:00" & date_time <= "2017-07-14 13:38:00"~ "out of water",
-                          date_time >= "2017-09-27 13:00" & date_time <= "2017-10-04 14:30" ~ "out of water",
-                          TRUE ~ "in water")) %>%
-  filter(year==2017) %>%
-  ggplot(aes(x=date_time, y=temp, color=flag))+
-  geom_point(alpha=0.1)+
-  facet_wrap(year~depth, scales="free_x")) 
+#https://business-science.github.io/timetk/reference/between_time.html 
+# ^^ this might work for us too?
 
-metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
-  mutate(deployment_date=mdy_hm(deployment_date),
-         retrieval_date=mdy_hm(retrieval_date),
-         depth=as.character(as.numeric(depth)),
-         depth_from=as.character(as.logical(depth_from))) %>%
-  filter(lake_id=='loch')
-
-combined_data %>%
-  filter(lake_id == "loch") %>%
-  mutate(
-    year = year(date_time),
-    date = date(date_time),
-    doy_wy = hydro.day(date),
-    water_year = calcWaterYear(date)
-  ) %>%
-  filter(year == 2017) %>%
-  rowwise() %>%
-  mutate(flag = is_within_intervals(date_time, lake_id, intervals)) %>%
-  ungroup() %>%
-  ggplot(aes(x = date_time, y = temp, color = flag)) +
-  geom_point(alpha = 0.1) +
-  facet_wrap(year ~ depth, scales = "free_x")
+#https://stackoverflow.com/questions/64295796/use-dplyr-to-subset-time-series-data-from-specified-start-and-stop-times
+## ^^ this could work but havent tried
 
 
 
-# Sky visual inspection --------------------------------------------------
 
-combined_data %>%
-  filter(lake_id=="sky" & do_obs<12) %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  ggplot(aes(x=doy_wy, y=do_obs, color=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~depth, scales="free_x")
-
-#Potentially some overlap in WY 2018?
-combined_data %>%
-  filter(lake_id=="sky" & do_obs<12) %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(water_year=="2018")%>%
-  ggplot(aes(x=date_time, y=do_obs, color=temp))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~depth)+
-  scale_color_distiller(palette ="YlOrRd", direction=1,
-                       guide = guide_colorbar(frame.colour = "black", ticks.colour = "black"))
-#Need to check my  old field notes to see if the DO drawdowns are real or correpsond w sensors coming out?- IAO
-
-combined_data %>%
-  filter(lake_id=="sky" & do_obs<12) %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(water_year=="2018")%>%
-  ggplot(aes(x=date_time, y=temp, color=folder_name))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~depth)
-#Uh yeaaaaahh need to do a bit of data trimming before Katie uses these - IAO
-#Stopped here 20240802 IAO
 
 
 # OLD SCRIPTS below -- delete when we trust the new one - IAO -------------------
