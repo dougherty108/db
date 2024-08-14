@@ -166,18 +166,31 @@ combined_data_clean <- combined_data %>%
                           lake_id == "loch" & date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 13:50:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2019-10-01 16:30" & date_time < "2019-10-15 09:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2019-10-01 16:30:00" & date_time < "2019-10-15 09:00:00" ~ "above water",
+                          lake_id == "sky" & date_time < "2016-08-11 11:27:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2017-06-22 11:45:00" & date_time < "2017-07-13 9:30:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2017-09-27 10:30:00" & date_time < "2017-10-04 11:40" ~ "above water",
+                          lake_id == "sky" & date_time > "2018-06-19 9:00:00" & date_time < "2018-06-26 12:00:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2018-08-25 9:00:00" & date_time < "2018-09-25 10:23:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2019-07-31 7:45:00" & date_time < "2019-08-06 8:30:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2020-07-14 9:00:00" & date_time < "2020-07-21 13:15:00" ~ "above water",
+                          #NO data in our system for sky @ 3.5m or 6.5m for summer 2021 :( AGK can you check on this -IAO?
+                          lake_id == "sky" & date_time > "2021-05-01 9:00:00" & date_time < "2021-10-01 13:15:00" ~ "above water",
+                          #Temporarily flagging out this entire spring summer-- need to check Tim's notes here -IAO
+                          lake_id == "sky" & date_time > "2021-05-01 9:00:00" & date_time < "2021-10-01 13:15:00" ~ "above water",
+                          lake_id == "sky" & date_time > "2022-08-09 9:00:00" ~ "above water",
                           TRUE ~ "under water"))
 
+#Visual check
 combined_data_clean %>%
-  filter(lake_id=="loch") %>%
+  filter(lake_id=="sky") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
   # filter(temp < 20) %>%
-  # filter(year %in% c('2016','2017')) %>%
-  # filter(date_time > "2022-08-09")  %>%
+  filter(water_year %in% c('2022')) %>%
+  # filter(date_time > "2021-05-01" & date_time < "2021-08-01") %>%
   ggplot(aes(x=date_time, y=temp, color=flag))+
   geom_point(alpha=0.1)+
   facet_wrap(water_year~depth)
