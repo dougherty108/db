@@ -1,9 +1,16 @@
 source("scripts/00_libraries.R")
 
+# file paths are incorrect - either fix paths, move data, or both - AGK 240827
+  # going to leave data where it is & update path 
+
+# correct file path for master chem == "Data/Historical Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv"
+
+# file paths have been fixed! this works again - AGK 240827
+
 # read in lvws data ------------------------
 chem1 <-
   read.csv(
-    "Data/Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
+    "Data/Historical Loch Vale/water_chemistry/master_data/LVWS_waterchem_master.csv",
     sep = ",",
     header = TRUE,
     skip = 1,
@@ -32,7 +39,7 @@ chem1 <-
 #see above comment about overriding if_else statement - manually calculating "NO3_calc"
 chem2 <-
   read.csv(
-    "Data/Loch Vale/water_chemistry/master_data/LVWS_2019_2020_master.csv",
+    "Data/Historical Loch Vale/water_chemistry/master_data/LVWS_2019_2020_master.csv",
     sep = ",",
     skip = 1,
     header = TRUE,
@@ -68,9 +75,13 @@ chem1 <- chem1 %>%
 chem2 <- chem2 %>%
   mutate(across(TEMP:ncol(chem2), as.numeric))
 
+str(chem1)
+str(chem2)
+
 #combine chem1 and chem2 to build dataframe - wanted to bind_rows upfront but R didn't want to.
 water_chem <- bind_rows(chem1, chem2)
 #this seems to work, but is adding a blank column at the end? not sure what's up with that
+str(water_chem)
 
 # filter for loch.o and norm samples -------------------------------
 loch_o_chem <- water_chem %>%
