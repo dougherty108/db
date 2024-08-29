@@ -166,7 +166,12 @@ combined_data_clean <- combined_data %>%
                           lake_id == "loch" & date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
                           lake_id == "loch" & date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 13:50:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2019-10-01 16:30" & date_time < "2019-10-15 09:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2019-10-01 16:30:00" & date_time < "2019-10-15 09:00:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2020-05-26 13:41:00" & date_time < "2020-06-02 11:00:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2021-06-08 11:30:00" & date_time < "2021-06-15 10:00:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2022-08-09 13:00:00" & date_time < "2022-08-16 13:15:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2023-09-05 14:00:00" & date_time < "2023-09-28 13:07:00" ~ "above water",
+                          lake_id == "loch" & date_time > "2024-06-13 09:30:00" ~ "above water",
                           TRUE ~ "under water"))
 
 combined_data_clean %>%
@@ -176,11 +181,11 @@ combined_data_clean %>%
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
   # filter(temp < 20) %>%
-  # filter(year %in% c('2016','2017')) %>%
-  # filter(date_time > "2022-08-09")  %>%
+  filter(water_year %in% c('2024')) %>%
+  # filter(date_time > "2023-09-01" & date_time < "2023-11-01")  %>%
   ggplot(aes(x=date_time, y=temp, color=flag))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~depth)
+  geom_point(alpha=0.5)+
+  facet_wrap(.~depth, scales="free_x")
 
 
 
