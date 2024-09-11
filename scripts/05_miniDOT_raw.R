@@ -15,6 +15,9 @@ files <- files[!str_detect(files, "/concat/")]
 # Filter out files from the "FERN" folder
 files <- files[!str_detect(files, "/FERN/")]
 
+# Filter out files from the "QC" folder
+files <- files[!str_detect(files, "QC")]
+
 
 # Define a function to process each file
 process_file <- function(file_path) {
@@ -68,28 +71,28 @@ print(combined_data)
 sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_hypo_Oct17-Sept18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)))#last term is atm pressure)
@@ -103,28 +106,28 @@ sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_a
 loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17_all.TXT", sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="T", folder_name="concat") %>%
+    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)))
