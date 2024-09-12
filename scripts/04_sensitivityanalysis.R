@@ -18,10 +18,11 @@ loch_o_chem$DAY_YEAR <- yday(loch_o_chem$DATE)
 # need to rethink how I'm parsing winter - choosing values for a range that doesn't exist
 
 loch_o_chem <- loch_o_chem %>%
+  group_by(WATER_YEAR) %>%
   mutate(season = case_when(
-            DAY_YEAR >= 105 & DAY_YEAR <= 166 ~ "Spring", 
-            DAY_YEAR >= 196 & DAY_YEAR <= 258 ~ "Baseflow", 
-            DAY_YEAR >= 319 & DAY_YEAR <= 365 | DAY_YEAR >= 0 & DAY_YEAR < 105 ~ "Winter")) %>%
+    DAY_YEAR >= 105 & DAY_YEAR <= 166 ~ "Spring", 
+    DAY_YEAR >= 196 & DAY_YEAR <= 258 ~ "Baseflow", 
+    DAY_YEAR >= 319 & DAY_YEAR <= 365 | DAY_YEAR >= 0 & DAY_YEAR < 105 ~ "Winter")) %>%
   filter(!is.na(season))
 
 # build subsampled dataframe 
@@ -39,18 +40,26 @@ monthly <- loch_o_chem %>%
   mutate(dataset_id = "monthly")
 
 full_data <- bind_rows(weekly, biweekly, monthly) %>%
-  mutate(season = as.factor(season))
+  mutate(season = factor(season,
+                         levels=c("Winter","Spring","Baseflow")),#Rearrange so they plot in chronological order
+         dataset_id = factor(dataset_id,
+                         levels=c("weekly","biweekly","monthly")))#Rearrange so they plot from highest to lowest freq. 
+
+datasetCols <- c("red","blue","green") #You can mess with these, maybe find a nice diverging colorblind friendly scheme 
 
 # plot temperature by season with subsampling on same plot 
-temp_seasons <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id)) +
+temp_seasons <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
   geom_point() + 
   #geom_line() + 
   facet_wrap(~ season, scales = "free") +
   geom_smooth(method = "lm") +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
   #geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
-  labs(x = "Year", y = "Temperature") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
+  labs(x = "Year", y = "Water temperature (°C)") +
   theme_pubclean()
 temp_seasons
 
