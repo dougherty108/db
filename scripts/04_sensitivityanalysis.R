@@ -4,12 +4,111 @@
 source("scripts/00_libraries.R")
 source("scripts/04_analysis_intermediate.R")
 
-# analytes needed are as follows: 
-  # increasing: temp, ANC, pH, conductivity 
-  # decreasing: nitrate, TDN
+# convert year to water year 
+loch_o_chem$WATER_YEAR <- calcWaterYear(loch_o_chem$DATE)
 
-# need plots, dropped frequency, table of results, and density dist for all 
-# all plots being pulled straight from rmarkdown - plots will need to be named 
+# convert date to day of year for the sake of parsing by season 
+loch_o_chem$DAY_YEAR <- yday(loch_o_chem$DATE)
+
+# converting to season 
+# apr 15 - jun 15 = spring (peak snowmelt)
+# july 15 - sep 15 = baseflow
+# nov 15 - apr 15 = winter (ice reliably on lake, low flow)
+
+# need to rethink how I'm parsing winter - choosing values for a range that doesn't exist
+
+loch_o_chem <- loch_o_chem %>%
+  mutate(season = case_when(
+            DAY_YEAR >= 105 & DAY_YEAR <= 166 ~ "Spring", 
+            DAY_YEAR >= 196 & DAY_YEAR <= 258 ~ "Baseflow", 
+            DAY_YEAR >= 319 & DAY_YEAR <= 365 | DAY_YEAR >= 0 & DAY_YEAR < 105 ~ "Winter")) %>%
+  filter(!is.na(season))
+
+# build subsampled dataframe 
+weekly <- loch_o_chem %>%
+  mutate(dataset_id = "weekly")
+
+biweekly <- loch_o_chem %>% 
+  group_by(MONTH, WATER_YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  mutate(dataset_id = "biweekly")
+
+monthly <- loch_o_chem %>% 
+  group_by(MONTH, WATER_YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  mutate(dataset_id = "monthly")
+
+full_data <- bind_rows(weekly, biweekly, monthly) %>%
+  mutate(season = as.factor(season))
+
+# plot temperature by season with subsampling on same plot 
+temp_seasons <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+temp_seasons
+
+# run above code but modify for ANC
+anc_seasons <- ggplot(data = full_data, aes(x = DATE, y = ANC, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+anc_seasons
+
+# calcium
+ca_seasons <- ggplot(data = full_data, aes(x = DATE, y = CA, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+ca_seasons
+
+# density plots 
+temp_density_seasons <- ggplot(full_data, aes(TEMP, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Temperature (ºC)",
+       title="All samples")
+temp_density_seasons
+
+anc_density_seasons <- ggplot(full_data, aes(ANC, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Temperature (ºC)",
+       title="All samples")
+anc_density_seasons
+
+ca_density_seasons <- ggplot(full_data, aes(CA, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Temperature (ºC)",
+       title="All samples")
+ca_density_seasons
+
+
+# fix water year - data retrieval, water year function 
+# group_by water year 
+# season = case_when date between values 
+   # run linear models through seasons 
+
+# updated 240911 - only temp, ANC, and calcium (?) or another analyte that increases in the winter 
 
 # WATER TEMP ---------------------------------------------------------------
 # dropping sampling frequency plots by month 
@@ -57,6 +156,82 @@ temp_monthly <- ggplot(data = loch_o_chem %>%
   labs(x = "Year", y = "Temperature") +
   theme_pubclean()
 temp_monthly
+
+# re-plot this so that subsampled frequencies are overlain on the same plot 
+
+ggplot(data = loch_o_chem %>%
+                    group_by(MONTH, YEAR) %>%
+                    sample_n(size = 2, replace = FALSE), 
+       aes(x = DATE, y = TEMP)) +
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", colour = "deeppink") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+
+# I'm thinking that maybe I write the subsampled points into another data frame? 
+  # new_df <- loch_o_chem %>%
+  # select(DATE, TEMP, MONTH, YEAR) %>%
+  # group_by(MONTH, YEAR) %>%
+  # sample_n(size = 2, replace = FALSE)
+
+# 3 data frames - full, biweekly, monthly 
+
+weekly <- loch_o_chem %>%
+  mutate(dataset_id = "weekly")
+
+biweekly <- loch_o_chem %>% 
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 2, replace = FALSE) %>%
+  mutate(dataset_id = "biweekly")
+
+monthly <- loch_o_chem %>% 
+  group_by(MONTH, YEAR) %>%
+  sample_n(size = 1, replace = FALSE) %>%
+  mutate(dataset_id = "monthly")
+
+full_data <- bind_rows(weekly, biweekly, monthly)
+
+temp_test <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm") +
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Temperature") +
+  theme_pubclean()
+temp_test
+
+# the problem here is that this column will be shorter than the others which is going to 
+  # cause dataframe grouping issues 
+
+# nov - apr = winter 
+# apr 15 - jun 15 = spring (peak snowmelt)
+# july 15 - sep 15 = baseflow
+# nov 15 - apr 15 = winter (ice reliably on lake, low flow)
+
+# winter, snowmelt, & baseflow 
+
+# use water year function 
+  # hydro day of year 
+
+temp_layers <- ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
+  geom_smooth(method = "lm", colour = "red") + 
+  stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "red") + 
+  labs(x = "Year", y = "Temperature") + 
+  theme_pubclean()
+temp_layers
+
 
 # will pull linear results from the linear_results tibble for each solute 
 
