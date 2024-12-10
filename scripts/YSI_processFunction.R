@@ -44,7 +44,7 @@ process_ysi <- function(file_path) {
     # Fix date formatting
     mutate(date_time = mdy_hms(date_time)) %>%
     # Pivot to long format
-    pivot_longer(cols = c(chla:barometer), names_to = "paramter") %>%
+    pivot_longer(cols = c(chla:barometer), names_to = "paramter") 
   # Return new dataframe
   return(data)
 }
