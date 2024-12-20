@@ -44,38 +44,12 @@ process_ysi <- function(file_path) {
     # Fix date formatting
     mutate(date_time = mdy_hms(date_time)) %>%
     # Pivot to long format
-    pivot_longer(cols = c(chla:barometer), names_to = "paramter") 
+    pivot_longer(cols = c(chla:barometer), names_to = "parameter") 
   # Return new dataframe
   return(data)
 }
 
 # Example below
 result_df <- process_ysi("Data/On Thin Ice/01_YSI/LOC/raw/Loch_Inlet_20240709.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
