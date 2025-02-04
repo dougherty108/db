@@ -27,7 +27,8 @@ pacman::p_load("lubridate",
                "ggthemes",
                "huxtable",
                "fs",
-               "dataRetrieval")
+               "dataRetrieval",
+               "imputeTS")
 
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
