@@ -245,6 +245,22 @@ combined_data_clean %>%
   geom_point(alpha=0.1)+
   facet_wrap(water_year~., scales="free_x")
 
+
+#Export data for Bryan from The Loch.
+# BGdata <- combined_data_clean %>%
+#   filter(lake_id == "loch" & flag == "under water") 
+# 
+# BGdata %>%
+#   mutate(year=year(date_time),
+#          date=date(date_time),
+#          doy_wy=hydro.day(date),
+#          water_year=calcWaterYear(date))%>%
+#   ggplot(aes(x=date_time, y=temp, color=depth))+
+#   geom_point(alpha=0.1)+
+#   facet_wrap(~water_year, scales="free_x")
+# 
+# write_csv(BGdata, "data_export/loch_minidot_WY2017-2024.csv")
+
 # Options for flagging data later -----------------------------------------
 
 #IAO to AGK -- I found this resource on stackoverflow that I think should work
