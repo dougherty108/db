@@ -1,9 +1,12 @@
 # creating new script for figures, etc. for abridged lvws sensitivity analysis/mtnclimn talk -AGK 240827
 
-# source library and intermediate script 
+# source library and intermediate script -------------------------------------
 source("scripts/00_libraries.R")
 source("scripts/04_analysis_intermediate.R")
+# this generates more than what is needed but isn't a priority for being cleaned right now. 
+  # what's important is that loch_o_chem comes from this
 
+# build and modify df --------------------------------------------------------
 # convert year to water year 
 loch_o_chem$WATER_YEAR <- calcWaterYear(loch_o_chem$DATE)
 
@@ -15,9 +18,16 @@ loch_o_chem$DAY_YEAR <- yday(loch_o_chem$DATE)
 # july 15 - sep 15 = baseflow
 # nov 15 - apr 15 = winter (ice reliably on lake, low flow)
 
-# need to rethink how I'm parsing winter - choosing values for a range that doesn't exist
+# group by water year and parse seasons (spring, baseflow, and winter)
 
-loch_o_chem <- loch_o_chem %>%
+# this needs to be written to a separate dataframe rather than loch_o_chem 
+  # such that variables can still be plotted monthly 
+
+# curious if I can do this after subsampling/building second df? 
+
+# create seasonal dataframe 
+  # the issue with this is that it does not include subsampled dataframes. 
+loch_o_chem_season <- loch_o_chem %>%
   group_by(WATER_YEAR) %>%
   mutate(season = case_when(
     DAY_YEAR >= 105 & DAY_YEAR <= 166 ~ "Spring", 
@@ -26,33 +36,138 @@ loch_o_chem <- loch_o_chem %>%
   filter(!is.na(season))
 
 # build subsampled dataframe 
-weekly <- loch_o_chem %>%
-  mutate(dataset_id = "weekly")
+  # three intermediate dataframes (weekly/full record, biweekly, and monthly), specify sampling freq
+Weekly <- loch_o_chem %>%
+  mutate(dataset_id = "Weekly")
 
-biweekly <- loch_o_chem %>% 
+Biweekly <- loch_o_chem %>% 
   group_by(MONTH, WATER_YEAR) %>%
   sample_n(size = 2, replace = FALSE) %>%
-  mutate(dataset_id = "biweekly")
+  mutate(dataset_id = "Biweekly")
 
-monthly <- loch_o_chem %>% 
+Monthly <- loch_o_chem %>% 
   group_by(MONTH, WATER_YEAR) %>%
   sample_n(size = 1, replace = FALSE) %>%
-  mutate(dataset_id = "monthly")
+  mutate(dataset_id = "Monthly")
 
-full_data <- bind_rows(weekly, biweekly, monthly) %>%
-  mutate(season = factor(season,
-                         levels=c("Winter","Spring","Baseflow")),#Rearrange so they plot in chronological order
-         dataset_id = factor(dataset_id,
-                         levels=c("weekly","biweekly","monthly")))#Rearrange so they plot from highest to lowest freq. 
+# combine subsampled dfs into full df 
+# convert dataset_id (sampling frequency) to a factor, rearrange so they plot in order
+  # this is not seasonally grouped! 
+  # this is used for plotting when grouped by month. 
+full_data <- bind_rows(Weekly, Biweekly, Monthly) %>%
+  mutate(dataset_id = factor(dataset_id,
+                         levels=c("Weekly","Biweekly","Monthly"))) 
 
-datasetCols <- c("red","blue","green") #You can mess with these, maybe find a nice diverging colorblind friendly scheme 
+# create seasonally grouped df
+  # this is used for plotting when grouped by season. 
+data_seasons <- full_data %>%
+  group_by(WATER_YEAR) %>%
+  mutate(season = case_when(
+    DAY_YEAR >= 105 & DAY_YEAR <= 166 ~ "Spring", 
+    DAY_YEAR >= 196 & DAY_YEAR <= 258 ~ "Baseflow", 
+    DAY_YEAR >= 319 & DAY_YEAR <= 365 | DAY_YEAR >= 0 & DAY_YEAR < 105 ~ "Winter")) %>%
+  filter(!is.na(season)) %>%
+  mutate(dataset_id = factor(dataset_id,
+                         levels=c("Weekly","Biweekly","Monthly"))) %>%
+  mutate(season = factor(season, 
+                         levels = c("Winter", "Spring", "Baseflow")))
 
+# set colors for plotting
+datasetCols <- c("deepskyblue3","darkorange2","violetred") 
+
+# create month labels for plotting by month 
+month_labels <- c("1" = "January", "2" = "February", "3" = "March", "4" = "April", 
+                  "5" = "May", "6" = "June", "7" = "July", "8" = "August",
+                  "9" = "September", "10" = "October", "11" = "November", "12" = "December")
+
+# plot temperature ----------------------------------------------------------
 # plot temperature by season with subsampling on same plot 
 temp_seasons <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
   geom_point() + 
   #geom_line() + 
   facet_wrap(~ season, scales = "free") +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")), #slope rather than r^2
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
+  labs(x = "Year", y = "Water temperature (°C)") +
+  scale_y_continuous(limits = c(0, 16)) +
+  theme_pubclean() + 
+  theme(legend.position = "bottom") 
+temp_seasons
+
+# nitrate
+nitrate_linearplot <- ggplot(data = full_data, aes(x = DATE, y = NO3_calc, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")), #slope rather than r^2
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
+  labs(x = "Year", y = "Nitrate") +
+  #scale_y_continuous(limits = c(0, 16)) +
+  theme_pubclean() + 
+  theme(legend.position = "bottom") 
+nitrate_linearplot
+
+# plot nitrate by season 
+nitrate_seasons <- ggplot(data = data_seasons, aes(x = DATE, y = NO3_calc, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")), #slope rather than r^2
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
+  labs(x = "Year", y = "Nitrate") +
+  #scale_y_continuous(limits = c(0, 16)) +
+  theme_pubclean() + 
+  theme(legend.position = "bottom") 
+nitrate_seasons
+
+
+# save plot 
+ggsave("temp_seasons.png", plot = temp_seasons, width = 14, height = 8, units = "in")
+
+# plot each frequency as a separate layer 
+# weekly 
+temp_weekly <- ggplot(data = full_data %>%
+                        filter(dataset_id == "weekly"), aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+#Fix x-axis labels so consistent across panels
+  scale_y_continuous(limits = c(0, 16)) +
+  labs(x = "Year", y = "Water temperature (°C)") +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+temp_weekly
+
+ggsave("temp_weekly.png", plot = temp_weekly, width = 14, height = 8, units = "in")
+
+# weekly and biweekly 
+temp_biweekly <- ggplot(data = full_data %>%
+                        filter(dataset_id == "biweekly" | dataset_id == "weekly"), aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
   scale_color_manual(values=datasetCols)+
   scale_fill_manual(values=datasetCols)+
   #geom_smooth(method = "gam", colour = "purple") +
@@ -60,56 +175,423 @@ temp_seasons <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
   scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
   labs(x = "Year", y = "Water temperature (°C)") +
-  theme_pubclean()
-temp_seasons
+  scale_y_continuous(limits = c(0, 16)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+temp_biweekly
 
+ggsave("temp_biweekly.png", plot = temp_biweekly, width = 14, height = 8, units = "in")
+
+# not sure if I need this one - will just overlay plot with all three. 
+temp_monthly <- ggplot(data = full_data %>%
+                        filter(dataset_id == "monthly"), aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+ #Fix x-axis labels so consistent across panels
+  labs(x = "Year", y = "Water temperature (°C)") +
+  theme_pubclean() +
+  scale_y_continuous(limits = c(0, 16)) 
+temp_monthly
+
+# plot temp by month 
+temp_monthly_linear <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  labs(x = "Year", y = "Water temperature (ºC)") +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_monthly_linear
+ggsave("temp_monthly_linear.png", plot = temp_monthly_linear, width = 14, height = 8, units = "in")
+
+# layer weekly and biweekly 
+   # note - sampling frequencies have been capitalized. make sure they're being called correctly
+temp_monthly_linear_weekly <- ggplot(data = full_data %>%
+                                       filter(dataset_id == "Weekly"), aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  labs(x = "Year", y = "Water temperature (ºC)") +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_monthly_linear_weekly
+ggsave("temp_monthly_linear_weekly.png", plot = temp_monthly_linear_weekly, width = 14, height = 8, units = "in")
+
+temp_monthly_linear_biweekly <- ggplot(data = full_data %>%
+                                       filter(dataset_id == "Weekly" | dataset_id == "Biweekly"), aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id, fill=dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  labs(x = "Year", y = "Water temperature (ºC)") +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_monthly_linear_biweekly
+ggsave("temp_monthly_linear_biweekly.png", plot = temp_monthly_linear_biweekly, width = 14, height = 8, units = "in")
+
+# plot ANC -------------------------------------------------------------------
 # run above code but modify for ANC
+# all sampling frequencies 
 anc_seasons <- ggplot(data = full_data, aes(x = DATE, y = ANC, group = dataset_id, colour = dataset_id)) +
   geom_point() + 
   #geom_line() + 
   facet_wrap(~ season, scales = "free") +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
   #geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
+  labs(x = "Year", y = "ANC") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 250)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
 anc_seasons
 
-# calcium
-ca_seasons <- ggplot(data = full_data, aes(x = DATE, y = CA, group = dataset_id, colour = dataset_id)) +
+ggsave("anc_seasons.png", plot = anc_seasons, width = 14, height = 8, units = "in")
+
+anc_weekly <- ggplot(data = full_data %>%
+                       filter(dataset_id == "weekly"), aes(x = DATE, y = ANC, group = dataset_id, colour = dataset_id)) +
   geom_point() + 
   #geom_line() + 
   facet_wrap(~ season, scales = "free") +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
   #geom_smooth(method = "gam", colour = "purple") +
           stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
                        p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
+  labs(x = "Year", y = "ANC") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 250)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+anc_weekly
+
+ggsave("anc_weekly.png", plot = anc_weekly, width = 14, height = 8, units = "in")
+
+anc_biweekly <- ggplot(data = full_data %>%
+                       filter(dataset_id == "weekly" | dataset_id == "biweekly"), aes(x = DATE, y = ANC, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "ANC") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 250)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+anc_biweekly
+
+ggsave("anc_biweekly.png", plot = anc_biweekly, width = 14, height = 8, units = "in")
+
+# plot calcium -----------------------------------------------------------
+# calcium
+ca_seasons <- ggplot(data = data_seasons, aes(x = DATE, y = CA, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Calcium") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 3.5)) +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
 ca_seasons
+ggsave("ca_seasons.png", plot = ca_seasons, width = 14, height = 8, units = "in")
 
-# density plots 
-temp_density_seasons <- ggplot(full_data, aes(TEMP, color=dataset_id, fill=dataset_id))+
+ca_weekly <- ggplot(data = data_seasons %>%
+                        filter(dataset_id == "Weekly"), aes(x = DATE, y = CA, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Calcium") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 3.5)) +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+ca_weekly
+
+ggsave("ca_weekly.png", plot = ca_weekly, width = 14, height = 8, units = "in")
+
+ca_biweekly <- ggplot(data = data_seasons %>%
+                        filter(dataset_id == "Weekly" | dataset_id == "Biweekly"), aes(x = DATE, y = CA, group = dataset_id, colour = dataset_id)) +
+  geom_point() + 
+  #geom_line() + 
+  facet_wrap(~ season, scales = "free") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols)+
+  #geom_smooth(method = "gam", colour = "purple") +
+          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
+                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
+  labs(x = "Year", y = "Calcium") +
+  scale_x_date(limits= as.Date(c("2000-01-01", "2020-01-01"), expand = c(0,0)))+
+  scale_y_continuous(limits = c(0, 3.5)) +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+ca_biweekly
+
+ggsave("ca_biweekly.png", plot = ca_biweekly, width = 14, height = 8, units = "in")
+
+# density plots -----------------------------------------------------------
+# fix y axis 
+
+# curious about how these would look layered w frequency (similar to above)
+
+# update this with correct dataframe to run on seasons 
+temp_density <- ggplot(full_data, aes(TEMP, color=dataset_id, fill=dataset_id))+
     geom_density(alpha=0.2)+
   facet_wrap(~season, scales="free_y")+
-  labs(x="Temperature (ºC)",
-       title="All samples")
-temp_density_seasons
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+temp_density
+ggsave("temp_density.png", plot = temp_density, width = 14, height = 8, units = "in")
 
-anc_density_seasons <- ggplot(full_data, aes(ANC, color=dataset_id, fill=dataset_id))+
+temp_density_weekly <- ggplot(full_data %>%
+                         filter(dataset_id == "weekly"), aes(TEMP, color=dataset_id, fill=dataset_id))+
     geom_density(alpha=0.2)+
   facet_wrap(~season, scales="free_y")+
-  labs(x="Temperature (ºC)",
-       title="All samples")
-anc_density_seasons
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean(base_size = 18) +
+  theme(legend.position = "bottom")
+temp_density_weekly
+ggsave("temp_density_weekly.png", plot = temp_density_weekly, width = 14, height = 8, units = "in")
 
-ca_density_seasons <- ggplot(full_data, aes(CA, color=dataset_id, fill=dataset_id))+
+temp_density_biweekly <- ggplot(full_data %>%
+                         filter(dataset_id == "weekly" | dataset_id == "biweekly"), aes(TEMP, color=dataset_id, fill=dataset_id))+
     geom_density(alpha=0.2)+
   facet_wrap(~season, scales="free_y")+
-  labs(x="Temperature (ºC)",
-       title="All samples")
-ca_density_seasons
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+temp_density_biweekly
+ggsave("temp_density_biweekly.png", plot = temp_density_biweekly, width = 14, height = 8, units = "in")
+
+# plot temp density by month to match other figures 
+  # plot by layer as well
+  # need to relabel months
+temp_density_bymonth <- ggplot(full_data, aes(TEMP, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y", labeller = as_labeller(month_labels))+
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_density_bymonth
+ggsave("temp_density_bymonth.png", plot = temp_density_bymonth, width = 14, height = 8, units = "in")
+
+temp_density_bymonth_weekly <- ggplot(full_data %>%
+                                        filter(dataset_id == "Weekly"), aes(TEMP, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y", labeller = as_labeller(month_labels))+
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_density_bymonth_weekly
+ggsave("temp_density_bymonth_weekly.png", plot = temp_density_bymonth_weekly, width = 14, height = 8, units = "in")
+
+temp_density_bymonth_biweekly <- ggplot(full_data %>%
+                                        filter(dataset_id == "Weekly" | dataset_id == "Biweekly"), aes(TEMP, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y", labeller = as_labeller(month_labels))+
+  labs(x="Water temperature (ºC)")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+temp_density_bymonth_biweekly
+ggsave("temp_density_bymonth_biweekly.png", plot = temp_density_bymonth_biweekly, width = 14, height = 8, units = "in")
+
+
+anc_density <- ggplot(full_data, aes(ANC, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="ANC") +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+anc_density
+ggsave("anc_density.png", plot = anc_density, width = 14, height = 8, units = "in")
+
+anc_density_weekly <- ggplot(full_data %>%
+                        filter(dataset_id == "weekly"), aes(ANC, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="ANC") +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+anc_density_weekly
+ggsave("anc_density_weekly.png", plot = anc_density_weekly, width = 14, height = 8, units = "in")
+
+anc_density_biweekly <- ggplot(full_data %>%
+                        filter(dataset_id == "weekly" | dataset_id == "biweekly"), aes(ANC, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="ANC") +
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+anc_density_biweekly
+ggsave("anc_density_biweekly.png", plot = anc_density_biweekly, width = 14, height = 8, units = "in")
+
+ca_density <- ggplot(data_seasons, aes(CA, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Calcium") +
+    scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+ca_density
+ggsave("ca_density.png", plot = ca_density, width = 14, height = 8, units = "in")
+
+ca_density_weekly <- ggplot(data_seasons %>%
+                              filter(dataset_id == "Weekly"), aes(CA, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Calcium") +
+    scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+ca_density_weekly
+ggsave("ca_density_weekly.png", plot = ca_density_weekly, width = 14, height = 8, units = "in")
+
+ca_density_biweekly <- ggplot(data_seasons %>%
+                                filter(dataset_id == "Weekly" | dataset_id == "Biweekly"), aes(CA, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Calcium") +
+    scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+ca_density_biweekly
+ggsave("ca_density_biweekly.png", plot = ca_density_biweekly, width = 14, height = 8, units = "in")
+
+nitrate_density <- ggplot(full_data, aes(NO3_calc, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~MONTH, scales="free_y")+
+  labs(x="Nitrate")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom")
+nitrate_density
+ggsave("ca_density_biweekly.png", plot = ca_density_biweekly, width = 14, height = 8, units = "in")
+
+nitrate_density_seasonally <- ggplot(data_seasons, aes(NO3_calc, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Nitrate")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+nitrate_density_seasonally
+ggsave("nitrate_density_seasonally.png", plot = nitrate_density_seasonally, width = 14, height = 8, units = "in")
+
+nitrate_density_weekly <- ggplot(data_seasons %>%
+                                   filter(dataset_id == "Weekly"), aes(NO3_calc, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Nitrate")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+nitrate_density_weekly
+ggsave("nitrate_density_weekly.png", plot = nitrate_density_weekly, width = 14, height = 8, units = "in")
+
+nitrate_density_biweekly <- ggplot(data_seasons %>%
+                                   filter(dataset_id == "Weekly" | dataset_id == "Biweekly"), aes(NO3_calc, color=dataset_id, fill=dataset_id))+
+    geom_density(alpha=0.2)+
+  facet_wrap(~season, scales="free_y")+
+  labs(x="Nitrate")+ 
+  scale_color_manual(values=datasetCols)+
+  scale_fill_manual(values=datasetCols) +
+  #scale_y_continuous(limits = c(0,1)) +
+  theme_pubclean() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+nitrate_density_biweekly
+ggsave("nitrate_density_biweekly.png", plot = nitrate_density_biweekly, width = 14, height = 8, units = "in")
+
+
+
 
 
 # fix water year - data retrieval, water year function 
@@ -119,663 +601,8 @@ ca_density_seasons
 
 # updated 240911 - only temp, ANC, and calcium (?) or another analyte that increases in the winter 
 
-# WATER TEMP ---------------------------------------------------------------
-# dropping sampling frequency plots by month 
-  # full record
-temp_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
-temp_full
-# pulled pretty much straight from the rmarkdown doc w minimal issue. getting some odd error about non-finite & values 
-  # outside the scale range - will look further into this later
-# has a really weird aspect ratio when zoomed - could be a formatting relic from the rmarkdown doc 
-temp_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = TEMP)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
-temp_biweekly
-
-temp_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = TEMP)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
-temp_monthly
-
-# re-plot this so that subsampled frequencies are overlain on the same plot 
-
-ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = TEMP)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
-
-# I'm thinking that maybe I write the subsampled points into another data frame? 
-  # new_df <- loch_o_chem %>%
-  # select(DATE, TEMP, MONTH, YEAR) %>%
-  # group_by(MONTH, YEAR) %>%
-  # sample_n(size = 2, replace = FALSE)
-
-# 3 data frames - full, biweekly, monthly 
-
-weekly <- loch_o_chem %>%
-  mutate(dataset_id = "weekly")
-
-biweekly <- loch_o_chem %>% 
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  mutate(dataset_id = "biweekly")
-
-monthly <- loch_o_chem %>% 
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  mutate(dataset_id = "monthly")
-
-full_data <- bind_rows(weekly, biweekly, monthly)
-
-temp_test <- ggplot(data = full_data, aes(x = DATE, y = TEMP, group = dataset_id, colour = dataset_id)) +
-  geom_point() + 
-  #geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4) + 
-  labs(x = "Year", y = "Temperature") +
-  theme_pubclean()
-temp_test
-
-# the problem here is that this column will be shorter than the others which is going to 
-  # cause dataframe grouping issues 
-
-# nov - apr = winter 
-# apr 15 - jun 15 = spring (peak snowmelt)
-# july 15 - sep 15 = baseflow
-# nov 15 - apr 15 = winter (ice reliably on lake, low flow)
-
-# winter, snowmelt, & baseflow 
-
-# use water year function 
-  # hydro day of year 
-
-temp_layers <- ggplot(data = loch_o_chem, aes(x = DATE, y = TEMP)) + 
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) + 
-  geom_smooth(method = "lm", colour = "red") + 
-  stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "red") + 
-  labs(x = "Year", y = "Temperature") + 
-  theme_pubclean()
-temp_layers
-
-
-# will pull linear results from the linear_results tibble for each solute 
-
-# density distribution 
-  # combine all samples into new dataframe
-  # some of these "samples" are values that were selected with reduced sampling frequency 
-  # being added to the same df & indicating which sampling frequency they came from 
-temp_all <- bind_rows(loch_o_chem %>%
-  select(TEMP, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(TEMP) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(TEMP) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-# density dist for all samples 
-temp_density <- ggplot(temp_all, aes(TEMP, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="Temperature (ºC)",
-       title="All samples")
-temp_density
-
-# density dist by month 
-temp_density_monthly <- ggplot(temp_all, aes(TEMP, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="Temperature (ºC)",
-       title="All samples")
-temp_density_monthly
-# again, works with minimal manipulation from the rmarkdown doc but formatting is weird in zoom window 
-
-# ridgelines 
-
-# I swear I had a full version of this with all seasons. will need to find or rewrite. 
-
-# whole year
-temp_ridgeline <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = TEMP, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#c26f8b",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="Temperature (ºC)",
-       y="Year",
-       title="Year-round samples")
-temp_ridgeline
-
-# summer only
-temp_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = TEMP, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="Temperature (ºC)",
-       y="Year",
-       title="Summer only (July-August)")
-temp_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# spring only 
-
-# ANC --------------------------------------------------------------------
-  # full record
-anc_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = ANC)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-anc_full
-# some values outside the scale range; fewer than temp
-
-# biweekly 
-anc_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = ANC)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-anc_biweekly
-
-# monthly
-anc_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = ANC)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "ANC") +
-  theme_pubclean()
-anc_monthly
-
-# density distribution 
-# combine all data into one df for ANC
-anc_all <- bind_rows(loch_o_chem %>%
-  select(ANC, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(ANC) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(ANC) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-
-# plot all samples 
-anc_density <- ggplot(anc_all, aes(ANC, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="ANC",
-       title="All samples")
-anc_density
-
-# plot by month 
-anc_density_monthly <- ggplot(anc_all, aes(ANC, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="ANC",
-       title="All samples")
-anc_density_monthly
-
-# ridgelines 
-# again, will need all seasons for this. will write later - AGK 240828
-anc_ridgeline <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = ANC, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#c26f8b",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="ANC",
-       y="Year",
-       title="Year-round samples")
-anc_ridgeline
-# unknown parameters, values outside scale range, etc etc
-  # look more into this later - AGK 
-
-anc_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = ANC, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="ANC",
-       y="Year",
-       title="Summer only (July-August)")
-anc_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# spring only
-
-# pH -------------------------------------------------------------------
-# this is lab pH rather than field - I believe we deemed this record more reliable 
-# full record
-pH_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = LABPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "pH (lab)") +
-  theme_pubclean()
-pH_full
-
-pH_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = LABPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (lab)") +
-  theme_pubclean()
-pH_biweekly
-
-pH_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = LABPH)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "pH (lab)") +
-  theme_pubclean()
-pH_monthly
-
-# density distribution 
-pH_all <- bind_rows(loch_o_chem %>%
-  select(LABPH, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(LABPH) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(LABPH) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-
-# plot all samples 
-pH_density <- ggplot(pH_all, aes(LABPH, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="pH",
-       title="All samples")
-pH_density
-
-# plot by month
-pH_density_monthly <- ggplot(pH_all, aes(LABPH, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="pH",
-       title="All samples")
-pH_density_monthly
-
-# ridgelines 
-pH_ridgeline <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = LABPH, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#c26f8b",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="pH",
-       y="Year",
-       title="Year-round samples")
-pH_ridgeline
-
-pH_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = LABPH, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="pH",
-       y="Year",
-       title="Summer only (July-August)")
-pH_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# summer only 
-
-# CONDUCTIVITY -------------------------------------------------------
-# full record 
-  # this is also lab rather than field. 
-cond_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = LABCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (lab)") +
-  theme_pubclean()
-cond_full
-
-# biweekly 
-cond_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = LABCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (lab)") +
-  theme_pubclean()
-cond_biweekly
-
-cond_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = LABCOND)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Conductivity (lab)") +
-  theme_pubclean()
-cond_monthly 
-
-# density distributions 
-# combine all into df
-lcond_all <- bind_rows(loch_o_chem %>%
-  select(LABCOND, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(LABCOND) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(LABCOND) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-
-# density dist for all samples  
-cond_density <- ggplot(lcond_all, aes(LABCOND, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="Conductivity",
-       title="All samples")
-cond_density
-
-# monthly density dist
-cond_density_monthly <- ggplot(lcond_all, aes(LABCOND, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="Conductivity",
-       title="All samples")
-cond_density_monthly
-
-# ridgelines 
-cond_ridgeline <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = LABCOND, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#c26f8b",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="Conductivity",
-       y="Year",
-       title="Year-round samples")
-cond_ridgeline
-
-# summer only 
-cond_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = LABCOND, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="Conductivity",
-       y="Year",
-       title="Summer only (July-August)")
-cond_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# spring only 
-
-# NITRATE -------------------------------------------------------------
-# full record 
-nitrate_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = NO3_calc)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "Nitrate") +
-  theme_pubclean()
-nitrate_full
-
-# biweekly 
-nitrate_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = NO3_calc)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Nitrate") +
-  theme_pubclean()
-nitrate_biweekly
-
-# monthly 
-nitrate_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = NO3_calc)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "Nitrate") +
-  theme_pubclean()
-nitrate_monthly 
-
-# density distributions
-NO3_all <- bind_rows(loch_o_chem %>%
-  select(NO3, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(NO3) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(NO3) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-
-# density dist for all samples 
-nitrate_density <- ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="Nitrate",
-       title="All samples")
-nitrate_density 
-
-# density dist by month 
-nitrate_density_monthly <- ggplot(NO3_all, aes(NO3, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="Nitrate",
-       title="All samples")
-nitrate_density_monthly 
-
-# ridgelines 
-# whole year 
-nitrate_ridgeline <- ggplot(water_chem %>%
+# ridgeline plots --------------------------------------------------------
+ggplot(water_chem %>%
          filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
   geom_density_ridges(
     scale = 7,
@@ -788,167 +615,21 @@ nitrate_ridgeline <- ggplot(water_chem %>%
   labs(x="Nitrate",
        y="Year",
        title="Year-round samples")
-nitrate_ridgeline
 
-# summer only 
-nitrate_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = NO3_calc, y = YEAR, group=YEAR)) +
+nitrate_ridgeline <- ggplot(data = full_data, aes(x = NO3_calc, y = YEAR, group = YEAR)) +
   geom_density_ridges(
     scale = 7,
     size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
+    rel_min_height = 0.01, 
+    alpha = 0.4, 
+    fill = "deepskyblue3")+
+  scale_y_reverse(breaks = c(seq(2020, 1995, -5)))+
   theme_minimal()+
   labs(x="Nitrate",
-       y="Year",
-       title="Summer only (July-August)")
-nitrate_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# spring only 
-
-# TDN --------------------------------------------------------------------
-# full record 
-tdn_full <- ggplot(data = loch_o_chem, aes(x = DATE, y = TDN)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") +
-  labs(x = "Year", y = "TDN") +
-  theme_pubclean()
-tdn_full
-
-# biweekly 
-tdn_biweekly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 2, replace = FALSE), 
-       aes(x = DATE, y = TDN)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "TDN") +
-  theme_pubclean()
-tdn_biweekly 
-
-# monthly 
-tdn_monthly <- ggplot(data = loch_o_chem %>%
-                    group_by(MONTH, YEAR) %>%
-                    sample_n(size = 1, replace = FALSE), 
-       aes(x = DATE, y = TDN)) +
-  geom_point() + 
-  geom_line() + 
-  facet_wrap(~ MONTH, scales = "free", labeller = as_labeller(month_labels)) +
-  geom_smooth(method = "lm", colour = "deeppink") +
-  #geom_smooth(method = "gam", colour = "purple") +
-          stat_cor(aes(label = paste(after_stat(rr.label), ..p.label.., sep = "~`,`~")),
-                       p.accuracy = 0.001, r.accuracy = 0.01, label.x.npc = 0.4, color = "deeppink") + 
-  labs(x = "Year", y = "TDN") +
-  theme_pubclean()
-tdn_monthly
-
-# density distribution 
-  # combine all into new df
-tdn_all <- bind_rows(loch_o_chem %>%
-  select(TDN, MONTH, YEAR) %>%
-  mutate(frequency = "weekly"),  
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 2, replace = FALSE) %>%
-  select(TDN) %>%
-  mutate(frequency = "bi-monthly"),
-loch_o_chem %>%
-  group_by(MONTH, YEAR) %>%
-  sample_n(size = 1, replace = FALSE) %>%
-  select(TDN) %>%
-  mutate(frequency = "monthly")) %>%
-  #Arrange the frequency levels from most to least frequent
-  mutate(frequency = factor(frequency,
-                            levels=c("weekly",
-                                     "bi-monthly",
-                                     "monthly"))) 
-
-# density dist 
-tdn_density <- ggplot(tdn_all, aes(TDN, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  labs(x="TDN",
-       title="All samples")
-tdn_density
-
-# density dist by month 
-tdn_density_monthly <- ggplot(tdn_all, aes(TDN, color=frequency, fill=frequency))+
-    geom_density(alpha=0.2)+
-  facet_wrap(~MONTH, scales="free_y")+
-  labs(x="TDN",
-       title="All samples")
-tdn_density_monthly
-
-# ridgelines 
-# whole year 
-tdn_ridgeline <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" & TYPE=="NORMAL"), aes(x = TDN, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#c26f8b",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="TDN",
-       y="Year",
-       title="Year-round samples")
-tdn_ridgeline
-
-# summer only 
-tdn_ridgeline_summer <- ggplot(water_chem %>%
-         filter(SITE=="LOCH.O" &
-                  TYPE=="NORMAL" &
-                  MONTH %in% c(7,8)), aes(x = TDN, y = YEAR, group=YEAR)) +
-  geom_density_ridges(
-    scale = 7,
-    size = 0.25,
-    rel_min_height = 0.01, #You can comment this out to keep the long tails
-    fill = "#b2df8a",
-    alpha = 0.4)+
-  scale_y_reverse(breaks = c(seq(2022, 1982, -4)))+
-  theme_minimal()+
-  labs(x="TDN",
-       y="Year",
-       title="Summer only (July-August)")
-tdn_ridgeline_summer
-
-# fall only 
-
-# winter only 
-
-# spring only 
-
-
-
-
-
-
-
-
-
-
-
-
-
+       y="Year") +
+  theme_pubclean(base_size = 18)
+nitrate_ridgeline
+ggsave("nitrate_ridgeline.png", plot = nitrate_ridgeline, width = 12, height = 8, units = "in")
 
 
 
