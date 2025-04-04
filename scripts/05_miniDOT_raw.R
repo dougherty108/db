@@ -238,9 +238,9 @@ combined_data_clean %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  # filter(temp < 20) %>%
-  # filter(water_year %in% c('2024')) %>%
-  ggplot(aes(x=date_time, y=temp, color=depth))+
+  filter(temp < 20) %>%
+  filter(water_year %in% c('2024')) %>%
+  ggplot(aes(x=date_time, y=do_obs, color=depth))+
   geom_point(alpha=0.1)+
   facet_wrap(water_year~., scales="free_x")
 
