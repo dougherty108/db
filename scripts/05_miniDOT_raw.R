@@ -189,7 +189,8 @@ combined_data_clean <- combined_data %>%
                           lake_id == "sky" & date_time > "2022-08-09 09:45:00" & date_time < "2022-08-16 10:00:00" ~ "above water",
                           lake_id == "sky" & date_time > "2023-09-05 12:30:00" & date_time < "2023-09-19 09:15:00" ~ "above water",
                           lake_id == "sky" & date_time > "2024-06-25 08:15:00" ~ "above water",
-                          TRUE ~ "under water"))
+                          TRUE ~ "under water")) %>%
+  mutate(logging_frequency = difftime(date_time, lag(date_time), units = "mins"))
 
 #Visual check the loch (color = flag)
 combined_data_clean %>%
@@ -198,11 +199,9 @@ combined_data_clean %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  # filter(temp < 20) %>%
-  # filter(water_year %in% c('2018')) %>%
-  ggplot(aes(x=date_time, y=temp, color=flag))+
+  ggplot(aes(x=date_time, y=temp, color= depth, shape=flag))+
   geom_point(alpha=0.5)+
-  facet_wrap(water_year~depth, scales="free_x")+
+  facet_wrap(water_year~., scales="free_x")+
   labs(title="The Loch")
 
 #Visual check sky (color = depth, flags removed)
@@ -239,11 +238,27 @@ combined_data_clean %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  # filter(temp < 20) %>%
-  # filter(water_year %in% c('2024')) %>%
-  ggplot(aes(x=date_time, y=temp, color=depth))+
+  filter(temp < 20) %>%
+  filter(water_year %in% c('2024')) %>%
+  ggplot(aes(x=date_time, y=do_obs, color=depth))+
   geom_point(alpha=0.1)+
   facet_wrap(water_year~., scales="free_x")
+
+
+#Export data for Bryan from The Loch.
+# BGdata <- combined_data_clean %>%
+#   filter(lake_id == "loch" & flag == "under water") 
+# 
+# BGdata %>%
+#   mutate(year=year(date_time),
+#          date=date(date_time),
+#          doy_wy=hydro.day(date),
+#          water_year=calcWaterYear(date))%>%
+#   ggplot(aes(x=date_time, y=temp, color=depth))+
+#   geom_point(alpha=0.1)+
+#   facet_wrap(~water_year, scales="free_x")
+# 
+# write_csv(BGdata, "data_export/loch_minidot_WY2017-2024.csv")
 
 # Options for flagging data later -----------------------------------------
 
@@ -435,6 +450,4 @@ df2 %>%
 #Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
 
 # file paths updated, this runs. need to trim based on pull date/time -AGK
-
-
 
