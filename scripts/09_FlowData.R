@@ -2,53 +2,137 @@ source("scripts/00_libraries.R")
 
 # file extension is .dat; comma delimited text files 
 
-# these will ultimately be uploaded as different files w the following naming scheme: 
-  # "Loch_Inlet_299_T_10min_2024XXXX.dat" with readout date in unix format 
+# Data > On Thin Ice > 09_FlowData > LOC_INLET > raw > T_10min
+# T_10min stores actual data (i.e. 10 minute readings)
 
-# I'm thinking it would make sense to write a script that searches the folder for files ending in .dat, 
-  # similar to how miniDOT data are processed. 
+# 1) build database of all existing data (read in all files, bind into one dataframe)
+# 2) write to csv file
+# 3) write function that reads in csv file (10 min database), reads in file to be added, 
+  # modifies file structure, and appends to inlet database
+# 4) data QC? sensor types, what reads what? 
 
-# stored in Data > On Thin Ice > 09_FlowData > LOC_INLET > raw > files
-
-# read in all 10 minute files, code all variables as numeric
-
-# need to trim NAs before coding as numeric 
-
-# read in df
-
-inlet_10min <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/Loch_Inlet_299_T_10min.dat", sep = ",", skip = 4,
-                          header = FALSE) %>%
-  rename(date_time = 1, record = 2, level_feet = 3, temp_pt_C = 4, avg_cond = 5, ct_avg = 6, cond_temp_C = 7) %>%
-  mutate(date_time = ymd_hms(date_time)) # %>%
-  inlet_10min[3:7] <- lapply(inlet_10min[3:7], function(x) as.numeric(x))
-# write function to remove all rows with NAS
-
+# build database ---------------------------------------------------------------
+# read in existing files
+# 20240610 
+inlet_240610 <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20240610.dat", sep = ",", skip = 4,
+                          header = FALSE) %>% # read in file - .dat, comma delimited text file
+  # rename columns - skipping first fews due to file structure. names pulled from full file. 
+  # could drop the record column - essentially just a row number
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  # fix date formatting
+  mutate(date_time = ymd_hms(date_time)) 
 # recode all columns containing data as numeric 
-inlet_10min[3:7] <- lapply(inlet_10min[3:7], function(x) as.numeric(x))
-str(inlet_10min)
+inlet_240610[3:7] <- lapply(inlet_240610[3:7], function(x) as.numeric(x))
 
-# get rid of NAs 
-# yeah this doesn't run whatever 
-inlet_10min[3:7] <- lapply(inlet_10min[3:7], function(x) na.omit(x))
-
-# draft code to read in multiple inlet files/compile 
-
-sky_raw <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/SKY/raw/sky_0.5", regexp = "\\.txt$") %>%
-    purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-    select(1, 3, 4) %>%
-    dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-    mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-    mutate(date_time = as_datetime(`date_time`))), 
-
-
-inlet_10min <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/Loch_Inlet_299_T_10min.dat", sep = ",", skip = 4,
+# 20240730 
+inlet_240730 <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20240730.dat", sep = ",", skip = 4,
                           header = FALSE) %>%
-  rename(date_time = 1, record = 2, level_feet = 3, temp_pt_C = 4, avg_cond = 5, ct_avg = 6, cond_temp_C = 7) %>%
-  mutate(date_time = ymd_hms(date_time))    
-    
-inlet_compile <-
-  fs::dir_ls("Data/On Thin Ice/09_FlowData/LOC_INLET/raw", regexp = "\\.dat$") %>%
-  purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 4, header = FALSE))
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  mutate(date_time = ymd_hms(date_time)) 
+inlet_240730[3:7] <- lapply(inlet_240730[3:7], function(x) as.numeric(x))
+
+# 20240924 
+inlet_240924 <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20240924.dat", sep = ",", skip = 4,
+                          header = FALSE) %>%
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  mutate(date_time = ymd_hms(date_time)) 
+inlet_240924[3:7] <- lapply(inlet_240924[3:7], function(x) as.numeric(x))
+
+# 20250321 
+inlet_250321 <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20250321.dat", sep = ",", skip = 4,
+                          header = FALSE) %>%
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  mutate(date_time = ymd_hms(date_time)) 
+inlet_250321[3:7] <- lapply(inlet_250321[3:7], function(x) as.numeric(x))
+
+#inlet_db <- bind_rows(inlet_240610, inlet_240730, inlet_240924, inlet_250321)
+inlet_db <- bind_rows(inlet_240610, inlet_240730, inlet_240924)
+
+# write full dataframe to csv
+write_csv(inlet_db, "Data/On Thin Ice/09_FlowData/LOC_INLET/export/inlet_db.csv")
+
+# data adding function ---------------------------------------------------------
+# read in existing database 
+inlet_db1 <- read.csv("Data/On Thin Ice/09_FlowData/LOC_INLET/export/inlet_db.csv") %>%
+  # fix date formatting, not preserved with exporting
+  mutate(date_time = ymd_hms(date_time)) 
+
+# read in new data - same as above
+# will need to modify this when writing into a function such that it's file name agnostic
+new_data <- read.table("Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20250321.dat", sep = ",", skip = 4,
+                          header = FALSE) %>%
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  mutate(date_time = ymd_hms(date_time)) 
+# recode all columns containing data as numeric 
+new_data[3:7] <- lapply(new_data[3:7], function(x) as.numeric(x))
+str(new_data)
+
+# bind to dataframe of existing data
+inlet_db2 <- bind_rows(inlet_db1, new_data)
+
+# write function 
+# input == file_path, read in file with specs above, read in existing db, append input data 
+
+# inputs are file1 and file2 - file1 == existing inlet database, file2 == data to be added
+inlet_function <- function(file1, file2) {
+  # read in existing database file
+  inlet_db1 <- read.csv(file1) %>%
+  mutate(date_time = ymd_hms(date_time))
+  # read in new data and modify dataframe
+  new_data <- new_data <- read.table(file2, sep = ",", skip = 4, header = FALSE) %>%
+  rename(date_time = 1, record = 2, level_feet = 3, temp_c_pt_avg = 4, avg_cond = 5, ct_avg = 6, temp_c_sct_avg = 7) %>%
+  mutate(date_time = ymd_hms(date_time)) 
+  # recode all columns containing data as numeric 
+  new_data[3:7] <- lapply(new_data[3:7], function(x) as.numeric(x))
+  # combine into one dataframe
+  test_inlet <- bind_rows(inlet_db1, new_data)
+  write_csv(test_inlet, "Data/On Thin Ice/09_FlowData/LOC_INLET/export/inlet_full.csv")
+}
+
+inlet_function("Data/On Thin Ice/09_FlowData/LOC_INLET/export/inlet_db.csv", "Data/On Thin Ice/09_FlowData/LOC_INLET/raw/T_10min/Loch_Inlet_299_T_10min_20250321.dat")
+
+
+
+
+# plot data --------------------------------------------------------------------
+inlet_10min_db %>%
+  ggplot(aes(x = date_time, y = temp_c_pt_avg)) + 
+  geom_point() + 
+  geom_line()
+
+inlet_10min_db %>%
+  ggplot(aes(x = date_time, y = avg_cond)) + 
+  geom_point() + 
+  geom_line()
+
+inlet_10min_db %>%
+  ggplot(aes(x = date_time, y = ct_avg)) + 
+  geom_point() + 
+  geom_line()
+
+inlet_10min_db %>%
+  ggplot(aes(x = date_time, y = temp_c_sct_avg)) + 
+  geom_point() + 
+  geom_line()
+
+inlet_10min_db %>%
+  ggplot(aes(x = date_time, y = level_feet)) + 
+  geom_point() + 
+  geom_line()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
