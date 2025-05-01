@@ -5,11 +5,11 @@ source("scripts/00_libraries.R")
 #' @param filepath By default, the `main_dir` variable, which is defined in the global environment (usually at the beginning of each analysis script). Allows for flexibility for you to call the Sharepoint shortcut wherever it lives on your computer.
 #' @return a dataframe with ~15 columns (filepath, lake_ID, date_time, timezone, sensor depth (from top or bottom), temperature, lux, and some extraneous other columns that are part of some HOBO output but not others)
 #' @examples
-#' main_dir <-  here("data/LVWS/06_HOBO")
+#' main_dir <-  here("data/sensors/HOBO")
 #' all_HOBO <- compile_HOBO_data(filepath = main_dir) 
 #' # equivalent to compile_HOBO_data(main_dir) 
 #' If you want to only include one particular lake in case too many files is bogging down your machine, simply adjust the directory path
-#' loch_dir <- here("data/LVWS/06_HOBO/LOC)
+#' loch_dir <- here("data/sensors/HOBO/LOC)
 #' loch_HOBO <- compile_HOBO_data(loch_dir)
 
 
@@ -135,13 +135,15 @@ compile_HOBO_data <- function(filepath = main_dir) {
 
 
 
-main_dir <-  here("data/LVWS/06_HOBO")
+main_dir <-  here("data/sensors/HOBO")
 all_HOBO <- compile_HOBO_data(filepath = main_dir)
 str(all_HOBO)
+length(unique(all_HOBO$date_retrieved))
 
 # Plot all Loch data 
 all_HOBO %>%
   filter(lake_ID=="LOC") %>%
+  filter(date_time > "2023-10-30" & date_time < "2024-03-01") %>%
   ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
   geom_point()
 
