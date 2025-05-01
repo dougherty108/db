@@ -115,9 +115,9 @@ compile_HOBO_data <- function(filepath = main_dir) {
     left_join(metadata, by = "File") %>%
     mutate(
       date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),  # Auto-detects format
-      depth_from_top = case_when(lake_ID == "SKY" & depth_from == "BOT" ~ 7.2 - depth_m,
+      depth_from_top = case_when(lake_ID == "SKY" & depth_from == "BOT" ~ 7 - depth_m,
                                  lake_ID == "SKY" & depth_from == "TOP" ~ depth_m,
-                                 lake_ID == "LOC" & depth_from == "BOT" ~ 4.7 - depth_m,
+                                 lake_ID == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
                                  lake_ID == "LOC" & depth_from == "TOP" ~ depth_m),
 
       depth_from_bottom = ifelse(depth_from == "BOT", depth_m, NA_real_)
