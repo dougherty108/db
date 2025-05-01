@@ -7,7 +7,7 @@ source("scripts/00_libraries.R")
 #' @examples
 #' main_dir <-  here("data/LVWS/06_HOBO")
 #' all_HOBO <- compile_HOBO_data(filepath = main_dir) 
-#' # equivelent to compile_HOBO_data(main_dir) 
+#' # equivalent to compile_HOBO_data(main_dir) 
 #' If you want to only include one particular lake in case too many files is bogging down your machine, simply adjust the directory path
 #' loch_dir <- here("data/LVWS/06_HOBO/LOC)
 #' loch_HOBO <- compile_HOBO_data(loch_dir)
