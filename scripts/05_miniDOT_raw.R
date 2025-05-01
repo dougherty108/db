@@ -12,11 +12,11 @@ files <- dir_ls(main_dir, regexp = "\\.txt$", recurse = TRUE)
 # Filter out files from the "concat" folder
 files <- files[!str_detect(files, "/concat/")]
 
-# Filter out files from the "FERN" folder
-files <- files[!str_detect(files, "/FERN/")]
-
 # Filter out files from the "QC" folder
 files <- files[!str_detect(files, "QC")]
+
+#Ignore the "new data" folder -- migrating files into here at the moment IAO 2025-05-01
+files <- files[!str_detect(files, "/new data/")]
 
 
 # Define a function to process each file
@@ -56,11 +56,11 @@ process_file <- function(file_path) {
 combined_data <- files %>%
   map_dfr(process_file) %>%
   mutate(salinity = 0) %>%
-  group_by(lake_id,depth) %>%
+  group_by(lake_id,depth)
   #Currently, these do_sat values are sus and aren't a 1:1 match with the old
   #dataframe (code preserved below). Need to troubleshoot this - IAO 20240802
-  mutate(do_sat = case_when(lake_id=="loch" ~ 100 * do_obs/oxySol(temp, salinity, 0.68),
-                            lake_id=="sky" ~ 100 * do_obs/oxySol(temp, salinity, 0.66))) 
+  # mutate(do_sat = case_when(lake_id=="loch" ~ 100 * do_obs/oxySol(temp, salinity, 0.68),
+  #                           lake_id=="SKY" ~ 100 * do_obs/oxySol(temp, salinity, 0.66))) 
 
 
 # View the combined data
@@ -71,28 +71,28 @@ print(combined_data)
 sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_hypo_Oct17-Sept18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
   read.table("Data/LVWS/05_miniDOT/concat/Sky_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)))#last term is atm pressure)
@@ -106,28 +106,28 @@ sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Sky_6.5m_16-17_a
 loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/concat/Loch_4.5m_16-17_all.TXT", sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
   read.table("Data/LVWS/05_miniDOT/concat/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)))
@@ -151,62 +151,77 @@ metadata <- read_csv(here("data/LVWS/05_miniDOT/miniDot_metadata.csv")) %>%
   mutate(start_time=mdy_hm(start_time),
          end_time=mdy_hm(end_time),
          depth=as.character(as.numeric(depth)),
-         depth_from=as.character(as.logical(depth_from)))
+         depth_from=as.character(depth_from))
 
 loch_metadata <- metadata %>%
   select(lake_id, start_time, end_time) %>%
-  filter(lake_id=="loch")
+  filter(lake_id=="LOC")
 
 sky_metadata <- metadata %>%
   select(lake_id, start_time, end_time) %>%
-  filter(lake_id=="sky")
+  filter(lake_id=="SKY")
 #eventually I want to be able to flag any intervals not included between any of the 
 #start_time - end_time intervals in the metadata above. Currently doing this manually, not ideal -IAO
 
 combined_data_clean <- combined_data %>%
-  mutate(flag = case_when(lake_id == "loch" & date_time < "2016-07-19 13:39:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2017-05-30 12:00:00" & date_time < "2017-07-14 13:38:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 17:30:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2019-10-01 16:30:00" & date_time < "2019-10-15 09:00:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2020-05-26 13:41:00" & date_time < "2020-06-02 11:00:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2021-06-08 11:30:00" & date_time < "2021-06-15 10:00:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2022-08-09 13:00:00" & date_time < "2022-08-16 13:15:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2023-09-05 14:00:00" & date_time < "2023-09-28 13:07:00" ~ "above water",
-                          lake_id == "loch" & date_time > "2024-06-13 09:30:00" ~ "above water",
-                          lake_id == "sky" & date_time < "2016-08-11 11:27:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2017-06-22 11:45:00" & date_time < "2017-07-13 09:30:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2017-09-27 10:30:00" & date_time < "2017-10-04 11:40:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2018-06-19 09:00:00" & date_time < "2018-06-26 12:00:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2018-08-25 09:00:00" & date_time < "2018-09-25 10:23:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2019-07-31 07:45:00" & date_time < "2019-08-06 08:30:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2020-07-14 09:00:00" & date_time < "2020-07-21 13:15:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2021-06-11 07:37:00" & date_time < "2021-07-06 10:08:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2021-06-11 07:37:00" & date_time < "2021-07-06 10:08:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2021-09-28 05:00:00" & date_time < "2021-09-28 11:26:00" ~ "above water",
+  mutate(depth = as.numeric(depth),
+         flag = case_when(lake_id == "LOC" & date_time < "2016-07-19 13:39:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2017-05-30 12:00:00" & date_time < "2017-07-14 13:38:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2017-09-27 13:00:00" & date_time < "2017-10-04 14:30:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2018-06-19 11:00:00" & date_time < "2018-06-26 16:30:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2018-09-11 10:01:00" & date_time < "2018-09-24 17:30:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2019-10-01 16:30:00" & date_time < "2019-10-15 09:00:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2020-05-26 13:41:00" & date_time < "2020-06-02 11:00:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2021-06-08 11:30:00" & date_time < "2021-06-15 10:00:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2022-08-09 13:00:00" & date_time < "2022-08-16 13:15:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2023-09-05 14:00:00" & date_time < "2023-09-28 13:07:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2024-06-13 09:30:00" & date_time < "2024-08-20 10:07:00" ~ "above water",
+                          lake_id == "LOC" & date_time > "2024-10-17 9:00:00" ~ "above water",
+                          lake_id == "SKY" & date_time < "2016-08-11 11:27:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2017-06-22 11:45:00" & date_time < "2017-07-13 09:30:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2017-09-27 10:30:00" & date_time < "2017-10-04 11:40:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2018-06-19 09:00:00" & date_time < "2018-06-26 12:00:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2018-08-25 09:00:00" & date_time < "2018-09-25 10:23:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2019-07-31 07:45:00" & date_time < "2019-08-06 08:30:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2020-07-14 09:00:00" & date_time < "2020-07-21 13:15:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2021-06-11 07:37:00" & date_time < "2021-07-06 10:08:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2021-06-11 07:37:00" & date_time < "2021-07-06 10:08:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2021-09-28 05:00:00" & date_time < "2021-09-28 11:26:00" ~ "above water",
                           #^^ IAO- i know this one is weird but we are missing data for summer 2021 for mid and hypo sensors
-                          lake_id == "sky" & date_time > "2022-08-09 09:45:00" & date_time < "2022-08-16 10:00:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2023-09-05 12:30:00" & date_time < "2023-09-19 09:15:00" ~ "above water",
-                          lake_id == "sky" & date_time > "2024-06-25 08:15:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2022-08-09 09:45:00" & date_time < "2022-08-16 10:00:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2023-09-05 12:30:00" & date_time < "2023-09-19 09:15:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2024-06-25 08:15:00" ~ "above water",
                           TRUE ~ "under water")) %>%
-  mutate(logging_frequency = difftime(date_time, lag(date_time), units = "mins"))
+  mutate(logging_frequency = difftime(date_time, lag(date_time), units = "mins")) %>%
+  # There are some years where it is clear the miniDOT logger was lodged in the ice. I want to flag these as well.
+  # These cases are based on visual inspect and field notes.
+  mutate(flag = case_when(lake_id == "SKY" & depth == "0.5" & date_time > "2020-10-01 00:00:00" & date_time < "2021-06-11 07:37:00" ~ "frozen",
+                          TRUE ~ flag )) %>%
+  mutate(depth_from_top = case_when(lake_id == "SKY" & depth_from == "BOT" ~ 7 - depth,
+                                    lake_id == "SKY" & depth_from == "TOP" ~ depth,
+                                    lake_id == "LOC" & depth_from == "BOT" ~ 5 - depth,
+                                    lake_id == "LOC" & depth_from == "TOP" ~ depth,
+                                    lake_id == "FER" & depth_from == "BOT" ~ 5.5 - depth,
+                                    lake_id == "FER" & depth_from == "TOP" ~ depth),
+         depth_from_bottom = ifelse(depth_from == "BOT", depth, NA_real_))
 
 #Visual check the loch (color = flag)
 combined_data_clean %>%
-  filter(lake_id=="loch") %>%
+  filter(lake_id=="LOC" & flag == "under water") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  ggplot(aes(x=date_time, y=temp, color= depth, shape=flag))+
+  # filter(water_year == 2024) %>%
+  # filter(date_time > "2024-08-20") %>%
+  ggplot(aes(x=date_time, y=temp, color= factor(depth_from_top), shape=flag))+
   geom_point(alpha=0.5)+
-  facet_wrap(water_year~., scales="free_x")+
+  facet_wrap(year~., scales="free_x")+
   labs(title="The Loch")
 
 #Visual check sky (color = depth, flags removed)
 combined_data_clean %>%
-  filter(lake_id=="sky" & flag =="under water") %>%
+  filter(lake_id=="SKY" & flag =="under water") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
@@ -219,7 +234,7 @@ combined_data_clean %>%
 
 #Visual check sky (color = flag)
 combined_data_clean %>%
-  filter(lake_id=="sky") %>%
+  filter(lake_id=="SKY") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
@@ -233,21 +248,51 @@ combined_data_clean %>%
 
 #Visual check sky (color = depth, flags removed)
 combined_data_clean %>%
-  filter(lake_id=="sky" & flag =="under water") %>%
+  filter(lake_id=="SKY" & flag =="under water") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  filter(temp < 20) %>%
-  filter(water_year %in% c('2024')) %>%
+  filter(do_obs < 20) %>%
+  # filter(water_year %in% c('2024')) %>%
   ggplot(aes(x=date_time, y=do_obs, color=depth))+
   geom_point(alpha=0.1)+
   facet_wrap(water_year~., scales="free_x")
 
+# What's going on in Sky Pond spring 2021?
+combined_data_clean %>%
+  filter(lake_id=="SKY" & flag =="under water") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  filter(do_obs < 20) %>%
+  filter(water_year %in% c('2021')) %>%
+  pivot_longer(temp:do_obs) %>%
+  ggplot(aes(x=date_time, y=value, color=depth))+
+  geom_point(alpha=0.1)+
+  facet_wrap(name~., scales="free_x") 
+
+
+# Look at Fern Lake data
+combined_data_clean %>%
+  filter(lake_id=="FER") %>%
+  mutate(year=year(date_time),
+         date=date(date_time),
+         doy_wy=hydro.day(date),
+         water_year=calcWaterYear(date))%>%
+  # filter(do_obs < 20) %>%
+  # filter(water_year %in% c('2021')) %>%
+  # pivot_longer(temp:do_obs) %>%
+  ggplot(aes(x=date_time, y=temp, color=depth))+
+  geom_point(alpha=0.1)+
+  facet_wrap(water_year~., scales="free_x") 
+
+
 
 #Export data for Bryan from The Loch.
 # BGdata <- combined_data_clean %>%
-#   filter(lake_id == "loch" & flag == "under water") 
+#   filter(lake_id == "LOC" & flag == "under water") 
 # 
 # BGdata %>%
 #   mutate(year=year(date_time),
@@ -306,148 +351,4 @@ df2 %>%
 
 
 
-
-
-
-# OLD SCRIPTS below -- delete when we trust the new one - IAO -------------------
-
-
-
-#sky pond database####
-#raw files first, manually calculating do_sat
-
-# thinking about shortening file paths? either by writing to a variable or defining a global variable
-
-# this runs! -AGK 20240801
-# sky_raw <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/sky_0.5_T", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`))), 
-#   fs::dir_ls("Data/LVWS/05_miniDOT/sky_3.5_T", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "3.5") %>%
-#     mutate(date_time = as_datetime(`date_time`)),
-#   fs::dir_ls("Data/LVWS/05_miniDOT/sky_6_T", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-#     mutate(date_time = as_datetime(`date_time`))) %>%
-#   mutate(salinity = 0,
-#          do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66))#last term is atm pressure
-#Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
-
-#concatenated files - pulled from an earlier version. keeping do_sat, can also remove and calculate manually
-#have to convert date formatting in order to combine with dataframe of raw files
-
-# concatenated files still need to be moved & these paths need to be updated once we settle on a file structure -AGK
-# sky_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/SKY/concat/2016_17_SkyLH/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-#     mutate(date_time = as_datetime(`date_time`)), 
-#   read.table("Data/LVWS/05_miniDOT/SKY/concat/2016_17_SkyLS/Sky_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`)), 
-#   read.table("Data/LVWS/05_miniDOT/SKY/concat/Sky/2017_18_SkyLH/sky_hypo_Oct17-Sept18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "6") %>%
-#     mutate(date_time = as_datetime(`date_time`)),
-#   read.table("Data/LVWS/05_miniDOT/SKY/concat/Sky/2017_18_SkyLS/Sky_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Sky", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`)))
-# 'corrected' hypolimnion depth to 6m. will look through field notebooks and fix later -AGK
-
-#build database
-# sky_minidot <- bind_rows(sky_raw, sky_concat)
-
-# #loch database####
-# #raw files first, manually concatenating do_sat
-# loch_raw <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/loch_0.5_T", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`))), 
-#   fs::dir_ls("Data/LVWS/05_miniDOT/loch_4_T", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
-#     mutate(date_time = as_datetime(`date_time`))) %>%
-#   mutate(salinity = 0,
-#          do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)) #last term is atm pressure
-# #Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
-# 
-# LVWS_combined <- bind_rows(sky_raw, loch_raw) %>%
-#   mutate(dataset = "old")
-
-
-
-#this is generating some NA values when converting unix to date_time. not sure why, will fix -AGK
-
-#Check where the NAs are:
-# loch_minidot %>% filter(if_any(everything(), is.na))
-# Did not find any NAs with the function above so just overriding date_time with date_time
-
-#concatenated files - pulled from an earlier version. keeping do_sat, can also remove and calculate manually
-#have to convert date formatting in order to combine with dataframe of raw files
-# loch_concat <- bind_rows(read.table("Data/LVWS/05_miniDOT/LOCH/concat/2016_17_LochLH/Loch_4.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
-#     mutate(date_time = as_datetime(`date_time`)), 
-#   read.table("Data/LVWS/05_miniDOT/LOCH/concat/2016_17_LochLS/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`)), 
-#   read.table("Data/LVWS/05_miniDOT/LOCH/concat/2017_18_LochLH/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "4") %>%
-#     mutate(date_time = as_datetime(`date_time`)),
-#   read.table("Data/LVWS/05_miniDOT/LOCH/concat/2017_18_LochLS/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
-#     select(3, 5:7) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-#     mutate(lake_id = "Loch", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`)))
-#adjusted hypo depth to 4m, will fix after checking field notebooks -AGK
-
-#build database
-# 
-# loch_minidot <- bind_rows(loch_raw, loch_concat) %>%
-#   mutate(month = month(date_time)) %>%
-#   mutate(year = year(date_time)) %>%
-#   mutate(year = as.factor(year)) %>%
-#   mutate(month = as.factor(month))
-# str(loch_minidot)
-
-#fern database####
-# fern_minidot <- bind_rows((fs::dir_ls("Data/LVWS/05_miniDOT/FERN/FERN_LS", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5") %>%
-#     mutate(date_time = as_datetime(`date_time`))), 
-#   fs::dir_ls("Data/LVWS/05_miniDOT/FERN/FERN_LH", regexp = "\\.txt$") %>%
-#     purrr::map_dfr( ~ read.table(.x, sep = ",", skip = 2, header = TRUE)) %>%
-#     select(1, 3, 4) %>%
-#     dplyr::rename(date_time = 1, temp = 2, do_obs = 3) %>%
-#     mutate(lake_id = "Fern", local_tz = "Mountain", daylight_savings = "Yes", depth = "5") %>%
-#     mutate(date_time = as_datetime(`date_time`)))%>%
-#   mutate(salinity = 0,
-#          do_sat = 100 * do_obs/oxySol(temp, salinity, 0.7)) #last term is atm pressure
-#Get atm from elevation here: https://www.waterontheweb.org/under/waterquality/dosatcalc.html
-
-# file paths updated, this runs. need to trim based on pull date/time -AGK
 
