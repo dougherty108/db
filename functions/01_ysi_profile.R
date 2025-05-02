@@ -52,6 +52,4 @@ process_ysi <- function(file_path) {
 }
 
 # Example below for profile measurement
-result_df <- process_ysi("Data/On Thin Ice/01_YSI/LOC/raw/Loch_Inlet_20240709.csv")
-
-
+# result_df <- process_ysi("Data/On Thin Ice/01_YSI/LOC/raw/Loch_Zmax_20250415.csv")
