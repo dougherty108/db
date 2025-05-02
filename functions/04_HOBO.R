@@ -1,4 +1,4 @@
-source("scripts/00_libraries.R")
+source("functions/00_libraries.R")
 
 #' Compile high-frequency data from HOBOs
 #' 
