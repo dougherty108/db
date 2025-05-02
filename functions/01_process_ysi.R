@@ -1,3 +1,7 @@
+# This script was written by Adeline G. Kelly and simply takes the YSI Pro DSS file
+# and converts it into a CSV and make the headings all pretty. This function is meant
+# for looking at lake profiles. See script XXXXX.R for a point measurement function.
+
 process_ysi <- function(file_path) {
   # Extract information from file name
   file_name <- path_file(file_path)
@@ -47,5 +51,7 @@ process_ysi <- function(file_path) {
   return(data)
 }
 
-# Example below
-# result_df <- process_ysi("Data/On Thin Ice/01_YSI/LOC/raw/Loch_Inlet_20240709.csv")
+# Example below for profile measurement
+result_df <- process_ysi("Data/On Thin Ice/01_YSI/LOC/raw/Loch_Inlet_20240709.csv")
+
+
