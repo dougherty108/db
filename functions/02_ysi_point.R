@@ -6,7 +6,7 @@
 # ----------------------------------------------------------------------------------
 
 
-source("scripts/00_libraries.R")
+source("functions/00_libraries.R")
 
 # Function to calculate point estimates for YSI scripts - inlets, outlets, etc.
 
