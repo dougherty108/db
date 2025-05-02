@@ -1,65 +1,65 @@
 # Written by Bella Oleksy 2024-04-08
-# Sky sleuthing 
+# SKY sleuthing 
 # Run the HOBO and MINIDOT scripts and then this will all work
 
 
 # data munging ------------------------------------------------------------
 
 
-sky2024 <- combined_data_clean %>%
-  filter(lake_id=="sky" & flag =="under water") %>%
+SKY2024 <- combined_data_clean %>%
+  filter(lake_id=="SKY" & flag =="under water") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
   filter(temp < 20) %>%
   filter(water_year %in% c('2024'))
-names(sky2024)
+names(SKY2024)
 
-sky2024minidot <- sky2024 %>%
+SKY2024minidot <- SKY2024 %>%
   select(date_time, temp, do_obs, lake_id, depth) %>%
   rename(depth_from_top = depth,
          temperature_C = temp) %>%
   mutate(data_type = "miniDOT",
          depth_from_top = as.numeric(depth_from_top))
 
-sky2024hobo <- all_HOBO %>%
+SKY2024hobo <- all_HOBO %>%
   filter(lake_ID == "SKY") %>%
   select(date_time, temperature_C, depth_from_top) %>%
   mutate(data_type = "HOBO")
 
-sky2024bind <- bind_rows(sky2024minidot, sky2024hobo)
+SKY2024bind <- bind_rows(SKY2024minidot, SKY2024hobo)
 
-loch2024 <- combined_data_clean %>%
-  filter(lake_id=="loch" & flag =="under water") %>%
+LOC2024 <- combined_data_clean %>%
+  filter(lake_id=="LOC" & flag =="under water") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
   filter(temp < 20) %>%
   filter(water_year %in% c('2024'))
-names(loch2024)
+names(LOC2024)
 
-loch2024minidot <- loch2024 %>%
+LOC2024minidot <- LOC2024 %>%
   select(date_time, temp, do_obs, lake_id, depth) %>%
   rename(depth_from_top = depth,
          temperature_C = temp) %>%
   mutate(data_type = "miniDOT",
          depth_from_top = as.numeric(depth_from_top))
 
-loch2024hobo <- all_HOBO %>%
+LOC2024hobo <- all_HOBO %>%
   filter(lake_ID == "LOC") %>%
   select(date_time, temperature_C, depth_from_top, depth_from_bottom) %>%
   mutate(data_type = "HOBO")
 
-loch2024bind <- bind_rows(loch2024minidot, loch2024hobo)
+LOC2024bind <- bind_rows(LOC2024minidot, LOC2024hobo)
 
-# Sky Pond graphs ------------------------------------------------------------------
+# SKY Pond graphs ------------------------------------------------------------------
 
 
 
-# Just looking at the HOBO sensors in Sky Pond first
-sky2024bind %>%
+# Just looking at the HOBO sensors in SKY Pond first
+SKY2024bind %>%
   filter(data_type =="HOBO") %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 150) %>%
@@ -71,11 +71,11 @@ sky2024bind %>%
     # shape = data_type
   )) +
   geom_point() +
-  labs(title=paste(unique(sky2024bind$lake_id)))
+  labs(title=paste(unique(SKY2024bind$lake_id)))
 
 
 # Both HOBOs and miniDOTS together
-sky2024bind %>%
+SKY2024bind %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 100) %>%
   # filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
@@ -87,7 +87,7 @@ sky2024bind %>%
     shape = data_type
   )) +
   geom_point() +
-  labs(title=paste(unique(sky2024bind$lake_id)))
+  labs(title=paste(unique(SKY2024bind$lake_id)))
 
 # This top most HOBO sensor (2.2m from top) doesn't match with the 0.5m miniDOT.
 # Where is the miniDOT located, truly? The depth_from_top column for the HOBOs was 
@@ -97,7 +97,7 @@ sky2024bind %>%
 
 # This is VERY COARSE (dont do this lol) but if you relabel the miniDOT depth
 # to ~2.5 the sequence of sensors with temperatures makes a bit more sense
-sky2024bind %>%
+SKY2024bind %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 100) %>%
   filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
@@ -110,18 +110,18 @@ sky2024bind %>%
     shape = data_type
   )) +
   geom_point() +
-  labs(title=paste(unique(sky2024bind$lake_id)))
+  labs(title=paste(unique(SKY2024bind$lake_id)))
 
 
 
 
-# The Loch graphs ------------------------------------------------------------------
+# The LOC graphs ------------------------------------------------------------------
 
 
 # The file name says the sensor placement is from the top, but that doesn't seem to be the case
 # Based on the 
-# Just looking at the HOBO sensors in The Loch
-loch2024bind %>%
+# Just looking at the HOBO sensors in The LOC
+LOC2024bind %>%
   filter(data_type =="HOBO") %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 150) %>%
@@ -135,10 +135,10 @@ loch2024bind %>%
     # shape = data_type
   )) +
   geom_point() +
-  labs(title=paste(unique(loch2024bind$lake_id)))
+  labs(title=paste(unique(LOC2024bind$lake_id)))
 
 #Just miniDOT
-loch2024bind %>%
+LOC2024bind %>%
   filter(data_type =="miniDOT") %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 150) %>%
@@ -149,7 +149,7 @@ loch2024bind %>%
     # shape = data_type
   )) +
   geom_point() +
-  labs(title=paste(unique(loch2024bind$lake_id)))
+  labs(title=paste(unique(LOC2024bind$lake_id)))
 
 
 # Light from HOBOs --------------------------------------------------------
@@ -159,7 +159,7 @@ light2024hobo <- all_HOBO %>%
   select(date_time, lake_ID, light_lux, depth_from_top) %>%
   mutate(data_type = "HOBO")
 
-#Loch
+#LOC
 light2024hobo %>%
   filter(lake_ID=="LOC") %>%
   mutate(doy = yday(date_time)) %>%
