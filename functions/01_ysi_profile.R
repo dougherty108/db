@@ -1,6 +1,9 @@
-# This script was written by Adeline G. Kelly and simply takes the YSI Pro DSS file
-# and converts it into a CSV and make the headings all pretty. This function is meant
-# for looking at lake profiles. See script XXXXX.R for a point measurement function.
+# ----------------------------------------------------------------------------------
+# This script was written by Adeline G. Kelly and simply takes the YSI Pro DSS 
+# file and converts it into a CSV and make the headings all pretty. This 
+# function is meant for looking at lake profiles. See script 02_ysi_point.R 
+# for a point measurement function.
+# ----------------------------------------------------------------------------------
 
 process_ysi <- function(file_path) {
   # Extract information from file name

@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------------
+# This script was written by Adeline G. Kelly and simply takes the YSI Pro DSS 
+# file and converts it into a CSV and make the headings all pretty. This 
+# function is meant for looking at a single point (e.g., stream). See script 
+# 02_ysi_profile.Rfor a lake profile function.
+# ----------------------------------------------------------------------------------
+
+
 source("scripts/00_libraries.R")
 
 # Function to calculate point estimates for YSI scripts - inlets, outlets, etc.
