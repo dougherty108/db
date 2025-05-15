@@ -1,5 +1,5 @@
-source("scripts/00_libraries.R")
-source("scripts/00_functions.R")
+source("functions/00_libraries.R")
+source("functions/00_helper_functions.R")
 
 #Compile miniDOT data for Sky, Loch, Fern
 
