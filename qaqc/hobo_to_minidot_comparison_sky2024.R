@@ -14,12 +14,12 @@ SKY2024 <- combined_data_clean %>%
          water_year=calcWaterYear(date))%>%
   filter(temp < 20) %>%
   filter(water_year %in% c('2024'))
-names(SKY2024)
+head(SKY2024)
 
 SKY2024minidot <- SKY2024 %>%
-  select(date_time, temp, do_obs, lake_id, depth) %>%
-  rename(depth_from_top = depth,
-         temperature_C = temp) %>%
+  ungroup() %>%
+  select(date_time, temp, do_obs, lake_id, depth_from_top) %>%
+  rename(temperature_C = temp) %>%
   mutate(data_type = "miniDOT",
          depth_from_top = as.numeric(depth_from_top))
 
@@ -41,9 +41,9 @@ LOC2024 <- combined_data_clean %>%
 names(LOC2024)
 
 LOC2024minidot <- LOC2024 %>%
-  select(date_time, temp, do_obs, lake_id, depth) %>%
-  rename(depth_from_top = depth,
-         temperature_C = temp) %>%
+  ungroup() %>%
+  select(date_time, temp, do_obs, lake_id, depth_from_top) %>%
+  rename(temperature_C = temp) %>%
   mutate(data_type = "miniDOT",
          depth_from_top = as.numeric(depth_from_top))
 
@@ -63,10 +63,40 @@ SKY2024bind %>%
   filter(data_type =="HOBO") %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 150) %>%
+  filter(!depth_from_top %in% c("0","1")) %>% #these are frozen
+  ggplot(aes(
+    x = date_time,
+    y = temperature_C,
+    color = factor(depth_from_top),
+    # shape = data_type
+  )) +
+  geom_point() +
+  labs(title=paste(unique(SKY2024bind$lake_id)))
+
+# Just miniDOT - temperature
+SKY2024bind %>%
+  filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
   # filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
   ggplot(aes(
     x = date_time,
     y = temperature_C,
+    color = factor(depth_from_top),
+    # shape = data_type
+  )) +
+  geom_point() +
+  labs(title=paste(unique(SKY2024bind$lake_id)))
+
+# Just miniDOT - oxygen
+SKY2024bind %>%
+  filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
+  # filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
+  ggplot(aes(
+    x = date_time,
+    y = do_obs,
     color = factor(depth_from_top),
     # shape = data_type
   )) +
@@ -78,8 +108,9 @@ SKY2024bind %>%
 SKY2024bind %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 100) %>%
-  # filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
-  filter(depth_from_top %in% c("0.5","2.2","3.2")) %>% #these are frozen
+  # filter(depth_from_top=="0.5") %>%
+  filter(!depth_from_top %in% c("0","1")) %>% #these are frozen
+  # filter(depth_from_top %in% c("0.5","2.2","3.2")) %>% #these are frozen
   ggplot(aes(
     x = date_time,
     y = temperature_C,
@@ -88,21 +119,15 @@ SKY2024bind %>%
   )) +
   geom_point() +
   labs(title=paste(unique(SKY2024bind$lake_id)))
+  
+# facet_wrap(.~depth_from_top)
 
-# This top most HOBO sensor (2.2m from top) doesn't match with the 0.5m miniDOT.
-# Where is the miniDOT located, truly? The depth_from_top column for the HOBOs was 
-# calculated from the bottom of the lake (subtracting from max depth of 7.2)
-# because the 2.2m sensor is the coldest, my guess is that the miniDOT is actually
-# quite a bit deeper than 0.5 m below the ice? More like 1.5m? 
-
-# This is VERY COARSE (dont do this lol) but if you relabel the miniDOT depth
-# to ~2.5 the sequence of sensors with temperatures makes a bit more sense
+#Look at just the 6 and 6.5m sensors
 SKY2024bind %>%
   mutate(doy = yday(date_time)) %>%
   filter(doy < 100) %>%
-  filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
-  mutate(depth_from_top = case_when(depth_from_top == 0.5 ~ 2.5,
-                                    TRUE ~ depth_from_top)) %>%
+  # filter(depth_from_top=="0.5") %>%
+  filter(depth_from_top %in% c("6","6.5")) %>% 
   ggplot(aes(
     x = date_time,
     y = temperature_C,
@@ -110,10 +135,9 @@ SKY2024bind %>%
     shape = data_type
   )) +
   geom_point() +
+  geom_line() +
   labs(title=paste(unique(SKY2024bind$lake_id)))
-
-
-
+# This is the only thing that seems a bit sus now. Shouldn't the 6.5m miniDOT be reading warmer than the 6m HOBO?
 
 # The LOC graphs ------------------------------------------------------------------
 
@@ -149,6 +173,38 @@ LOC2024bind %>%
     # shape = data_type
   )) +
   geom_point() +
+  labs(title=paste(unique(LOC2024bind$lake_id)))
+
+
+#Both
+LOC2024bind %>%
+  # filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
+  ggplot(aes(
+    x = date_time,
+    y = temperature_C,
+    color = factor(depth_from_top),
+    shape = data_type
+  )) +
+  geom_point() +
+  labs(title=paste(unique(LOC2024bind$lake_id)))
+
+#Duplicate alleged 4m from top sensors
+#Both
+LOC2024bind %>%
+  # filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
+  filter(depth_from_top %in% c("4")) %>%
+  ggplot(aes(
+    x = date_time,
+    y = temperature_C,
+    color = factor(data_type),
+    shape = data_type
+  )) +
+  geom_point() +
+  geom_line() +
   labs(title=paste(unique(LOC2024bind$lake_id)))
 
 
