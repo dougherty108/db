@@ -33,10 +33,12 @@ compile_HOBO_data <- function(filepath = main_dir) {
       lake_ID = map_chr(Parts, 1, .default = NA),  
       depth_m = map_chr(Parts, 2, .default = NA),
       depth_from = map_chr(Parts, 3, .default = NA),
-      date_retrieved = map_chr(Parts, 4, .default = NA) %>% str_remove("\\.csv$"),
-      logging_frequency = map_chr(Parts, 5, .default = NA) %>% str_remove("\\.csv$")
+      date_deployed = map_chr(Parts, 4, .default = NA),
+      date_retrieved = map_chr(Parts, 5, .default = NA),
+      logging_frequency = map_chr(Parts, 6, .default = NA) ,
+      serial_num = map_chr(Parts, 7, .default = NA) %>% str_remove("\\.csv$") %>% str_remove("serial")
     ) %>%
-    select(File, lake_ID, depth_m, depth_from, date_retrieved, logging_frequency) %>%
+    select(File, lake_ID, depth_m, depth_from, date_deployed, date_retrieved, logging_frequency, serial_num) %>%
     mutate(depth_m = suppressWarnings(as.numeric(str_remove(depth_m, "m"))))  
   
   # file <- files[[1]]
@@ -118,12 +120,14 @@ compile_HOBO_data <- function(filepath = main_dir) {
       depth_from_top = case_when(lake_ID == "SKY" & depth_from == "BOT" ~ 7 - depth_m,
                                  lake_ID == "SKY" & depth_from == "TOP" ~ depth_m,
                                  lake_ID == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
-                                 lake_ID == "LOC" & depth_from == "TOP" ~ depth_m),
-
+                                 lake_ID == "LOC" & depth_from == "TOP" ~ depth_m,
+                                 lake_ID == "FER" & depth_from == "BOT" ~ 5.5 - depth_m,
+                                 lake_ID == "FER" & depth_from == "TOP" ~ depth_m),
       depth_from_bottom = ifelse(depth_from == "BOT", depth_m, NA_real_)
     ) %>%
     select(File, lake_ID, date_time, timezone, depth_from_top, depth_from_bottom, everything()) %>%
-    select(-depth_m, -depth_from) #delete metadata columns to reduce confusion
+    select(-depth_m, -depth_from) %>%  #delete metadata columns to reduce confusion
+    select(-c(button_down:Stopped)) #delete HOBOs columns unless we decide we need them later
   
   return(data)
 }
@@ -135,63 +139,17 @@ compile_HOBO_data <- function(filepath = main_dir) {
 
 
 
-main_dir <-  here("data/sensors/HOBO")
+main_dir <-  here("data/sensors/HOBO/LOC")
 all_HOBO <- compile_HOBO_data(filepath = main_dir)
 str(all_HOBO)
 length(unique(all_HOBO$date_retrieved))
 
 # Plot all Loch data 
+pretty <- all_HOBO %>%
+  filter(date_deployed=="20241025")
 all_HOBO %>%
-  filter(lake_ID=="LOC") %>%
-  filter(date_time > "2023-10-30" & date_time < "2024-03-01") %>%
+  filter(date_deployed=="20241025") %>%
+  # filter(date_time >= "2024-10-26" & date_time < "2025-05-21") %>%
+  filter(date_time >= "2024-10-26" & date_time < "2024-11-30") %>%
   ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
-  geom_point()
-
-loch_HOBO %>%
-  mutate(doy = yday(date_time)) %>%
-  filter(doy > 0 & doy < 100) %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
-  geom_point()
-#WOAH! What happened in early March? Got very cold then back to the inverse stratified. Snowmelt intrusion? Similar in Sky Pond? Do the miniDOT data reflect the same pattern?
-
-# Plot all Sky data
-all_HOBO %>%
-  filter(lake_ID=="SKY") %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
-  geom_point()
-
-# I have a feeling those top two sensors were lodged in the ice given temps < 0
-all_HOBO %>%
-  filter(lake_ID=="SKY") %>%
-  filter(temperature_C >= 0) %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
-  geom_point()
-
-all_HOBO %>%
-  filter(lake_ID=="SKY") %>%
-  filter(depth_from_top > 2) %>% #toss out of the top sensors, probably in ice much of the winter
-  mutate(doy = yday(date_time)) %>%
-  filter(doy > 0 & doy < 120) %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_bottom)))+
-  geom_point()
-# Yeah! Sky Pond goes from inversely stratified to isothermal at ~4.5-5.5 degrees and then RE-stratifies. Checked and the miniDOT data are in agreement with this
-
-
-# Do we see this in Fern lake?
-# This deployment period we had duplicate loggers going at 10 min and 1 hr
-all_HOBO %>%
-  filter(lake_ID=="FER") %>%
-  filter(logging_frequency == "10min") %>%
-  filter(temperature_C < 10) %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_bottom)))+
-  geom_point()
-
-all_HOBO %>%
-  filter(lake_ID=="FER") %>%
-  filter(logging_frequency == "10min") %>%
-  mutate(doy = yday(date_time)) %>%
-  filter(doy > 0 & doy < 120) %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_bottom)))+
-  geom_point()
-# Huh not really. 
-
+  geom_point(alpha=0.5)
