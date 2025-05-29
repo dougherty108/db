@@ -25,8 +25,8 @@ process_EXO <- function(file_path) {
       do_percent = "ODO % sat",
       do_percent_calibrated = "ODO % CB", # "Local DO value calculated from the barometric pressure value entered at the time of calibration."
       do_mgL = "ODO mg/L",
-      TAL_PC_RFU = "TAL PC RFU",
-      TAL_PE_RFU = "TAL PE RFU",
+      phycoE_RFU = "TAL PC RFU",
+      phycoC_RFU = "TAL PE RFU",
       TDS_mgL = "TDS mg/L",
       temp_C = "Temp °C",
       pressure_psia = "Pressure psi a",
