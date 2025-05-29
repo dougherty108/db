@@ -12,8 +12,8 @@ SKY2024 <- combined_data_clean %>%
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  filter(temp < 20) %>%
-  filter(water_year %in% c('2024'))
+  filter(temp < 20) 
+  # filter(water_year %in% c('2024'))
 head(SKY2024)
 
 SKY2024minidot <- SKY2024 %>%
@@ -31,13 +31,13 @@ SKY2024hobo <- all_HOBO %>%
 SKY2024bind <- bind_rows(SKY2024minidot, SKY2024hobo)
 
 LOC2024 <- combined_data_clean %>%
-  filter(lake_id=="LOC" & flag =="under water") %>%
+  filter(lake_id=="LOC") %>%
   mutate(year=year(date_time),
          date=date(date_time),
          doy_wy=hydro.day(date),
          water_year=calcWaterYear(date))%>%
-  filter(temp < 20) %>%
-  filter(water_year %in% c('2024'))
+  filter(temp < 20) 
+  # filter(water_year %in% c('2024'))
 names(LOC2024)
 
 LOC2024minidot <- LOC2024 %>%
@@ -148,7 +148,7 @@ SKY2024bind %>%
 LOC2024bind %>%
   filter(data_type =="HOBO") %>%
   mutate(doy = yday(date_time)) %>%
-  filter(doy < 150) %>%
+  # filter(doy < 150) %>%
   # filter(!depth_from_top %in% c("0.2","1.2")) %>% #these are frozen
   # mutate(depth_from_top = case_when(depth_from_top == 0.5 ~ 2.5,
   #                                   TRUE ~ depth_from_top)) %>%
@@ -164,13 +164,13 @@ LOC2024bind %>%
 #Just miniDOT
 LOC2024bind %>%
   filter(data_type =="miniDOT") %>%
+  filter(date_time > "2024-07-01") %>%
   mutate(doy = yday(date_time)) %>%
-  filter(doy < 150) %>%
+  # filter(doy < 150) %>%
   ggplot(aes(
     x = date_time,
     y = temperature_C,
-    color = factor(depth_from_top),
-    # shape = data_type
+    color = factor(depth_from_top)    # shape = data_type
   )) +
   geom_point() +
   labs(title=paste(unique(LOC2024bind$lake_id)))
@@ -180,15 +180,32 @@ LOC2024bind %>%
 LOC2024bind %>%
   # filter(data_type =="miniDOT") %>%
   mutate(doy = yday(date_time)) %>%
-  filter(doy < 150) %>%
+  filter(date_time > "2024-10-26" & date_time < "2025-05-20") %>%
   ggplot(aes(
     x = date_time,
     y = temperature_C,
     color = factor(depth_from_top),
     shape = data_type
   )) +
-  geom_point() +
+  geom_point(alpha=0.1) +
   labs(title=paste(unique(LOC2024bind$lake_id)))
+
+#Just look at the daily mean temp at each sensor depth x data_type combo
+LOC2024bind %>%
+  filter(date_time > "2024-10-26" & date_time < "2025-05-20") %>%
+  mutate(doy = yday(date_time)) %>%
+  group_by(doy, data_type, depth_from_top) %>%
+  summarize(temperature_C = mean(temperature_C, na.rm=TRUE)) %>%
+  filter(doy > 150 ) %>%
+  ggplot(aes(
+    x = doy,
+    y = temperature_C,
+    color = factor(depth_from_top),
+    shape = data_type
+  )) +
+  geom_point(alpha=0.5) +
+  labs(title=paste(unique(LOC2024bind$lake_id)))
+
 
 #Duplicate alleged 4m from top sensors
 #Both
@@ -207,6 +224,55 @@ LOC2024bind %>%
   geom_line() +
   labs(title=paste(unique(LOC2024bind$lake_id)))
 
+LOC2024bind %>%
+  # filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
+  # filter(depth_from_top %in% c("0.5","2","3")) %>%
+  mutate(depth_from_top = case_when(as.character(depth_from_top) == "0.5" ~ "1.5",
+                                    TRUE ~ as.character(depth_from_top))) %>%
+  ggplot(aes(
+    x = date_time,
+    y = temperature_C,
+    color = factor(depth_from_top),
+    shape = data_type
+  )) +
+  geom_point() +
+  geom_line() +
+  labs(title=paste(unique(LOC2024bind$lake_id)))
+
+#How does DO data look?
+LOC2024bind %>%
+  filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  filter(doy < 150) %>%
+  ggplot(aes(
+    x = date_time,
+    y = do_obs,
+    color = factor(depth_from_top),
+    # shape = data_type
+  )) +
+  geom_point() +
+  labs(title=paste(unique(LOC2024bind$lake_id)))
+
+#How does DO data look along with temperature?
+LOC2024bind %>%
+  filter(data_type =="miniDOT") %>%
+  mutate(doy = yday(date_time)) %>%
+  pivot_longer(temperature_C:do_obs) %>%
+  filter(date_time > "2024-05-01" & date_time < "2024-06-13") %>%
+  ggplot(aes(
+    x = date_time,
+    y = value,
+    color = factor(name),
+    # shape = data_type
+  )) +
+  geom_point() +
+  geom_hline(yintercept=4)+
+  labs(title=paste(unique(LOC2024bind$lake_id))) +
+  facet_wrap(~depth_from_top)
+
+
 
 # Light from HOBOs --------------------------------------------------------
 
@@ -219,7 +285,8 @@ light2024hobo <- all_HOBO %>%
 light2024hobo %>%
   filter(lake_ID=="LOC") %>%
   mutate(doy = yday(date_time)) %>%
-  filter(doy < 150) %>%
+  filter(doy > 50 & doy < 75) %>%
+  filter(light_lux > 10) %>%
   ggplot(aes(
     x = date_time,
     y = light_lux,
@@ -227,6 +294,7 @@ light2024hobo %>%
     # shape = data_type
   )) +
   geom_point(alpha=0.5) +
-  facet_grid(depth_from_top~lake_ID, scales="free_y")
+  geom_line()
+  # facet_grid(depth_from_top~lake_ID, scales="free_y")
 
 
