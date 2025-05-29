@@ -274,20 +274,13 @@ combined_data_clean %>%
   facet_wrap(name~., scales="free_x") 
 
 
-# Look at Fern Lake data
 combined_data_clean %>%
-  filter(lake_id=="FER") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  # filter(do_obs < 20) %>%
-  # filter(water_year %in% c('2021')) %>%
-  # pivot_longer(temp:do_obs) %>%
-  ggplot(aes(x=date_time, y=temp, color=depth))+
+  filter(lake_id=="LOC") %>%
+  filter(date_time > "2024-10-26 20:00" & date_time < "2025-05-22 12:30") %>%
+  pivot_longer(temp:do_obs) %>%
+  ggplot(aes(x=date_time, y=value, color=factor(depth)))+
   geom_point(alpha=0.1)+
-  facet_wrap(water_year~., scales="free_x") 
-
+  facet_wrap(name~., scales="free_x") 
 
 
 #Export data for Bryan from The Loch.
