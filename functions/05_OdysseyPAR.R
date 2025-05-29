@@ -1,4 +1,4 @@
-source("scripts/00_libraries.R")
+source("functions/00_libraries.R")
 
 # Odyssey PAR data processing - reads in file, renames columns, selects columns, writes to new dataframe
 process_par <- function(file_path) {
