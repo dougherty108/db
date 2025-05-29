@@ -21,7 +21,7 @@ process_EXO <- function(file_path) {
       cond_uScm = "Cond µS/cm",
       cond_nonlinear_uScm = "nLF Cond µS/cm",
       cond_spec_uScm = "SpCond µS/cm",
-      depth_m = "Depth m",
+      depth_m_from_pressure = "Depth m",
       do_percent = "ODO % sat",
       do_percent_calibrated = "ODO % CB", # "Local DO value calculated from the barometric pressure value entered at the time of calibration."
       do_mgL = "ODO mg/L",
@@ -37,33 +37,33 @@ process_EXO <- function(file_path) {
     ) %>%
     # Merge date and time columns
     mutate(date_time = paste(date, time),
-           date_time = mdy_hms(date_time)) 
+           date_time = mdy_hms(date_time),
+           date_time = force_tz(as_datetime(`date_time`), tzone = "America/Denver")) %>%
   #   # Select desired columns
   #   select(date_time, chla, cond, depth, do_percent, do_mgL, orp, specific_cond, 
   #          TAL_PC, pH, temp, barometer
   #   ) %>%
-    # Create columns for lake and site from file path
-  #   mutate(lake = file_info[1]) %>%
-  #   mutate(site = file_info[2]) %>%
+  # Create columns for lake and site from file path
+    mutate(lake_id = file_info[1],
+           depth_m = file_info[3],
+           depth_from = file_info[4],
+           depth_m = suppressWarnings(as.numeric(str_remove(depth_m, "m"))),
+           deployment_date = ymd(file_info[5]),
+           retrieval_date = ymd(file_info[6])) %>%
+    #Convert depth from bottom to depth from top
+    mutate(depth_from_top = case_when(lake_id == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
+                                      lake_id == "LOC" & depth_from == "TOP" ~ depth_m),
+           depth_from_bottom = ifelse(depth_from == "BOT", depth_m, NA_real_)) %>%
   #   # Move columns
-  #   relocate(date_time, .before = chla) %>%
-  #   relocate(lake, .before = date_time) %>%
-  #   relocate(site, .before = date_time) %>%
-  #   relocate(depth, .after = date_time) %>%
+    relocate(date_time, .before = date) %>%
+    relocate(lake_id, .after = date_time) %>%
+    relocate(depth_from_top, .after = date_time) %>%
+    relocate(depth_from_bottom, .after = depth_from_top)
   #   # Pivot to long format
   #   pivot_longer(cols = c(chla:barometer), names_to = "parameter") 
   # Return new dataframe
   return(data)
 }
 
-result_df <- process_EXO("data/Sensors/YSI EXO3/winter 2024 to spring 2025 deployment/Loch_EXO_20241024_20250430.csv")
+# result_df <- process_EXO("data/Sensors/YSI EXO3/winter 2024 to spring 2025 deployment/Loch_EXO_20241024_20250430.csv")
 
-names(result_df)
-
-result_df %>%
-  ggplot(aes(x=date_time, y=total_algae_PE))+
-  geom_point()
-
-result_df %>%
-  ggplot(aes(x=total_algae_PE, y=TAL_PE_RFU))+
-  geom_point(alpha=0.1)
