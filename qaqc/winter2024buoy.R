@@ -1,6 +1,7 @@
 source("functions/07_EXO3.R")
 source("functions/00_helper_functions.R")
 source("functions/00_libraries.R")
+source("functions/05_OdysseyPAR.R")
 
 summer1 <- process_EXO("data/Sensors/YSI EXO3/LOC_EXO_Xm_BOT_20240815_20241017.csv") %>% mutate(time_period="summer1")
 winter1 <- process_EXO("data/Sensors/YSI EXO3/LOC_EXO_2.3m_BOT_20241024_20250430.csv") %>% mutate(time_period="winter1")
@@ -397,3 +398,58 @@ all_2425 %>%
 # The "winter 2" deployment was corrected to 2m BOT
 # These are now hard-coded into the file names
 
+
+# Question 5 - Odyssey PAR
+# How do the data look?
+
+LOC2m <- process_par("data/Sensors/Odyssey PAR/LOC/LOC_2m_BOT_20241025_20250522_Serial16694.CSV")
+LOC1.5m <- process_par("data/Sensors/Odyssey PAR/LOC/LOC_1.5m_BOT_20241025_20250522_Serial16684.CSV")
+LOC1m <- process_par("data/Sensors/Odyssey PAR/LOC/LOC_1m_BOT_20241025_20250522_Serial16691.CSV")
+
+head(LOC2m)
+
+all_PAR <- bind_rows(LOC2m,
+                     LOC1.5m,
+                     LOC1m)
+
+all_PAR %>%
+  mutate(month = month(date_time)) %>%
+  filter(date_time > "2024-11-01" & date_time < "2025-05-20") %>%
+  ggplot(aes(x=date_time, y=calibrated_value, color=factor(depth_from_top))) +
+  geom_point(alpha=0.1, show.legend = NA) +
+  facet_wrap(~month,scales="free") +
+  guides(alpha = "none", color = guide_legend(override.aes = list(alpha = 1)))
+
+all_PAR %>%
+  mutate(month = month(date_time)) %>%
+  filter(date_time > "2025-03-15" & date_time < "2025-04-20") %>%
+  ggplot(aes(x=date_time, y=calibrated_value, color=factor(depth_from_top))) +
+  geom_point(alpha=0.1, show.legend = NA) +
+  # facet_wrap(~month,scales="free") +
+  guides(alpha = "none", color = guide_legend(override.aes = list(alpha = 1)))
+
+# Look at maximum daily values?
+all_PAR %>%
+  mutate(month = month(date_time),
+         date = date(date_time)) %>%
+  filter(date_time > "2024-11-01" & date_time < "2025-05-20") %>%
+  group_by(date, depth_from_top) %>%
+  summarize(max = max(calibrated_value)) %>%
+  ggplot(aes(x=date, y=max, color=factor(depth_from_top))) +
+  geom_point(alpha=0.2, show.legend = NA) +
+  # facet_wrap(~month,scales="free") +
+  guides(alpha = "none", color = guide_legend(override.aes = list(alpha = 1)))
+
+# Look at maximum daily values?
+look <- all_PAR %>%
+  mutate(month = month(date_time),
+         date = date(date_time)) %>%
+  filter(date_time > "2024-11-01" & date_time < "2025-05-20") %>%
+  group_by(date, depth_from_top) %>%
+  summarize(max = max(calibrated_value)) %>%
+  pivot_wider(names_from = depth_from_top,
+              values_from = max) %>%
+  mutate(diff_4_to_3.5 = `4` - `3.5`,
+         diff_4_to_3 = `4` - `3`,
+         diff_3.5_to_3 = `3.5` - `3`) 
+  
