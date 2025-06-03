@@ -42,7 +42,7 @@ process_ysi <- function(file_path) {
     mutate(lake = file_info[1],
            site = file_info[2]) %>%
     # Move columns
-    relocate(date_time, .before = chla) %>%
+    relocate(date_time, .before = chla_RFU) %>%
     relocate(lake, .before = date_time) %>%
     relocate(site, .before = date_time) %>%
     relocate(depth, .after = date_time) %>%
