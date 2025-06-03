@@ -25,27 +25,27 @@ point_ysi <- function(file_path) {
     rename(
       date = "Date (MM/DD/YYYY)", 
       time = "Time (HH:mm:ss)", 
-      chla = "Chlorophyll RFU", 
-      cond = "Cond µS/cm", 
-      depth = "Depth m", 
+      chla_RFU = "Chlorophyll RFU", 
+      cond_uScm = "Cond µS/cm", 
+      depth_m = "Depth m", 
       do_percent = "ODO % sat", 
       do_mgL = "ODO mg/L", 
-      orp = "ORP mV", 
-      specific_cond = "SpCond µS/cm", 
-      TAL_PC = "TAL PC RFU", 
+      orp_mV = "ORP mV", 
+      cond_spec_uScm = "SpCond µS/cm", 
+      phycoC_RFU = "TAL PC RFU", 
       pH = "pH", 
-      temp = "Temp °C", 
-      barometer = "Barometer mmHg"
+      temp_C = "Temp °C", 
+      barometer_mmHg = "Barometer mmHg"
     ) %>%
     # Select desired columns
-    select(date, chla, cond, do_percent, do_mgL, orp, specific_cond, 
-      TAL_PC, pH, temp, barometer
+    select(date, chla_RFU, cond_uScm, do_percent, do_mgL, orp_mV, cond_spec_uScm, 
+           phycoC_RFU, pH, temp_C, barometer_mmHg
     ) %>%
     # Create columns for lake and site from file path
     mutate(lake = file_info[1]) %>%
     mutate(site = file_info[2]) %>%
     # Move columns
-    relocate(date, .before = chla) %>%
+    relocate(date, .before = chla_RFU) %>%
     relocate(lake, .before = date) %>%
     relocate(site, .before = date) %>%
     # Fix date formatting
@@ -55,7 +55,7 @@ point_ysi <- function(file_path) {
     # Group by lake, site, and date 
     group_by(lake, site, date) %>%
     # Calculate mean values 
-    summarise(across(chla:barometer, mean)) %>%
+    summarise(across(chla_RFU:barometer_mmHg, mean)) %>%
     # Fix output structure
     ungroup() %>%
     as.data.frame()
