@@ -20,17 +20,17 @@ process_ysi <- function(file_path) {
     rename(
       date = "Date (MM/DD/YYYY)", 
       time = "Time (HH:mm:ss)", 
-      chla = "Chlorophyll RFU", 
-      cond = "Cond µS/cm", 
-      depth = "Depth m", 
+      chla_RFU = "Chlorophyll RFU", 
+      cond_uScm = "Cond µS/cm", 
+      depth_m = "Depth m", 
       do_percent = "ODO % sat", 
       do_mgL = "ODO mg/L", 
-      orp = "ORP mV", 
-      specific_cond = "SpCond µS/cm", 
-      TAL_PC = "TAL PC RFU", 
+      orp_mV = "ORP mV", 
+      cond_spec_uScm = "SpCond µS/cm", 
+      phycoC_RFU = "TAL PC RFU", 
       pH = "pH", 
-      temp = "Temp °C", 
-      barometer = "Barometer mmHg"
+      temp_C = "Temp °C", 
+      barometer_mmHg = "Barometer mmHg"
     ) %>%
     # Merge date and time columns
     mutate(date_time = paste(date, time)) %>%
@@ -40,15 +40,15 @@ process_ysi <- function(file_path) {
     ) %>%
     # Create columns for lake and site from file path
     mutate(lake = file_info[1],
-           site = file_info[2],
-           date = date(date_time)) %>%
+           site = file_info[2]) %>%
     # Move columns
     relocate(date_time, .before = chla) %>%
     relocate(lake, .before = date_time) %>%
     relocate(site, .before = date_time) %>%
     relocate(depth, .after = date_time) %>%
     # Fix date formatting
-    mutate(date_time = mdy_hms(date_time)) %>%
+    mutate(date_time = mdy_hms(date_time),
+           date = date(date_time)) %>%
     # Pivot to long format
     pivot_longer(cols = c(chla:barometer), names_to = "parameter") 
   # Return new dataframe
