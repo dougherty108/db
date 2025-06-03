@@ -45,7 +45,7 @@ process_ysi <- function(file_path) {
     relocate(date_time, .before = chla_RFU) %>%
     relocate(lake, .before = date_time) %>%
     relocate(site, .before = date_time) %>%
-    relocate(depth, .after = date_time) %>%
+    relocate(depth_m, .after = date_time) %>%
     # Fix date formatting
     mutate(date_time = mdy_hms(date_time),
            date = date(date_time)) %>%
