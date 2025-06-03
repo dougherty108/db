@@ -35,8 +35,8 @@ process_ysi <- function(file_path) {
     # Merge date and time columns
     mutate(date_time = paste(date, time)) %>%
     # Select desired columns
-    select(date_time, chla, cond, depth, do_percent, do_mgL, orp, specific_cond, 
-           TAL_PC, pH, temp, barometer
+    select(date_time, chla_RFU, cond_uScm, depth_m, do_percent, do_mgL, orp_mV, cond_spec_uScm, 
+           phycoC_RFU, pH, temp_C, barometer_mmHg
     ) %>%
     # Create columns for lake and site from file path
     mutate(lake = file_info[1],
@@ -50,7 +50,7 @@ process_ysi <- function(file_path) {
     mutate(date_time = mdy_hms(date_time),
            date = date(date_time)) %>%
     # Pivot to long format
-    pivot_longer(cols = c(chla:barometer), names_to = "parameter") 
+    pivot_longer(cols = c(chla_RFU:barometer_mmHg), names_to = "parameter") 
   # Return new dataframe
   return(data)
 }
