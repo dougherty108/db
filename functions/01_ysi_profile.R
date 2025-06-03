@@ -39,8 +39,9 @@ process_ysi <- function(file_path) {
            TAL_PC, pH, temp, barometer
     ) %>%
     # Create columns for lake and site from file path
-    mutate(lake = file_info[1]) %>%
-    mutate(site = file_info[2]) %>%
+    mutate(lake = file_info[1],
+           site = file_info[2],
+           date = date(date_time)) %>%
     # Move columns
     relocate(date_time, .before = chla) %>%
     relocate(lake, .before = date_time) %>%
