@@ -113,7 +113,7 @@ loch_concat <- bind_rows(read.table("data/Sensors/miniDOT/concat/Loch_4.5m_16-17
   read.table("data/Sensors/miniDOT/concat/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "1.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
@@ -127,7 +127,7 @@ loch_concat <- bind_rows(read.table("data/Sensors/miniDOT/concat/Loch_4.5m_16-17
   read.table("data/Sensors/miniDOT/concat/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
-    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
+    mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "1.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)))
@@ -276,7 +276,7 @@ combined_data_clean %>%
 
 combined_data_clean %>%
   filter(lake_id=="LOC") %>%
-  filter(date_time > "2024-10-26 20:00" & date_time < "2025-05-22 12:30") %>%
+  filter(date_time > "2019-10-15" & date_time < "2020-05-26") %>%
   pivot_longer(temp:do_obs) %>%
   ggplot(aes(x=date_time, y=value, color=factor(depth)))+
   geom_point(alpha=0.1)+
