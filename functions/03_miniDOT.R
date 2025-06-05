@@ -275,12 +275,12 @@ combined_data_clean %>%
 
 
 combined_data_clean %>%
-  filter(lake_id=="LOC") %>%
-  filter(date_time > "2019-10-15" & date_time < "2020-05-26") %>%
+  filter(lake_id=="SKY") %>%
+  filter(date_time > "2021-07-06" & date_time < "2021-09-28") %>%
   pivot_longer(temp:do_obs) %>%
   ggplot(aes(x=date_time, y=value, color=factor(depth)))+
   geom_point(alpha=0.1)+
-  facet_wrap(name~., scales="free_x") 
+  facet_wrap(name~depth, scales="free_y") 
 
 
 #Export data for Bryan from The Loch.
