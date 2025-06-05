@@ -11,6 +11,6 @@ This project has a collections of functions to compile sensor data from our YSI'
 
 ## Instructions for use
 * All users should 'fork' the main branch of the repository and make changes via pull requests that @BellaOleksy approves.
-
-The 'data' folder is intentionally hidden from the repo because it is large. The source folder the Teams/Sharepoint folder with the same name 'Data'. Users will need to make sure they point to a shortcut of this folder from their machine for all of the data compilation functions.
+![image](https://github.com/user-attachments/assets/d93cb1a5-211d-4f95-8166-3b3db148c64f)
+* The 'data' folder is intentionally hidden from the repo because it is large. The source folder the Teams/Sharepoint folder with the same name 'Data'. Users will need to make sure they point to a shortcut of this folder from their machine for all of the data compilation functions.
 
