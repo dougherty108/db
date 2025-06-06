@@ -1,7 +1,7 @@
 source("functions/00_libraries.R")
 source("functions/00_helper_functions.R")
 
-#Compile miniDOT data for Sky, Loch, Fern
+#Compile miniDOT data
 
 # Define the path to the main directory
 main_dir <- here("data/Sensors/miniDOT")
@@ -53,6 +53,8 @@ process_file <- function(file_path) {
 }
 
 # Apply the function to each file and combine the results
+# Start the clock!
+ptm <- proc.time()
 combined_data <- files %>%
   map_dfr(process_file) %>%
   mutate(salinity = 0) %>%
@@ -61,6 +63,7 @@ combined_data <- files %>%
   #dataframe (code preserved below). Need to troubleshoot this - IAO 20240802
   # mutate(do_sat = case_when(lake_id=="loch" ~ 100 * do_obs/oxySol(temp, salinity, 0.68),
   #                           lake_id=="SKY" ~ 100 * do_obs/oxySol(temp, salinity, 0.66))) 
+proc.time() - ptm
 
 
 # View the combined data
