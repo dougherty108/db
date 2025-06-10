@@ -150,19 +150,6 @@ combined_data <- bind_rows(combined_data, sky_concat, loch_concat) %>%
 
 # Filtering out times when the sensors were above water -------------------
 
-metadata <- read_csv(here("data/Sensors/miniDOT/miniDot_metadata.csv")) %>%
-  mutate(start_time=mdy_hm(start_time),
-         end_time=mdy_hm(end_time),
-         depth=as.character(as.numeric(depth)),
-         depth_from=as.character(depth_from))
-
-loch_metadata <- metadata %>%
-  select(lake_id, start_time, end_time) %>%
-  filter(lake_id=="LOC")
-
-sky_metadata <- metadata %>%
-  select(lake_id, start_time, end_time) %>%
-  filter(lake_id=="SKY")
 #eventually I want to be able to flag any intervals not included between any of the 
 #start_time - end_time intervals in the metadata above. Currently doing this manually, not ideal -IAO
 
