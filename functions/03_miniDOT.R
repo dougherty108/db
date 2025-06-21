@@ -37,11 +37,15 @@ process_file <- function(file_path) {
     dplyr::rename(date_time = `Time..sec.`,
                   temp = `T..deg.C.`,
                   do_obs = `DO..mg.l.`) %>%
-    mutate(local_tz = "Mountain", daylight_savings = "Yes") %>%
-    mutate(date_time = as_datetime(`date_time`, tz="America/Denver"),
-           date_time = with_tz(date_time, tz="America/Denver")) %>%
-    # IAO---I THINK that UTC is the default with the minidot software? as_datetime defaults to UTC.
-    # I believe that "with_tz" changes how it prints, for our sanity
+    mutate(local_tz = "Mountain",
+           daylight_savings = "Yes",
+           date_time = as_datetime(as.numeric(date_time), tz = "UTC"), 
+           # Convert from Unix time (in UTC)
+           date_time = with_tz(date_time, tz = "America/Denver")) %>%            
+           # Convert to Mountain Time with DST
+      # mutate(date_time = as_datetime(`date_time`, tz="America/Denver"),
+       # date_time = with_tz(date_time, tz="America/Denver")) %>%
+    # ^^ THIS IS OLD/WRONG I THINK! Saving it just in case need to retrace steps later-IAO
     mutate(
       folder_name = folder_name,
       lake_id = folder_info[1],
@@ -138,9 +142,17 @@ loch_concat <- bind_rows(read.table("data/Sensors/miniDOT/concat/Loch_4.5m_16-17
 # corrected the hypo to 4.5m from surface - IAO
 
 lvws_concat <- bind_rows(sky_concat, loch_concat) %>%
-  mutate(date_time = as_datetime(`date_time`, tz="America/Denver"),
-         date_time = force_tz(date_time, tz="America/Denver"),
-         date_time = with_tz(date_time, tz="America/Denver"))
+  # For the concatenated files, the date_time column reads "Mountain Standard Time"
+  # That means that they are ALWAYS UTC−07:00
+  # There is no DST applied, even during the summer months when Denver normally uses MDT (UTC−06:00)
+  mutate(
+    date_time = as_datetime(date_time),  
+    # Read raw timestamp
+    date_time = force_tz(date_time, tzone = "Etc/GMT+7"),
+    # Treat as MST (UTC−7) year-round
+    date_time = with_tz(date_time, tzone = "America/Denver")
+    # Convert to Mountain local time (MST/MDT with DST)
+  )
 
 
 combined_data <- bind_rows(combined_data, sky_concat, loch_concat) %>%
@@ -180,6 +192,7 @@ combined_data_clean <- combined_data %>%
                           #^^ IAO- i know this one is weird but we are missing data for summer 2021 for mid and hypo sensors
                           lake_id == "SKY" & date_time > "2022-08-09 09:45:00" & date_time < "2022-08-16 10:00:00" ~ "above water",
                           lake_id == "SKY" & date_time > "2023-09-05 12:30:00" & date_time < "2023-09-19 09:15:00" ~ "above water",
+                          lake_id == "SKY" & date_time > "2024-09-24 11:00:00" & date_time < "2024-06-25 11:25:00" ~ "above water",
                           lake_id == "SKY" & date_time > "2024-06-25 08:15:00" ~ "above water",
                           TRUE ~ "under water")) %>%
   mutate(logging_frequency = difftime(date_time, lag(date_time), units = "mins")) %>%
@@ -194,144 +207,4 @@ combined_data_clean <- combined_data %>%
                                     lake_id == "FER" & depth_from == "BOT" ~ 5.5 - depth,
                                     lake_id == "FER" & depth_from == "TOP" ~ depth),
          depth_from_bottom = ifelse(depth_from == "BOT", depth, NA_real_))
-
-#Visual check the loch (color = flag)
-combined_data_clean %>%
-  filter(lake_id=="LOC" & flag == "under water") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  # filter(water_year == 2024) %>%
-  # filter(date_time > "2024-08-20") %>%
-  ggplot(aes(x=date_time, y=temp, color= factor(depth_from_top), shape=flag))+
-  geom_point(alpha=0.5)+
-  facet_wrap(year~., scales="free_x")+
-  labs(title="The Loch")
-
-#Visual check sky (color = depth, flags removed)
-combined_data_clean %>%
-  filter(lake_id=="SKY" & flag =="under water") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  # filter(temp < 20) %>%
-  # filter(water_year %in% c('2024')) %>%
-  ggplot(aes(x=date_time, y=temp, color=depth))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~., scales="free_x")
-
-#Visual check sky (color = flag)
-combined_data_clean %>%
-  filter(lake_id=="SKY") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  # filter(temp < 20) %>%
-  # filter(water_year %in% c('2024')) %>%
-  ggplot(aes(x=date_time, y=temp, color=flag))+
-  geom_point(alpha=0.5)+
-  facet_wrap(water_year~depth, scales="free_x")+
-  labs(title="Sky Pond")
-
-#Visual check sky (color = depth, flags removed)
-combined_data_clean %>%
-  filter(lake_id=="SKY" & flag =="under water") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(do_obs < 20) %>%
-  # filter(water_year %in% c('2024')) %>%
-  ggplot(aes(x=date_time, y=do_obs, color=depth))+
-  geom_point(alpha=0.1)+
-  facet_wrap(water_year~., scales="free_x")
-
-# What's going on in Sky Pond spring 2021?
-combined_data_clean %>%
-  filter(lake_id=="SKY" & flag =="under water") %>%
-  mutate(year=year(date_time),
-         date=date(date_time),
-         doy_wy=hydro.day(date),
-         water_year=calcWaterYear(date))%>%
-  filter(do_obs < 20) %>%
-  filter(water_year %in% c('2021')) %>%
-  pivot_longer(temp:do_obs) %>%
-  ggplot(aes(x=date_time, y=value, color=depth))+
-  geom_point(alpha=0.1)+
-  facet_wrap(name~., scales="free_x") 
-
-
-combined_data_clean %>%
-  filter(lake_id=="SKY") %>%
-  filter(date_time > "2021-07-06" & date_time < "2021-09-28") %>%
-  pivot_longer(temp:do_obs) %>%
-  ggplot(aes(x=date_time, y=value, color=factor(depth)))+
-  geom_point(alpha=0.1)+
-  facet_wrap(name~depth, scales="free_y") 
-
-
-#Export data for Bryan from The Loch.
-# BGdata <- combined_data_clean %>%
-#   filter(lake_id == "LOC" & flag == "under water") 
-# 
-# BGdata %>%
-#   mutate(year=year(date_time),
-#          date=date(date_time),
-#          doy_wy=hydro.day(date),
-#          water_year=calcWaterYear(date))%>%
-#   ggplot(aes(x=date_time, y=temp, color=depth))+
-#   geom_point(alpha=0.1)+
-#   facet_wrap(~water_year, scales="free_x")
-# 
-# write_csv(BGdata, "data_export/loch_minidot_WY2017-2024.csv")
-
-# Options for flagging data later -----------------------------------------
-
-#IAO to AGK -- I found this resource on stackoverflow that I think should work
-#for our data. I pasted the example code below. Give it a try? I also included
-#2 more resources in case this doesn't work
-#https://stackoverflow.com/questions/42371168/subset-time-series-by-groups-based-on-cutoff-date-data-frame
-
-date <- seq(as.POSIXct("2014-07-21 17:00:00", tz= "GMT"), as.POSIXct("2014-09-11 24:00:00", tz= "GMT"), by="hour") 
-group <- letters[1:4]             
-# group <- rep(letters[1:4],2)             
-datereps <- rep(date, length(group))                  
-attr(datereps, "tzone") <- "GMT"
-sitereps <- rep(group, each = length(date))    
-value  <- rnorm(length(datereps))
-df <- data.frame(DateTime = datereps, Group = group, Value = value)  
-
-
-start <- c("2014-08-01 00:00:00 GMT", "2014-07-26 00:00:00 GMT", "2014-07-21 17:00:00 GMT", "2014-08-03 24:00:00 GMT")
-end <- c("2014-09-11 24:00:00 GMT", "2014-09-01 24:00:00 GMT", "2014-09-07 24:00:00 GMT", "2014-09-11 24:00:00 GMT")
-cut <- data.frame(Group = group, Start = as.POSIXct(start), End = as.POSIXct(end))
-
-df2 <- merge(x = df,y = cut,by = "Group")
-df2$flagvar <- !(df2$DateTime <= df2$Start | df2$DateTime >= df2$End)
-
-#Does it work the way I think it should?
-df2 %>%
-  ggplot(aes(x=DateTime, y=Value, color=flagvar))+
-  geom_point()+
-  facet_wrap(~Group)
-#Yes!
-
-#Then in practice we change just filter out the 'FALSE' values
-df2 %>%
-  filter(flagvar=="TRUE") %>%
-  ggplot(aes(x=DateTime, y=Value))+
-  geom_point()+
-  facet_wrap(~Group)
-
-#https://business-science.github.io/timetk/reference/between_time.html 
-# ^^ this might work for us too?
-
-#https://stackoverflow.com/questions/64295796/use-dplyr-to-subset-time-series-data-from-specified-start-and-stop-times
-## ^^ this could work but havent tried
-
-
-
 
