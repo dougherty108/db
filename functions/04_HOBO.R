@@ -107,14 +107,13 @@ compile_HOBO_data <- function(filepath = main_dir) {
   data <- bind_rows(data_list) %>%
     left_join(metadata, by = "File") %>%
     mutate(
-      date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),  # Auto-detects format
-      date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),
-      date_time = case_when(
-        timezone == "MDT" ~ force_tz(date_time, "America/Denver"),  # Will apply DST when appropriate
-        timezone == "MST" ~ force_tz(date_time, "Etc/GMT+7"),       # Fixed UTC-7, no DST
-        TRUE ~ date_time  # Fallback if timezone is missing
+      date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),  # Auto-detects format                                   # 1. parse, still naïve
+      date_time = case_when(                                           # 2. pin the real zone
+        timezone == "MDT" ~ force_tz(date_time, "America/Denver"),     #    recorded in MDT (UTC‑6)
+        timezone == "MST" ~ force_tz(date_time, "Etc/GMT+7"),          #    recorded in fixed MST (UTC‑7)
+        TRUE ~ date_time                                               #    safety net
       ),
-      date_time = with_tz(date_time, "America/Denver"),  # Convert all to local time zone for consistency
+      date_time = with_tz(date_time, "America/Denver"),                 # 3. show everything in local Denver time
       depth_from_top = case_when(lake_ID == "SKY" & depth_from == "BOT" ~ 7 - depth_m,
                                  lake_ID == "SKY" & depth_from == "TOP" ~ depth_m,
                                  lake_ID == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
