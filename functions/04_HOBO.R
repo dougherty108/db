@@ -24,7 +24,7 @@ compile_HOBO_data <- function(filepath = main_dir) {
     return(NULL)
   }
   
-
+  
   # Extract metadata
   metadata <- tibble(File = files) %>%
     mutate(
@@ -89,15 +89,6 @@ compile_HOBO_data <- function(filepath = main_dir) {
         df <- df %>% rename_with(~ "end_of_file", matches("End_of_File"))
       }
       
-      # Rename other columns
-      # df <- df %>%
-      #   rename_with(~ "temperature_C", matches("Temperature")) %>%
-      #   rename_with(~ "light_lux", matches("Light")) %>%
-      #   rename_with(~ "button_down", matches("Button_Down")) %>%
-      #   rename_with(~ "button_up", matches("Button_Up")) %>%
-      #   rename_with(~ "host_connected", matches("Host_Connected")) %>%
-      #   rename_with(~ "end_of_file", matches("End_of_File")) 
-      #   # rename_with(~ "stopped", matches("Stopped"))
       
       return(df)
     }, error = function(e) {
@@ -117,6 +108,13 @@ compile_HOBO_data <- function(filepath = main_dir) {
     left_join(metadata, by = "File") %>%
     mutate(
       date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),  # Auto-detects format
+      date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),
+      date_time = case_when(
+        timezone == "MDT" ~ force_tz(date_time, "America/Denver"),  # Will apply DST when appropriate
+        timezone == "MST" ~ force_tz(date_time, "Etc/GMT+7"),       # Fixed UTC-7, no DST
+        TRUE ~ date_time  # Fallback if timezone is missing
+      ),
+      date_time = with_tz(date_time, "America/Denver"),  # Convert all to local time zone for consistency
       depth_from_top = case_when(lake_ID == "SKY" & depth_from == "BOT" ~ 7 - depth_m,
                                  lake_ID == "SKY" & depth_from == "TOP" ~ depth_m,
                                  lake_ID == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
@@ -130,6 +128,8 @@ compile_HOBO_data <- function(filepath = main_dir) {
     select(-c(button_down:Stopped)) #delete HOBOs columns unless we decide we need them later
   
   return(data)
+  
+  
 }
 
 
@@ -139,7 +139,7 @@ compile_HOBO_data <- function(filepath = main_dir) {
 
 
 
-main_dir <-  here("data/sensors/HOBO/LOC")
+main_dir <-  here("data/sensors/HOBO")
 all_HOBO <- compile_HOBO_data(filepath = main_dir)
 str(all_HOBO)
 length(unique(all_HOBO$date_retrieved))
