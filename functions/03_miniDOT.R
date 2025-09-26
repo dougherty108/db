@@ -3,8 +3,10 @@ source("functions/00_helper_functions.R")
 
 #Compile miniDOT data
 
+data_path = "~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data"
+
 # Define the path to the main directory
-main_dir <- here("data/Sensors/miniDOT")
+main_dir <- file.path(Data_path, "Sensors/miniDOT")
 
 # Get all text files in the main directory and its subdirectories
 files <- dir_ls(main_dir, regexp = "\\.txt$", recurse = TRUE)
@@ -75,63 +77,63 @@ print(combined_data)
 
 
 # Append concatenated files for some early years in Sky Pond --------------
-sky_concat <- bind_rows(read.table("data/Sensors/miniDOT/concat/Sky_6.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+sky_concat <- bind_rows(read.table(file.path(data_path, "Sensors/miniDOT/concat/Sky_6.5m_16-17_all.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
-  read.table("data/Sensors/miniDOT/concat/Sky_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Sky_0.5m_16-17_all.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
-  read.table("data/Sensors/miniDOT/concat/Sky_hypo_Oct17-Sept18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Sky_hypo_Oct17-Sept18.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "6.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)),
-  read.table("data/Sensors/miniDOT/concat/Sky_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Sky_surface_Oct17-June18.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "SKY", local_tz = "Mountain", daylight_savings = "Yes", depth = "0.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`)) %>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.66)))#last term is atm pressure)
-# 'corrected' hypolimnion depth to 6m. will look through field notebooks and fix later -AGK
+ # 'corrected' hypolimnion depth to 6m. will look through field notebooks and fix later -AGK
 # I change it to 6.5m, which was the depth from surface -IAO
 
 # Append concatenated files for some early years in The Loch --------------
 
 # concatenated files - pulled from an earlier version. keeping do_sat, can also remove and calculate manually
 # have to convert date formatting in order to combine with dataframe of raw files
-loch_concat <- bind_rows(read.table("data/Sensors/miniDOT/concat/Loch_4.5m_16-17_all.TXT", sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
+loch_concat <- bind_rows(read.table(file.path(data_path, "Sensors/miniDOT/concat/Loch_4.5m_16-17_all.TXT"), sep = ",", header = TRUE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
       mutate(salinity = 0,
              do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
-  read.table("data/Sensors/miniDOT/concat/Loch_0.5m_16-17_all.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Loch_0.5m_16-17_all.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "1.5", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
-  read.table("data/Sensors/miniDOT/concat/Loch_hypo_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Loch_hypo_Oct17-June18.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "4", depth_from="TOP", folder_name="concat") %>%
     mutate(date_time = as_datetime(`date_time`))%>%
     mutate(salinity = 0,
            do_sat = 100 * do_obs/oxySol(temp, salinity, 0.68)),
-  read.table("data/Sensors/miniDOT/concat/Loch_surface_Oct17-June18.TXT", sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
+  read.table(file.path(data_path, "Sensors/miniDOT/concat/Loch_surface_Oct17-June18.TXT"), sep = ",", header = FALSE, skip = 9, strip.white = TRUE) %>%
     select(2, 5:7) %>%
     dplyr::rename(date_time = 1, temp = 2, do_obs = 3, do_sat = 4) %>%
     mutate(lake_id = "LOC", local_tz = "Mountain", daylight_savings = "Yes", depth = "1.5", depth_from="TOP", folder_name="concat") %>%
