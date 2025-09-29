@@ -119,7 +119,10 @@ compile_HOBO_data <- function(filepath = main_dir) {
                                  lake_ID == "LOC" & depth_from == "BOT" ~ 5 - depth_m,
                                  lake_ID == "LOC" & depth_from == "TOP" ~ depth_m,
                                  lake_ID == "FER" & depth_from == "BOT" ~ 5.5 - depth_m,
-                                 lake_ID == "FER" & depth_from == "TOP" ~ depth_m),
+                                 lake_ID == "FER" & depth_from == "TOP" ~ depth_m,
+                                 lake_ID == "TUC" & depth_from == "BOT" ~ 16.6 - depth_m,
+                                 lake_ID == "UFM" & depth_from == "BOT" ~ 9 - depth_m,
+                                 lake_ID == "LFM" & depth_from == "BOT" ~ 6.4 - depth_m),
       depth_from_bottom = ifelse(depth_from == "BOT", depth_m, NA_real_)
     ) %>%
     select(File, lake_ID, date_time, timezone, depth_from_top, depth_from_bottom, everything()) %>%
