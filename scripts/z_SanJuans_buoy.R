@@ -33,7 +33,7 @@ SJ_buoy <- bind_rows(SJ_DO, SJ_HOBO) %>%
 SJ_buoy %>%
   filter(lake_ID=="TUC") %>%
   filter(name=="temperature_C") %>%
-  filter(!depth_from_top == "1.6") %>% #Show Charlie or Katie -- a bit of recon needed
+  filter(depth_from_top == "8.6") %>% #Show Charlie or Katie -- a bit of recon needed
   filter(date > as.Date("2024-07-19") & date < as.Date("2024-09-06") | 
            date >= as.Date("2024-09-08") & date < as.Date("2025-07-16")) %>%
   ggplot(aes(x=date_time, y=value, color=depth_from_top))+
