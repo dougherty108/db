@@ -208,6 +208,8 @@ combined_data_clean <- combined_data %>%
                                     lake_id == "FER" & depth_from == "TOP" ~ depth,
                                     lake_id == "TUC" & depth_from == "BOT" ~ 16.6 - depth,
                                     lake_id == "UFM" & depth_from == "BOT" ~ 9 - depth,
-                                    lake_id == "LFM" & depth_from == "BOT" ~ 6.4 - depth),
+                                    lake_id == "LFM" & depth_from == "BOT" ~ 6.4 - depth,
+                                    lake_id == "GL1" & depth_from == "BOT" ~ 8 - depth,
+                                    lake_id == "GL5" & depth_from == "BOT" ~ 8 - depth),
          depth_from_bottom = ifelse(depth_from == "BOT", depth, NA_real_))
 
