@@ -4,14 +4,11 @@ source("functions/01_ysi_profile.R")
 
 
 
-
-
-
 # Inspect the profiles, summarize the data, and export into "GL4 > export" folder
 
 # 00 Set Up R Environment ----
-# Write plotting function 
 
+    # Write plotting function 
     Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest ){
       ysi_profile %>%
         mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) %>% #round to the nearest 0.5
@@ -25,6 +22,31 @@ source("functions/01_ysi_profile.R")
         facet_wrap(parameter~., scales="free_x", nrow = 2)+
         labs(title=paste(unique(ysi_profile$lake),unique(ysi_profile$date)))
     }
+
+    # Write Rounding function 
+
+    # Dummy data to write function 
+        ysi_profile <- GL4_1
+        round_to_nearest <- 0.25
+        head(ysi_profile)
+
+    Round_YSI_FUNC <- function(ysi_profile, round_to_nearest){
+
+      # to start off this part does the rounding 
+      ysi_profile_rounded <- ysi_profile %>%
+        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) %>% #round to the nearest 0.5
+        group_by(depth_m, parameter, lake) %>% # gather everythinf into groups correspond to a unique combination of lake, date, depth
+        mutate(value = median(value, na.rm=TRUE)) %>% #then create or override a column called value and populate it with the median of the existing "value" values for that group
+        mutate(month=month(date_time)) # Create a column called month and populate it by pulling the month out of the date_time column 
+
+      # And this part does the pivoting 
+
+      return(ysi_profile_rounded)
+    }
+
+    # Write a Pivot function 
+
+    # round based on the visual assessment of the plotted data 
     
     # Code to #Export a CSV with rounded depths
     GL4_20240627 <- GL4_1 %>%
