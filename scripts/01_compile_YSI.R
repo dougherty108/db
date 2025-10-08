@@ -2,6 +2,9 @@ source("functions/00_libraries.R")
 source("functions/00_helper_functions.R")
 source("functions/01_ysi_profile.R")
 
+mhk<- read.csv("/Users/kaga3666/OneDrive - UCB-O365/Desktop/MHK_2024_05_07_profile.csv")
+form_names <- names(mhk) #save the names formatted the way you need them for PP 
+
 
 
 # Inspect the profiles, summarize the data, and export into "GL4 > export" folder
@@ -23,7 +26,7 @@ source("functions/01_ysi_profile.R")
         labs(title=paste(unique(ysi_profile$lake),unique(ysi_profile$date)))
     }
 
-    # Write Rounding function 
+    # Write a function that rounds, summarizes by depth, and pivots the data to wide format 
 
     # Dummy data to write function 
         ysi_profile <- GL4_1
@@ -32,16 +35,50 @@ source("functions/01_ysi_profile.R")
 
     Round_YSI_FUNC <- function(ysi_profile, round_to_nearest){
 
-      # to start off this part does the rounding 
+      # Round to the nearest depth (based on what you decided looking at the plots ) 
       ysi_profile_rounded <- ysi_profile %>%
-        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) %>% #round to the nearest 0.5
-        group_by(depth_m, parameter, lake) %>% # gather everythinf into groups correspond to a unique combination of lake, date, depth
-        mutate(value = median(value, na.rm=TRUE)) %>% #then create or override a column called value and populate it with the median of the existing "value" values for that group
-        mutate(month=month(date_time)) # Create a column called month and populate it by pulling the month out of the date_time column 
+        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) 
 
-      # And this part does the pivoting 
+      # Save the date time that the profile was collected as date 
+      ysi_profile_rounded$date <- ysi_profile_rounded$date_time[1] # funky because we want to keep the date-time that the profile was taken but we don't want to summarize by time bc it would replicate for each second or minute and some of our profiles cover a lot of time 
 
-      return(ysi_profile_rounded)
+      # Summarize: take median parameter value for each unique combination of lake, site, date, depth
+      ysi_profile_summarized <- ysi_profile_rounded %>% #round to the nearest 0.5
+        group_by(lake, site, date, depth_m, parameter) %>% # gather everythinf into groups correspond to a unique combination of lake, date, depth
+        summarize(value = median(value, na.rm=TRUE),.groups = "drop") #then create or override a column called value and populate it with the median of the existing "value" values for that group
+        # print(ysi_profile_summarized, n = 20) # double checking that the process is working so far 
+
+      # Pivot the resulting table from long format to wide format 
+      ysi_wide <- ysi_profile_summarized %>%
+        select(lake, site, date, depth_m, parameter, value) %>%  # keep relevant columns
+        pivot_wider(
+          names_from = parameter,   # each unique parameter becomes its own column
+          values_from = value       # fill those columns with the 'value' data
+        )
+      
+      # Now you need to make sure all of the column names are the same as MHK from Dave 
+      names(ysi_wide)[names(ysi_wide) == "lake"] <- "lakeID" 
+      ysi_wide$date_yyyy.mm.dd <- as.Date(ysi_wide$date)
+      ysi_wide$time_hhmmss <- format(ysi_wide$date, "%H:%M:%S")
+      names(ysi_wide)[names(ysi_wide) == "temp_C"] <- "temp_degC" 
+      names(ysi_wide)[names(ysi_wide) == "do_mgL"] <- "doConcentration_mgpL" 
+      names(ysi_wide)[names(ysi_wide) == "do_percent"] <- "doSaturation_percent" 
+      names(ysi_wide)[names(ysi_wide) == "chla_RFU"] <- "chlorophyll_RFU" 
+      names(ysi_wide)[names(ysi_wide) == "phycoC_RFU"] <- "phycocyaninBGA_RFU" 
+      ysi_wide$turbidity_FNU <- NA # explicit column of NAs for data that we do not have 
+      names(ysi_wide)[names(ysi_wide) == "cond_spec_uScm"] <- "specificConductivity_uSpcm" 
+      ysi_wide$salinity_psu <- NA # explicit column of NAs for data that we do not have
+      ysi_wide$tds_mgpL <- NA # explicit column of NAs for data that we do not have
+      ysi_wide$waterPressure_barA <- ysi_wide$barometer_mmHg * 0.0013322 # we measure barometric pressure as barometer_mmHg, for "water pressure" (under water rather than in air handheld) Dave wanrs barA as the units 
+      
+  
+
+      # Put all together into one nice formatted dataframe 
+      ysi_clean <- subset(ysi_wide, select = c("lakeID" , "date_yyyy.mm.dd", "time_hhmmss", "depth_m", "temp_degC", "doConcentration_mgpL",
+                                    "doSaturation_percent", "chlorophyll_RFU", "phycocyaninBGA_RFU", "turbidity_FNU", "pH", "orp_mV", 
+                                    "specificConductivity_uSpcm", "salinity_psu", "tds_mgpL", "waterPressure_barA" ))
+
+      return(ysi_clean)
     }
 
     # Write a Pivot function 
