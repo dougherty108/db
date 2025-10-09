@@ -31,7 +31,7 @@
     }
 
     # Write a function that rounds, summarizes by depth, and pivots the data to wide format 
-    Round_YSI_FUNC <- function(ysi_profile, round_to_nearest){
+    OTI_YSI_FUNC <- function(ysi_profile, round_to_nearest){
 
       # Round to the nearest depth (based on what you decided looking at the plots ) 
       ysi_profile_rounded <- ysi_profile %>%
@@ -129,59 +129,59 @@
   setwd("/Users/kaga3666/Library/CloudStorage/OneDrive-UCB-O365/Graduate_School/04_Mountain_Limno_Lab/01_Data/Sensor_Data/YSI_DSSPro/cleaned/GL4/")
 
       Round_Plot_YSI_FUNC(GL4files_processed[[1]], 0.5) # Check the plot 
-      GL4_2024_06_27 <- Round_YSI_FUNC(GL4files_processed[[1]], 0.5) #round, summarize, pivot, and format the data 
+      GL4_2024_06_27 <- OTI_YSI_FUNC(GL4files_processed[[1]], 0.5) #round, summarize, pivot, and format the data 
       write_csv(GL4_2024_06_27, "GL4_2024_06_27_profile.csv") # save the output 
     
       Round_Plot_YSI_FUNC(GL4files_processed[[2]], 0.5)
-      GL4_2024_07_23 <- Round_YSI_FUNC(GL4files_processed[[2]], 0.5)
+      GL4_2024_07_23 <- OTI_YSI_FUNC(GL4files_processed[[2]], 0.5)
       write_csv( GL4_2024_07_23, "GL4_2024_07_23_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[3]], 0.25) # good at 0.25
-      GL4_2024_08_22 <- Round_YSI_FUNC(GL4files_processed[[3]], 0.5)
+      GL4_2024_08_22 <- OTI_YSI_FUNC(GL4files_processed[[3]], 0.5)
       write_csv( GL4_2024_08_22, "GL4_2024_08_22_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[4]], 0.25) # good at 0.25
-      GL4_2024_09_26 <- Round_YSI_FUNC(GL4files_processed[[4]], 0.25)
+      GL4_2024_09_26 <- OTI_YSI_FUNC(GL4files_processed[[4]], 0.25)
       write_csv( GL4_2024_09_26, "GL4_2024_09_26_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[5]], 0.25) # only one data point at 0.25 but I think still worth saving 
-      GL4_2024_10_22 <-  Round_YSI_FUNC(GL4files_processed[[5]], 0.25) 
+      GL4_2024_10_22 <-  OTI_YSI_FUNC(GL4files_processed[[5]], 0.25) 
       write_csv(GL4_2024_10_22, "GL4_2024_10_22_profile.csv")
 
       Round_Plot_YSI_FUNC(GL4files_processed[[6]], 0.25) # only one data point at 0.25 but I think still worth saving 
-      GL4_2024_12_03 <-  Round_YSI_FUNC(GL4files_processed[[6]], 0.25) 
+      GL4_2024_12_03 <-  OTI_YSI_FUNC(GL4files_processed[[6]], 0.25) 
       write_csv(GL4_2024_12_03, "GL4_2024_12_03_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[7]], 0.25)
-      GL4_2025_01_28 <- Round_YSI_FUNC(GL4files_processed[[7]], 0.25)
+      GL4_2025_01_28 <- OTI_YSI_FUNC(GL4files_processed[[7]], 0.25)
       write_csv( GL4_2025_01_28, "GL4_2025_01_28_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[8]], 0.25)
-      GL4_2025_02_27 <- Round_YSI_FUNC(GL4files_processed[[8]], 0.25)
+      GL4_2025_02_27 <- OTI_YSI_FUNC(GL4files_processed[[8]], 0.25)
       write_csv(GL4_2025_02_27, "GL4_2025_02_27_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[9]], 0.25)
-      GL4_2025_03_20 <- Round_YSI_FUNC(GL4files_processed[[9]], 0.25)
+      GL4_2025_03_20 <- OTI_YSI_FUNC(GL4files_processed[[9]], 0.25)
       write_csv(GL4_2025_03_20, "GL4_2025_03_20_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[10]], 0.25)
-      GL4_2025_04_22 <- Round_YSI_FUNC(GL4files_processed[[10]], 0.25)
+      GL4_2025_04_22 <- OTI_YSI_FUNC(GL4files_processed[[10]], 0.25)
       write_csv(GL4_2025_04_22, "GL4_2025_04_22_profile.csv" )
       
       Round_Plot_YSI_FUNC(GL4files_processed[[11]], 0.25)
-      GL4_2025_07_01 <- Round_YSI_FUNC(GL4files_processed[[11]], 0.25)
+      GL4_2025_07_01 <- OTI_YSI_FUNC(GL4files_processed[[11]], 0.25)
       write_csv(GL4_2025_07_01,"GL4_2025_07_01_profile.csv" )
       
       Round_Plot_YSI_FUNC(GL4files_processed[[12]], 0.25)
-      GL4_2025_07_23 <- Round_YSI_FUNC(GL4files_processed[[12]], 0.25)
+      GL4_2025_07_23 <- OTI_YSI_FUNC(GL4files_processed[[12]], 0.25)
       write_csv(GL4_2025_07_23, "GL4_2025_07_23_profile.csv")
       
       Round_Plot_YSI_FUNC(GL4files_processed[[13]], 0.5)
-      GL4_2025_08_12 <- Round_YSI_FUNC(GL4files_processed[[13]], 0.5)
+      GL4_2025_08_12 <- OTI_YSI_FUNC(GL4files_processed[[13]], 0.5)
       write_csv(GL4_2025_08_12, "GL4_2025_08_12_profile.csv")
 
       Round_Plot_YSI_FUNC(GL4files_processed[[14]], 0.5)
-      GL4_2025_09_04 <- Round_YSI_FUNC(GL4files_processed[[14]], 0.5)
+      GL4_2025_09_04 <- OTI_YSI_FUNC(GL4files_processed[[14]], 0.5)
       write_csv(GL4_2025_09_04, "GL4_2025_09_04_profile.csv")
       
   
@@ -189,87 +189,87 @@
     setwd("/Users/kaga3666/Library/CloudStorage/OneDrive-UCB-O365/Graduate_School/04_Mountain_Limno_Lab/01_Data/Sensor_Data/YSI_DSSPro/cleaned/LOC/")
  
       Round_Plot_YSI_FUNC(LOCfiles_processed[[1]], 0.25)
-      LOC_2023_12_05 <-  Round_YSI_FUNC(LOCfiles_processed[[1]], 0.25)
+      LOC_2023_12_05 <-  OTI_YSI_FUNC(LOCfiles_processed[[1]], 0.25)
       write_csv(LOC_2023_12_05, "LOC_2023_12_05_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[2]], 0.1) 
-      LOC_2024_01_30 <-  Round_YSI_FUNC(LOCfiles_processed[[2]], 0.1)
+      LOC_2024_01_30 <-  OTI_YSI_FUNC(LOCfiles_processed[[2]], 0.1)
       write_csv(LOC_2024_01_30, "LOC_2024_01_30_profile.csv" )
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[3]], 0.25)
-      LOC_2024_02_06 <- Round_YSI_FUNC(LOCfiles_processed[[3]], 0.25)
+      LOC_2024_02_06 <- OTI_YSI_FUNC(LOCfiles_processed[[3]], 0.25)
       write_csv(LOC_2024_02_06, "LOC_2024_02_06_profile.csv" )
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[4]], 0.1)
-      LOC_2024_03_05 <- Round_YSI_FUNC(LOCfiles_processed[[4]], 0.1)
+      LOC_2024_03_05 <- OTI_YSI_FUNC(LOCfiles_processed[[4]], 0.1)
       write_csv(LOC_2024_03_05, "LOC_2024_03_05_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[5]], 0.25)
-      LOC_2024_04_23 <- Round_YSI_FUNC(LOCfiles_processed[[5]], 0.25)
+      LOC_2024_04_23 <- OTI_YSI_FUNC(LOCfiles_processed[[5]], 0.25)
       write_csv(LOC_2024_04_23, "LOC_2024_04_23_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[6]], 0.1)
-      LOC_2024_05_13 <-  Round_YSI_FUNC(LOCfiles_processed[[6]], 0.1)
+      LOC_2024_05_13 <-  OTI_YSI_FUNC(LOCfiles_processed[[6]], 0.1)
       write_csv(LOC_2024_05_13, "LOC_2024_05_13_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[7]], 0.25)
-      LOC_2024_06_13 <-  Round_YSI_FUNC(LOCfiles_processed[[7]], 0.25)
+      LOC_2024_06_13 <-  OTI_YSI_FUNC(LOCfiles_processed[[7]], 0.25)
       write_csv(LOC_2024_06_13, "LOC_2024_06_13_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[8]], 0.25)
-      LOC_2024_07_09 <- Round_YSI_FUNC(LOCfiles_processed[[8]], 0.25)
+      LOC_2024_07_09 <- OTI_YSI_FUNC(LOCfiles_processed[[8]], 0.25)
       write_csv(LOC_2024_07_09, "LOC_2024_07_09_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[9]], 0.25)
-      LOC_2024_09_24 <- Round_YSI_FUNC(LOCfiles_processed[[9]], 0.25)
+      LOC_2024_09_24 <- OTI_YSI_FUNC(LOCfiles_processed[[9]], 0.25)
       write_csv(LOC_2024_09_24, "LOC_2024_09_24_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[10]], 0.1) 
-      LOC_2024_10_25 <- Round_YSI_FUNC(LOCfiles_processed[[10]], 0.25)
+      LOC_2024_10_25 <- OTI_YSI_FUNC(LOCfiles_processed[[10]], 0.25)
       write_csv(LOC_2024_10_25, "LOC_2024_10_25_profile.csv")
 
       Round_Plot_YSI_FUNC(LOCfiles_processed[[11]], 0.1)
-      LOC_2024_11_21 <- Round_YSI_FUNC(LOCfiles_processed[[11]], 0.25)
+      LOC_2024_11_21 <- OTI_YSI_FUNC(LOCfiles_processed[[11]], 0.25)
       write_csv(LOC_2024_11_21, "LOC_2024_11_21_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[12]], 0.1)
-      LOC_2024_12_12 <-  Round_YSI_FUNC(LOCfiles_processed[[12]], 0.1)
+      LOC_2024_12_12 <-  OTI_YSI_FUNC(LOCfiles_processed[[12]], 0.1)
       write_csv(LOC_2024_12_12,"LOC_2024_12_12_profile.csv" )
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[13]], 0.1) 
-      LOC_2025_01_16 <- Round_YSI_FUNC(LOCfiles_processed[[13]], 0.1)
+      LOC_2025_01_16 <- OTI_YSI_FUNC(LOCfiles_processed[[13]], 0.1)
       write_csv(LOC_2025_01_16, "LOC_2025_01_16_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[14]], 0.1)
-      LOC_2025_01_24 <- Round_YSI_FUNC(LOCfiles_processed[[14]], 0.1)
+      LOC_2025_01_24 <- OTI_YSI_FUNC(LOCfiles_processed[[14]], 0.1)
       write_csv(LOC_2025_01_24, "LOC_2025_01_24_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[15]], 0.1)
-      LOC_2025_02_11 <- Round_YSI_FUNC(LOCfiles_processed[[15]], 0.1)
+      LOC_2025_02_11 <- OTI_YSI_FUNC(LOCfiles_processed[[15]], 0.1)
       write_csv(LOC_2025_02_11, "LOC_2025_02_11_profile.csv" )
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[16]], 0.25)
-      LOC_2025_02_25 <- Round_YSI_FUNC(LOCfiles_processed[[16]], 0.25)
+      LOC_2025_02_25 <- OTI_YSI_FUNC(LOCfiles_processed[[16]], 0.25)
       write_csv(LOC_2025_02_25, "LOC_2025_02_25_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[17]], 0.25) 
-      LOC_2025_03_11 <- Round_YSI_FUNC(LOCfiles_processed[[17]], 0.25)
+      LOC_2025_03_11 <- OTI_YSI_FUNC(LOCfiles_processed[[17]], 0.25)
       write_csv(LOC_2025_03_11,"LOC_2025_03_11_profile.csv" )
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[18]], 0.25)  
-      LOC_2025_04_15 <- Round_YSI_FUNC(LOCfiles_processed[[18]], 0.25)
+      LOC_2025_04_15 <- OTI_YSI_FUNC(LOCfiles_processed[[18]], 0.25)
       write_csv(LOC_2025_04_15, "LOC_2025_04_15_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[19]], 0.25) 
-      LOC_2025_05_22 <- Round_YSI_FUNC(LOCfiles_processed[[19]], 0.25)
+      LOC_2025_05_22 <- OTI_YSI_FUNC(LOCfiles_processed[[19]], 0.25)
       write_csv(LOC_2025_05_22, "LOC_2025_05_22_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[20]], 0.25) 
-      LOC_2025_06_19 <-  Round_YSI_FUNC(LOCfiles_processed[[20]], 0.25)
+      LOC_2025_06_19 <-  OTI_YSI_FUNC(LOCfiles_processed[[20]], 0.25)
       write_csv(LOC_2025_06_19, "LOC_2025_06_19_profile.csv")
       
       Round_Plot_YSI_FUNC(LOCfiles_processed[[21]], 0.25)
-      LOC_2025_07_29 <- Round_YSI_FUNC(LOCfiles_processed[[21]], 0.25)
+      LOC_2025_07_29 <- OTI_YSI_FUNC(LOCfiles_processed[[21]], 0.25)
       write_csv(LOC_2025_07_29, "LOC_2025_07_29_profile.csv")
 
       

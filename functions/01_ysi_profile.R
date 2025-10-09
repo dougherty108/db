@@ -87,7 +87,7 @@ Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest ){
     }
 
 # Write a function that rounds, summarizes by depth, and pivots the data to wide format 
-Round_YSI_FUNC <- function(ysi_profile, round_to_nearest){
+OTI_YSI_FUNC <- function(ysi_profile, round_to_nearest){
 
       # Round to the nearest depth (based on what you decided looking at the plots ) 
       ysi_profile_rounded <- ysi_profile %>%
