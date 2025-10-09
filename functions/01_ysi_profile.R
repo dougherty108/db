@@ -71,6 +71,90 @@ process_ysi <- function(file_path) {
   return(data)
 }
 
+# Write plotting function 
+Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest ){
+      ysi_profile %>%
+        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) %>% #round to the nearest 0.5
+        group_by(depth_m, parameter, lake) %>%
+        mutate(value = median(value, na.rm=TRUE)) %>%
+        mutate(month=month(date_time)) %>%
+        filter(!parameter %in% c("barometer_mmHg","cond_spec_uScm")) %>%
+        ggplot(aes(x=value, y=depth_m, color=parameter))+
+        geom_point()+
+        scale_y_reverse()+
+        facet_wrap(parameter~., scales="free_x", nrow = 2)+
+        labs(title=paste(unique(ysi_profile$lake),unique(ysi_profile$date)))
+    }
+
+# Write a function that rounds, summarizes by depth, and pivots the data to wide format 
+OTI_YSI_FUNC <- function(ysi_profile, round_to_nearest){
+
+      # Round to the nearest depth (based on what you decided looking at the plots ) 
+      ysi_profile_rounded <- ysi_profile %>%
+        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) 
+
+      # Save the date time that the profile was collected as date 
+      ysi_profile_rounded$date <- ysi_profile_rounded$date_time[1] # funky because we want to keep the date-time that the profile was taken but we don't want to summarize by time bc it would replicate for each second or minute and some of our profiles cover a lot of time 
+
+      # Summarize: take median parameter value for each unique combination of lake, site, date, depth
+      ysi_profile_summarized <- ysi_profile_rounded %>% #round to the nearest 0.5
+        group_by(lake, site, date, depth_m, parameter) %>% # gather everythinf into groups correspond to a unique combination of lake, date, depth
+        summarise(value = median(value, na.rm = TRUE), .groups = "drop") # take the median of each group 
+
+      # Pivot the resulting table from long format to wide format 
+      ysi_wide <- ysi_profile_summarized %>%
+        select(lake, site, date, depth_m, parameter, value) %>%  # keep relevant columns
+        pivot_wider(
+          names_from = parameter,   # each unique parameter becomes its own column
+          values_from = value       # fill those columns with the 'value' data
+        )
+       
+      # Format columns and column names 
+
+          # some columns just need to be renamed 
+          names(ysi_wide)[names(ysi_wide) == "lake"] <- "lakeID" 
+          names(ysi_wide)[names(ysi_wide) == "temp_C"] <- "temp_degC" 
+          names(ysi_wide)[names(ysi_wide) == "do_mgL"] <- "doConcentration_mgpL" 
+          names(ysi_wide)[names(ysi_wide) == "do_percent"] <- "doSaturation_percent"
+          names(ysi_wide)[names(ysi_wide) == "cond_spec_uScm"] <- "specificConductivity_uSpcm" 
+
+          # Format dates to be compatable 
+          ysi_wide$date_yyyy.mm.dd <- as.Date(ysi_wide$date)
+          ysi_wide$time_hhmmss <- format(ysi_wide$date, "%H:%M:%S")
+
+          # Convert the units of barometric pressure to tbe same as the rest of the OTI Team 
+          ysi_wide$waterPressure_barA <- ysi_wide$barometer_mmHg * 0.0013322 # we measure barometric pressure as barometer_mmHg, for "water pressure" (under water rather than in air handheld) Dave wanrs barA as the units 
+          
+          # Some parameters we don't collect on our instrument so give them a column with explicit NAs 
+          ysi_wide$turbidity_FNU <- NA # explicit column of NAs for data that we do not have 
+          ysi_wide$salinity_psu <- NA # explicit column of NAs for data that we do not have
+          ysi_wide$tds_mgpL <- NA # explicit column of NAs for data that we do not have
+          ysi_wide$barometerAirHandheld_mbars <- NA # explicit column of NAs for data that we do not have 
+
+          # Set lat long and altitude based on lake 
+          ysi_wide$latitude <- ifelse(ysi_wide$lakeID == "GL4", gl4_lat, 
+                                  ifelse(ysi_wide$lakeID == "LOC", loc_lat, NA)) 
+          ysi_wide$longitude <- ifelse(ysi_wide$lakeID == "GL4", gl4_long, 
+                                  ifelse(ysi_wide$lakeID == "LOC", loc_long, NA))
+          ysi_wide$altitude_m <- ifelse(ysi_wide$lakeID == "GL4", gl4_alt, 
+                                  ifelse(ysi_wide$lakeID == "LOC", loc_alt, NA))
+
+          # We have some timepoints for the loch where we have CHLA and PHYC but other time points when we don't. Set it up so that if we have data it populates and if not the column gets explocot NAs 
+          ysi_wide <- ysi_wide %>% mutate(chlorophyll_RFU  = if ("chla_RFU" %in% names(.)) chla_RFU else NA) # take ysi_wide and make a new column called "chlorophyll_RFU" (what Dave wants this called), if the data frame includes a column named "chla_RFU" (what we name that column), then use the data from that column. If there is no column with that name (if we don't have that data) then fill the column with NAs 
+          ysi_wide <- ysi_wide %>% mutate(phycocyaninBGA_RFU  = if ("phycoC_RFUU" %in% names(.)) phycoC_RFU else NA)
+          ysi_wide <- ysi_wide %>% mutate(pH  = if ("pH" %in% names(.)) pH else NA) # also for some reason some timepoints with no pH and no orp
+          ysi_wide <- ysi_wide %>% mutate(orp_mV = if ("orp_mV" %in% names(.)) orp_mV else NA)
+
+
+      # Put all together into one nice formatted dataframe 
+      ysi_clean <- subset(ysi_wide, select = c("lakeID" , "date_yyyy.mm.dd", "time_hhmmss", "depth_m", "temp_degC", "doConcentration_mgpL",
+                                    "doSaturation_percent", "chlorophyll_RFU", "phycocyaninBGA_RFU", "turbidity_FNU", "pH", "orp_mV", 
+                                    "specificConductivity_uSpcm", "salinity_psu", "tds_mgpL", "waterPressure_barA", "latitude",
+                                      "longitude", "altitude_m", "barometerAirHandheld_mbars" ))
+
+      return(ysi_clean)
+    }
+
 
 ## ORIGINAL just in case
 # process_ysi <- function(file_path) {
