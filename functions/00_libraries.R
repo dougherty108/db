@@ -30,7 +30,9 @@ pacman::p_load("lubridate",
                "dataRetrieval",
                "imputeTS",
                "vroom",
-               "rLakeAnalyzer")
+               "rLakeAnalyzer",
+               "vroom", 
+               "progress")
 
 #Use renv for version control.  Beginner guide here:
 # https://rstudio.github.io/renv/articles/renv.html
