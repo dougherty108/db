@@ -1,0 +1,40 @@
+---
+title: "EXO_viz"
+output: html_document
+author: 'Charlie Dougherty'
+---
+
+Goal of this script is to produce visuals of the EXO outputs for the Loch as part of On Thin Ice high frequency monitoring. GL4 EXO data is collected on the NWT LTER buoy, so it's not included here yet. 
+```{r}
+source(here("functions", "00_libraries.R"))
+
+# input your local path to the MLL Data folder
+data_path = "~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/sensors/YSI EXO3/Field Deployment"
+
+files = list.files(data_path)
+
+# there are multiple different files for different deployments of the EXO
+# there is already a processing script in the functions folder called process_EXO
+
+output = list()
+
+for(i in length(files)) {
+  temp <- process_EXO(paste0(data_path, "/", files[[i]]))
+  
+  output[[i]] = temp
+}
+
+output_df = bind_rows(output)
+
+```
+
+Load just the Fall-Winter Deployment from 2024-25 to see how long the EXO lasted into winter
+```{r}
+
+winter_2425 = process_EXO(paste0(data_path, "/", files[[2]]))
+
+ggplot(winter_2425, aes(date_time, battery_V)) + 
+  geom_path() + 
+  theme_bw(base_size = 20)
+```
+
