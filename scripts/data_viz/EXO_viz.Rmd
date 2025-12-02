@@ -18,7 +18,9 @@ ggplot(EXO3_DO, aes(date_time, DO_value, color = as.character(deployment_date)))
   geom_path() + 
   facet_wrap(vars(parameter), scales = "free") + 
   labs(color = "deployed") + 
-  theme_bw(base_size = 20)
+  theme_bw(base_size = 20) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
 ```{r}
@@ -31,7 +33,49 @@ ggplot(EXO3_physics, aes(date_time, physics_value,
   geom_path() + 
   facet_wrap(vars(parameter), scales = "free") + 
   labs(color = "deployed") + 
-  theme_bw(base_size = 20)
-
+  theme_bw(base_size = 20) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
+```{r}
+EXO3_phyco = output_df |> 
+  pivot_longer(cols = c(total_algae_PC, total_algae_PE, phycoE_RFU, phycoC_RFU), names_to = "parameter", values_to = "phyco_value")
+
+ggplot(EXO3_phyco, aes(date_time, phyco_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_depth = output_df |> 
+  pivot_longer(cols = c(depth_m_from_pressure, pressure_psia, vertical_position_m), names_to = "parameter", values_to = "depth_value")
+
+ggplot(EXO3_depth, aes(date_time, depth_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_power = output_df |> 
+  pivot_longer(cols = c(battery_V, cable_power_V, `Wiper Position volt`), names_to = "parameter", values_to = "power_value")
+
+ggplot(EXO3_power, aes(date_time, power_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
