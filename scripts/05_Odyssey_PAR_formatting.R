@@ -3,7 +3,7 @@
 # pull the process_par function from the functions library
 source(here::here("functions", "05_OdysseyPAR.R"))
 
-data_path = "~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/sensors/Odyssey PAR/GL4"
+data_path = "~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/sensors/Odyssey PAR/LOC"
 
 # create a list of files in the data path
 files = list.files(data_path)
