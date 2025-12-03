@@ -3,7 +3,8 @@ title: "Odyssey_PAR_viz"
 output: html_document
 ---
 
-```{r}
+```{r, warning=FALSE}
+source(here::here("functions", "00_libraries.R"))
 source(here::here("scripts", "05_Odyssey_PAR.R"))
 ```
 
@@ -17,6 +18,15 @@ Plot calibrated data for both depths through the whole season
 ggplot(par_df, aes(date_time, calibrated_value)) + 
   geom_point(shape = 21) + 
   facet_wrap(vars(depth_m)) + 
-  theme_bw()
+  ggtitle(paste0("Calibrated PAR ", par_df$lake_id)) + 
+  theme_bw(base_size = 15)
+```
+
+```{r}
+ggplot(par_df, aes(date_time, raw_value)) + 
+  geom_point(shape = 21) + 
+  facet_wrap(vars(depth_m)) + 
+  ggtitle(paste0("RAW PAR ", par_df$lake_id)) + 
+  theme_bw(base_size = 15)
 ```
 
