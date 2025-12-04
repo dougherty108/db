@@ -1,0 +1,81 @@
+---
+title: "EXO_viz"
+output: html_document
+author: 'Charlie Dougherty'
+---
+
+Goal of this script is to produce visuals of the EXO outputs for the Loch as part of On Thin Ice high frequency monitoring. GL4 EXO data is collected on the NWT LTER buoy, so it's not included here yet. 
+```{r, warning=FALSE}
+source(here::here("scripts", "03_EXO3_formatting.R"))
+```
+
+Now that we have an object that has all the EXO data from all deployments in the Loch (4 total deployments), we can start to do some visualization. 
+```{r}
+EXO3_DO = output_df |> 
+  pivot_longer(cols = c(do_percent, do_percent_calibrated, do_mgL), names_to = "parameter", values_to = "DO_value")
+
+ggplot(EXO3_DO, aes(date_time, DO_value, color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 20) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_physics = output_df |> 
+  pivot_longer(cols = c(cond_uScm, cond_spec_uScm, 
+                        TDS_mgL, temp_C), names_to = "parameter", values_to = "physics_value")
+
+ggplot(EXO3_physics, aes(date_time, physics_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 20) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_phyco = output_df |> 
+  pivot_longer(cols = c(total_algae_PC, total_algae_PE, phycoE_RFU, phycoC_RFU), names_to = "parameter", values_to = "phyco_value")
+
+ggplot(EXO3_phyco, aes(date_time, phyco_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_depth = output_df |> 
+  pivot_longer(cols = c(depth_m_from_pressure, pressure_psia, vertical_position_m), names_to = "parameter", values_to = "depth_value")
+
+ggplot(EXO3_depth, aes(date_time, depth_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+EXO3_power = output_df |> 
+  pivot_longer(cols = c(battery_V, cable_power_V, `Wiper Position volt`), names_to = "parameter", values_to = "power_value")
+
+ggplot(EXO3_power, aes(date_time, power_value, 
+                         color = as.character(deployment_date))) + 
+  geom_path() + 
+  facet_wrap(vars(parameter), scales = "free") + 
+  labs(color = "deployed") + 
+  theme_bw(base_size = 15) + 
+  theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
