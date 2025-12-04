@@ -3,27 +3,26 @@ source("functions/00_helper_functions.R")
 source("functions/00_libraries.R")
 source("functions/05_OdysseyPAR.R")
 
-summer1 <- process_EXO("data/Sensors/YSI EXO3/LOC_EXO_Xm_BOT_20240815_20241017.csv") %>% mutate(time_period="summer1")
-winter1 <- process_EXO("data/Sensors/YSI EXO3/LOC_EXO_2.3m_BOT_20241024_20250430.csv") %>% mutate(time_period="winter1")
-winter2 <- process_EXO("data/Sensors/YSI EXO3/LOC_EXO_2m_BOT_20250313_20250523.csv") %>% mutate(time_period="winter2")
+summer1 <- process_EXO("data/Sensors/YSI EXO3/Field Deployment/LOC_EXO_3.0m_BOT_20240815_20241017.csv") %>% mutate(time_period="summer1")
+winter1 <- process_EXO("data/Sensors/YSI EXO3/Field Deployment/LOC_EXO_2.3m_BOT_20241024_20250430.csv") %>% mutate(time_period="winter1")
+winter2 <- process_EXO("data/Sensors/YSI EXO3/Field Deployment/LOC_EXO_2.0m_BOT_20250313_20250523.csv") %>% mutate(time_period="winter2")
 
 
 #  Question 1 - what do these columns for Chlorophyll/PE/PC mean  --------
 
 
 winter1 %>%
-  ggplot(aes(x=total_algae_PE, y=TAL_PE_RFU))+
+  ggplot(aes(x=total_algae_PE, y=total_algae_PE))+
   geom_point(alpha=0.1) +
   labs(x = "Chlorophyll RFU (PE)")+
   geom_smooth(method="lm", se=FALSE, linewidth=0.2, color="black")
 #These are correlated with each other mostly
 
 winter1 %>%
-  ggplot(aes(x=total_algae_PC, y=TAL_PC_RFU))+
+  ggplot(aes(x=phycoE_RFU, y=phycoC_RFU))+
   geom_point(alpha=0.1)+
-  labs(x = "Chlorophyll RFU (PC)")+
   geom_smooth(method="lm", se=FALSE, linewidth=0.2, color="black")
-#These are correlated with each other mostly
+#Uncorrelated
 
 winter1 %>%
   ggplot(aes(x=total_algae_PC, y=total_algae_PE))+
@@ -36,6 +35,7 @@ winter1 %>%
   ggplot(aes(x=total_algae_PC, y=total_algae_PE))+
   geom_point(alpha=0.1)+
   geom_smooth(method="lm", se=FALSE, linewidth=0.2, color="black")
+#better
 
 winter1 %>%
   # filter(date_time > "2025-01-01") %>%
@@ -55,8 +55,9 @@ winter1 %>%
 winter1 %>%
   # filter(date_time > "2025-01-01") %>%
   mutate(month = month(date_time)) %>%
-  ggplot(aes(x=date_time, y=TAL_PE_RFU/total_algae_PE))+
+  ggplot(aes(x=date_time, y=phycoE_RFU/total_algae_PE))+
   geom_point()
+#Not useful?
 
 #  Question 2 - battery life over time?  --------
 winter1 %>%
