@@ -98,3 +98,5 @@ ggplot(temp_grouped, aes(date_time, temp_C, color = as.character(depth_group))) 
   theme_bw()
 
 
+#exporting it so CD can work with it in his personal repo .
+write_csv(temp_grouped, "data_export/loch_temperature_profile.csv")
