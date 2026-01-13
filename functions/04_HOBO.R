@@ -2,12 +2,12 @@ source("functions/00_libraries.R")
 
 #' Compile high-frequency data from HOBOs
 #' 
-#' @param filepath By default, the `main_dir` variable, which is defined in the global environment (usually at the beginning of each analysis script). Allows for flexibility for you to call the Sharepoint shortcut wherever it lives on your computer.
+#' @param filepath By default, the `filepath` variable, which is defined in the global environment (usually at the beginning of each analysis script). Allows for flexibility for you to call the Sharepoint shortcut wherever it lives on your computer.
 #' @return a dataframe with ~15 columns (filepath, lake_ID, date_time, timezone, sensor depth (from top or bottom), temperature, lux, and some extraneous other columns that are part of some HOBO output but not others)
 #' @examples
-#' main_dir <-  here("data/sensors/HOBO")
-#' all_HOBO <- compile_HOBO_data(filepath = main_dir) 
-#' # equivalent to compile_HOBO_data(main_dir) 
+#' filepath <-  here("data/sensors/HOBO")
+#' all_HOBO <- compile_HOBO_data(filepath = filepath) 
+#' # equivalent to compile_HOBO_data(filepath) 
 #' If you want to only include one particular lake in case too many files is bogging down your machine, simply adjust the directory path
 #' loch_dir <- here("data/sensors/HOBO/LOC)
 #' loch_HOBO <- compile_HOBO_data(loch_dir)
@@ -16,8 +16,8 @@ source("functions/00_libraries.R")
 
 # HOBO compilation function  -------------------------------------------
 
-compile_HOBO_data <- function(filepath = main_dir) {
-  files <- list.files(main_dir, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
+compile_HOBO_data <- function(filepath) {
+  files <- list.files(filepath, pattern = "\\.csv$", full.names = TRUE, recursive = TRUE)
   
   if (length(files) == 0) {
     warning("No CSV files found in the specified directory.")
@@ -138,8 +138,8 @@ compile_HOBO_data <- function(filepath = main_dir) {
 
 
 
-main_dir <-  here("data/sensors/HOBO")
-all_HOBO <- compile_HOBO_data(filepath = main_dir)
+filepath <-  here("data/sensors/HOBO")
+all_HOBO <- compile_HOBO_data(filepath = filepath)
 str(all_HOBO)
 length(unique(all_HOBO$date_retrieved))
 
