@@ -1,10 +1,10 @@
 ######### script for processing LiCOR data outputs #########
 source('functions/00_libraries.R')
 # Author: Charlie Dougherty
-filepath = '~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/LiCOR LI-1500/GL4/GL4_Zmax_20251216.TXT'
-startdepth = 0.0
-enddepth = 7.0
-interval = 1.0
+#filepath = '~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/LiCOR LI-1500/GL4/GL4_Zmax_20251216.TXT'
+#startdepth = 0.0
+#enddepth = 7.0
+#interval = 1.0
 
 process_LICOR_file = function(filepath, interval, startdepth, enddepth) {
   
@@ -32,4 +32,5 @@ process_LICOR_file = function(filepath, interval, startdepth, enddepth) {
   final_par = obj_temp
   }
 
-process_LICOR_file(filepath, interval, startdepth, enddepth)
+
+filepath = '~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/LiCOR LI-1500/LOC/LOC_Zmax_20250912.TXT'
