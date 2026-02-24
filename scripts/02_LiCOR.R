@@ -63,9 +63,21 @@ for (i in 1:length(files)) {
 
 
 
+##################### process_LICOR_file ###################
+# instructions for using this function: 
+# filepath: the unique filepath on your computer that points to the specific LiCOR file you want to reformat
+# startdepth: the first depth measurement in the file (use field data sheet to find)
+# enddepth: the final depth of measurement in the file. 
+# interval: the measurement interval between measurements, usually 0.5m to 1.0m. 
 
+# using the field data sheet from the associated sample event, fill out the above parameters and input into the function. 
+source("functions/09_LICOR_file_process.R")
+filepath = '~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/LiCOR LI-1500/GL4/GL4_Zmax_20251216.TXT'
+startdepth = 0.0
+enddepth = 7.0
+interval = 1.0
 
-
+licor_processed = process_LICOR_file(filepath, startdepth, enddepth, interval)
 
 
 
