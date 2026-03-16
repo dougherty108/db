@@ -88,7 +88,6 @@
 
       return(combined_data)
     }
-
 #########################
 # clean_deploy_retrieve function
 #    GOAL: this formats the spreadsheet of buoy deployments and retreivals from long format (more compatible with data entry and intuitive) into wide paired format where it can be used to trim data 
