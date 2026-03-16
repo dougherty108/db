@@ -9,7 +9,7 @@ source("functions/00_libraries.R")
 #' all_HOBO <- compile_HOBO_data(filepath = filepath) 
 #' # equivalent to compile_HOBO_data(filepath) 
 #' If you want to only include one particular lake in case too many files is bogging down your machine, simply adjust the directory path
-#' loch_dir <- here("data/sensors/HOBO/LOC)
+#' loch_dir <- here("data/sensors/HOBO/LOC")
 #' loch_HOBO <- compile_HOBO_data(loch_dir)
 
 
@@ -155,3 +155,54 @@ all_HOBO %>%
   filter(date_time >= "2024-10-26" & date_time < "2024-11-30") %>%
   ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
   geom_point(alpha=0.5)
+
+
+#########################
+# Katie's process hobo file function 
+#   GOAL: format hobo file column names and creates columns based on the file name
+#   input: file path to a single csv file of hobo data 
+#   ouput: formatted df of hobo data 
+
+    process_hobo_file <- function(hobo_file_path){
+        # Extract file name and save file info 
+            # Extract file name so that we can use that information and put it as columns 
+            file_name <- tools::file_path_sans_ext(basename(hobo_file_path)) 
+                  # basename() -> removes everything before the last / (so the path to the file)
+                  # file_path_sans_ext() --> removes .csv
+              
+              # Extract information from folder name (delimited by underscores)
+              file_info <- strsplit(file_name, "_")[[1]] # not this says take that folder name and split it into seperate objects, based on the "_"
+        
+        # add a note to see progress and where any issue is occuring 
+        message("Reading: ", basename(hobo_file_path))        
+      
+        # Read the data from the file
+        data <- read.csv(hobo_file_path, sep = ",")
+
+        # Format Data 
+ 
+        data <- data %>%
+            janitor::clean_names() %>% # this is a package that turns everything to lower case and snake case 
+            rename_with(~"date_time", matches("date.*time")) %>% #then this says anything with date and time in it call it date_time
+            rename_with(~"temp", matches("temp")) %>%
+            rename_with(~"lux", matches("light")) %>%
+            subset(select = c("date_time", "temp", "lux")) %>% # now grab only the columns that you want 
+            mutate(  # add the information from the file name as columns in the data 
+              siteID = file_info[1], # needs to be siteID to match the SQL database 
+              depth = file_info[2], 
+              depth_from = file_info[3], 
+              logging_interval = file_info[6],
+              sensor_num = substring(file_info[7], 7, 20), 
+              location = ifelse(length(file_info) >= 8, file_info[4], "zmax") #this is adding a little flexibility for when we have shore sites and the file path indicates which site they are at
+                    # this last location line of code says "check the length of the folder info object, if it contains 4 or more objects then use the forth to designate the location column, otherwise, call it zmax"
+            ) %>%
+          mutate(siteID = tolower(siteID), # change all the site ids to lower case to match other data streams 
+                date_time = parse_date_time(date_time, orders = c("mdy_HM", "mdy_HMS")),  # Auto-detects format  
+            ) 
+
+      # Try and format the datetime for the hobos 
+      data$date_time <- as.POSIXct(data$date_time)
+      
+       # return the formatted data file 
+        return(data)
+    }
