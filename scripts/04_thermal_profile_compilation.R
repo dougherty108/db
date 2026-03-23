@@ -13,6 +13,10 @@ source("functions/07_EXO3.R")
 source("functions/04_HOBO.R")
 source("functions/03_miniDOT.R")
 
+# Katie Messing with File Paths 
+      data_path <- "/Users/kaga3666/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/" # Katie's desktop
+      HOBO_path <- file.path(data_path, "Sensors/HOBO")
+
 
 #Step 1. EXO
 # define exo path, starting with the summer deployment from 2025
@@ -26,7 +30,7 @@ exo_temp = process_EXO(EXO_path) |>
 
 
 #Step 2. HOBOS
-HOBO_path = "~/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/HOBO/LOC"
+# HOBO_path = "~/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/Sensors/HOBO/LOC"
 #load files
 hobo_temp = compile_HOBO_data(filepath = HOBO_path) |> 
   mutate(depth_from_top = 5-depth_from_bottom, 
