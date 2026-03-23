@@ -59,6 +59,33 @@ minidot_reformatted <- minidot %>%
          depth_from_bottom = ifelse(depth_from == "BOT", depth, NA_real_),
         depth_from_top = as.character(depth_from_top))
 
+# 4. add a flag column for values greater than 5 sd away from the mean 
+
+    minidot_flagged <- minidot_reformatted %>%
+      ungroup() %>% # remove any pre-existing grouping 
+      mutate(
+        month = month(date_time)
+      ) %>%
+      group_by(siteID, waterYear, depth_from_top, month) %>% # group by the factors that you care about 
+      mutate(
+        do_mean = mean(do_obs, na.rm = TRUE), # create a new column called do_mean with the average do for that group 
+        do_sd   = sd(do_obs, na.rm = TRUE), # create another new column for sd 
+        temp_mean = mean(temp, na.rm = TRUE), 
+        temp_sd = sd(temp, na.rm = TRUE)
+      ) %>%
+      mutate(
+        do_flag = case_when( # create a new column called do_flag, then use "case when" (similar to if else structure)
+            abs(do_obs - do_mean) > 5 * do_sd ~ "outside_normal_range",# if the absolute value of the difference between the observed fo and the mean is greater than 5 * the sd then make that column say "outside of normal range"
+            TRUE ~ "within_normal_range" # otherwise have that column say within normal ranve 
+          ), 
+        temp_flag = case_when(
+          abs(temp - temp_mean) > 5 * temp_sd ~ "outside_normal_range", 
+          TRUE ~ "within_normal_range"
+        )
+      )%>%
+      ungroup() %>% # then ungroup everything again 
+      select(-do_mean, -do_sd, -temp_mean, -temp_sd, -month) # remove the columns that you don't need anymore 
+
 
 # 3.  Visually inspect the output 
 
