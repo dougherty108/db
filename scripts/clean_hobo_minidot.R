@@ -11,7 +11,7 @@
         library(here)
         source(here::here("functions", "00_libraries.R"))
         source(here::here("functions", "minidot_functions.R"))  
-        source(here::here("functions", "hobo_functions.R")) 
+        # source(here::here("functions", "04_HOBO.R")) 
 
     # -------- YOU NEED TO CHANGE ON YOUR MACHINE 
     # Connect to Sharepoint data connection on your machine 
@@ -26,6 +26,38 @@
 
     # Load and clean data using the "git miniDOT" function from the miniDOT functions script (loaded above)
     combined_data <- get_miniDOT(data_path) # this can take a minute, it is a lot of data to process 
+
+
+
+##### Katie Scratch 2026-04-03 figuring out buoy deployment with sensor nuumber START ________________________________________
+
+# Make a test dataset that is only sky 2025
+
+test_data <- combined_data %>% 
+  filter(date_time >= as.POSIXct("2025-05-01"))
+
+# plot to sanity check 
+test_data %>%
+  ggplot(aes(x = date_time, y = do_obs, color = as.character(depth), group = as.character(depth))) + 
+  geom_line() + 
+  theme_minimal()
+
+  depret <- read_excel(file.path(data_path, "Sensors/buoy_deployment_retreival_test.xlsx"))
+
+
+##### Katie Scratch 2026-04-03 figuring out buoy deployment with sensor nuumber END ________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Load in and format df of deployments and retreival times 
     # NOTE: you do not need to change this path because it is all within the repo 

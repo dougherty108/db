@@ -141,20 +141,20 @@ compile_HOBO_data <- function(filepath) {
 
 
 
-filepath <-  here("data/sensors/HOBO")
-all_HOBO <- compile_HOBO_data(filepath = filepath)
-str(all_HOBO)
-length(unique(all_HOBO$date_retrieved))
+# filepath <-  here("data/sensors/HOBO")
+# all_HOBO <- compile_HOBO_data(filepath = filepath)
+# str(all_HOBO)
+# length(unique(all_HOBO$date_retrieved))
 
-# Plot all Loch data 
-pretty <- all_HOBO %>%
-  filter(date_deployed=="20241025")
-all_HOBO %>%
-  filter(date_deployed=="20241025") %>%
-  # filter(date_time >= "2024-10-26" & date_time < "2025-05-21") %>%
-  filter(date_time >= "2024-10-26" & date_time < "2024-11-30") %>%
-  ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
-  geom_point(alpha=0.5)
+# # Plot all Loch data 
+# pretty <- all_HOBO %>%
+#   filter(date_deployed=="20241025")
+# all_HOBO %>%
+#   filter(date_deployed=="20241025") %>%
+#   # filter(date_time >= "2024-10-26" & date_time < "2025-05-21") %>%
+#   filter(date_time >= "2024-10-26" & date_time < "2024-11-30") %>%
+#   ggplot(aes(x=date_time, y=temperature_C, color=factor(depth_from_top)))+
+#   geom_point(alpha=0.5)
 
 
 #########################

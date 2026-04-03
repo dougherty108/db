@@ -32,6 +32,8 @@ pacman::p_load("lubridate",
                "vroom",
                "rLakeAnalyzer",
                "vroom", 
+               "progressr",
+               "readxl", 
                "progress")
 
 #Use renv for version control.  Beginner guide here:
