@@ -34,13 +34,14 @@
 # Make a test dataset that is only sky 2025
 
 test_data <- combined_data %>% 
-  filter(date_time >= as.POSIXct("2025-05-01"))
+  filter(date_time >= as.POSIXct("2025-05-01") & lake_id == "SKY")
 
 # plot to sanity check 
 test_data %>%
   ggplot(aes(x = date_time, y = do_obs, color = as.character(depth), group = as.character(depth))) + 
   geom_line() + 
-  theme_minimal()
+  theme_minimal() + 
+  facet_wrap(~lake_id)
 
   depret <- read_excel(file.path(data_path, "Sensors/buoy_deployment_retreival_test.xlsx"))
 

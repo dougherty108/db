@@ -76,6 +76,8 @@
       files <- files[!str_detect(files, "/concat/")]
       files <- files[!str_detect(files, "/duplicates not deleting just in case/")]
       files <- files[!str_detect(files, "/00_TEMPORARY_LOC_2526/")]
+
+      files <- files[str_detect(files, "SKY")] # if you want to specify only one or a few lakes 
       
       # Apply the processing function to each file and combine the results
       combined_data <- progressr::with_progress({
@@ -88,6 +90,7 @@
 
       return(combined_data)
     }
+
 #########################
 # clean_deploy_retrieve function
 #    GOAL: this formats the spreadsheet of buoy deployments and retreivals from long format (more compatible with data entry and intuitive) into wide paired format where it can be used to trim data 
@@ -174,45 +177,139 @@ buoy_above_water <- function(combined_data, depret_paired) {
   return(combined_flagged)
 }
 
+# KATIE WORKING HERE ***********************************************************
 
 #########################
-# pivot_minidot_wide function
-# GOAL: Pivot minidot data so that rather than long format (with one column for depth, then one column for temp and one column for do) it is in wide format (with one columnb for temp at depth 1 then another column for temp at depth 2 and the same for do)
-# Input: minidot data in long format
-# Ouput: minidot data in wide format 
-
-pivot_minidot_wide <- function(minidot_long){
-
-    # split into just temp 
-    minidot_temp_long <- subset(minidot_long, select = c("lake_id", "date_time", "depth_sur", "temp"))
-
-    # pivot wide by temp 
-        minidot_temp_wide <- minidot_temp_long  %>%
-          pivot_wider( # change format from long to wide 
-            id_cols = c(lake_id, date_time), # columns that stay the same
-            names_from = depth_sur, # column whose values become new column names
-            values_from = temp, # what fills those new columns
-            values_fn = mean, # this means if you have multiple temp measurements at a given time step take the average 
-            names_prefix = "temp_" # add this prefix to the begining of the new column names 
-          )
-
-      # split into just do 
-        minidot_do_long <- subset(minidot_long, select = c("lake_id", "date_time", "depth_sur", "do_obs"))
+# clean_deploy_retrieve function Updated with Sensor numbher 
+#    GOAL: this formats the spreadsheet of buoy deployments and retreivals from long format (more compatible with data entry and intuitive) into wide paired format where it can be used to trim data 
+#    input: raw data frame of deployments and retreivals (*** I want to automate this through excel similar to our sample inventory)
+#    output: cleaned and paired wide format df of buoy deployments and retreivals ready to be used to trim buoy data to only time periods under water 
 
 
-      # pivot wide by do 
-        minidot_do_wide <- minidot_do_long %>%
-                    pivot_wider( # change format from long to wide 
-                      id_cols = c(lake_id, date_time), # columns that stay the same
-                      names_from = depth_sur, # column whose values become new column names
-                      values_from = do_obs, # what fills those new columns
-                      values_fn = mean, # this means if you have multiple temp measurements at a given time step take the average 
-                      names_prefix = "do_" # add this prefix to the begining of the new column names 
-                    )
+clean_deploy_retrieve <- function(depret){
 
-      # put back together 
-      minidot_wide <- full_join(minidot_temp_wide, minidot_do_wide)
+    # format datetime into a timestamp POSIXct 
+      depret$timestamp <- paste(substring(depret$date_time, 1, 4), substring(depret$date_time, 5, 6), substring(depret$date_time, 7, 17), sep = "-" ) # this just adds "-" in between the year month and day in the date so that it is an unambiguous format 
+      depret$timestamp <- as.POSIXct(depret$timestamp, format = "%Y-%m-%d %H:%M:%OS") # format the timestamp as a POSIXct 
   
-  return(minidot_wide)
+    # Subset to only the sensor number, deploy retreive, and the time (then when you run through the minidot data just seperate everything by sensor number )
+      depret <- subset(depret, select = c("sensor_number", "deployed_retreived", "timestamp"))
 
+    # pivot into wide format with a column for time deployed and the following columbn for time retreived 
+    depret_paired <- depret %>%
+      # arrange(lake_id, location, timestamp) %>%  # order rows by lake > site > timestamp  # this Groups rows by lake_id, then within each lake, it groups by site, then finally within each site, sorts by timestamp (earliest -> latest)
+      # group_by(lake_id, location) %>% # group all of the rows by lake and site 
+      mutate(
+        event_id = cumsum(deployed_retreived == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that lake_id and location that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
+      ) %>%
+      pivot_wider( # change format from long to wide 
+        id_cols = c(sensor_number), # columns that stay the same
+        names_from = deployed_retreived, # column whose values become new column names
+        values_from = timestamp, # what fills those new columns
+        names_prefix = "time_" # add this prefix to the begining of the new column names 
+      ) %>%
+      filter(complete.cases(time_deployed, time_retreived)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retreived. This will get rid of rows where we have deployed the sensor in the lake but we haven't retreived it yet (so we shouldn't have data )
+      ungroup()
+  
+      return(depret_paired)
 }
+
+
+#########################
+# buoy_above_water function updated with Sensor Number 
+# GOAL: we want to make a new column in do_dat called "status" that denotes whether the buoy was above water or below water 
+# GAMEPLAN: 
+# For each row in combined_data:
+#     Match on lake_id
+#     Match on location
+#     Check if date_time falls between time_deployed and time_retreived
+#     If it does -->  "under water"
+#     If it does not --> "above water"
+
+#     inputs: 
+#             combineddata = minidot data compiled from all txt files, each row represents a timepoint when a do and temp measurement was taken, can include multiple lakes, years, and sites within the lake 
+#             depret_paired = data frame of deployment and retreival times formatted into wide format with paired deployment and retreival times 
+#     ouput : the same combined data file but now with an additional column called "status" denoting whether the buoy was above or below the water at that timepoint          
+#
+# NOTE: this function can take some time because the "fuzzy join" is pretty slow checking every row of all your miniDOT data
+          
+
+
+
+buoy_above_water <- function(combined_data, depret_paired) {
+
+    # Merge the combined_do data with the depret_paired df 
+    combined_flagged <- combined_data %>% #note that this step is kind of slow 
+      fuzzy_left_join( # we use "fuzzy join" here because for time deployed and time retreived you want to join when they are within a range not necessarily equivalent 
+        depret_paired, # join combined data with the depret paired data and use left join because you want to keep all of the rows in combined data 
+        by = c(
+          "lake_id" = "lake_id", # lake id needs to match exactly 
+          "location" = "location", # location needs to match exactly 
+          "date_time" = "time_deployed", # here the date time needs to be greater than the time deployed 
+          "date_time" = "time_retreived" # the datetime needs to be less than the time retreived 
+        ),
+        match_fun = list(`==`, `==`, `>=`, `<=`) # this tells fuzzy join the equivalents you want to use for the four joins above 
+      )
+
+    # Use that combined df to create a "status" column with "above water" for any row that does not fall within a deployment window 
+    combined_flagged <- combined_flagged %>%
+      mutate(
+        status = if_else(is.na(event_id), # then this is saying "if your event id column is NA then you are above water, otherwise you are under water". 
+                      "above_water", # We are using the event id column because the depret_paired df has an "event_id" column but the combined do data doesn't so if you are a row that did not get matched with the depret df then you are not in the under water group 
+                      "under_water")
+      )
+
+    # Clean up the ouput 
+        # remove the extra rows that you created as part of this process
+        combined_flagged <- combined_flagged %>%
+          select(-event_id, -time_deployed, -time_retreived, -lake_id.y, -location.y) # this gets rid of the event id, time deployed, and time retreived columns 
+
+        # Rename the file names that got the .x at the end 
+        names(combined_flagged)[names(combined_flagged) == "lake_id.x" ] <- "lake_id"
+        names(combined_flagged)[names(combined_flagged) == "location.x" ] <- "location"
+  
+  return(combined_flagged)
+}
+
+
+# #########################
+# # pivot_minidot_wide function <-  for metab, probably do not need here 
+# # GOAL: Pivot minidot data so that rather than long format (with one column for depth, then one column for temp and one column for do) it is in wide format (with one columnb for temp at depth 1 then another column for temp at depth 2 and the same for do)
+# # Input: minidot data in long format
+# # Ouput: minidot data in wide format 
+
+# pivot_minidot_wide <- function(minidot_long){
+
+#     # split into just temp 
+#     minidot_temp_long <- subset(minidot_long, select = c("lake_id", "date_time", "depth_sur", "temp"))
+
+#     # pivot wide by temp 
+#         minidot_temp_wide <- minidot_temp_long  %>%
+#           pivot_wider( # change format from long to wide 
+#             id_cols = c(lake_id, date_time), # columns that stay the same
+#             names_from = depth_sur, # column whose values become new column names
+#             values_from = temp, # what fills those new columns
+#             values_fn = mean, # this means if you have multiple temp measurements at a given time step take the average 
+#             names_prefix = "temp_" # add this prefix to the begining of the new column names 
+#           )
+
+#       # split into just do 
+#         minidot_do_long <- subset(minidot_long, select = c("lake_id", "date_time", "depth_sur", "do_obs"))
+
+
+#       # pivot wide by do 
+#         minidot_do_wide <- minidot_do_long %>%
+#                     pivot_wider( # change format from long to wide 
+#                       id_cols = c(lake_id, date_time), # columns that stay the same
+#                       names_from = depth_sur, # column whose values become new column names
+#                       values_from = do_obs, # what fills those new columns
+#                       values_fn = mean, # this means if you have multiple temp measurements at a given time step take the average 
+#                       names_prefix = "do_" # add this prefix to the begining of the new column names 
+#                     )
+
+#       # put back together 
+#       minidot_wide <- full_join(minidot_temp_wide, minidot_do_wide)
+  
+#   return(minidot_wide)
+
+# }
