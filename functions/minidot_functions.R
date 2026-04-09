@@ -11,7 +11,6 @@
 #   input: file path to a single txt file of miniDOT data 
 #   ouput: formatted df 
 
-
     process_minidot_file <- function(file_path, p) {
 
         p()  # signal one step of progress
