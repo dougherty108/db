@@ -43,6 +43,9 @@ test_data %>%
   theme_minimal() + 
   facet_wrap(~lake_id)
 
+# write.csv(test_data, file = "data_export/test_data.csv")
+
+
   depret <- read_excel(file.path(data_path, "Sensors/buoy_deployment_retreival_test.xlsx"))
 
 
