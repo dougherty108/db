@@ -37,7 +37,8 @@ test_data <- combined_data %>%
   filter(date_time >= as.POSIXct("2025-05-01") & lake_id == "SKY")
 
 # plot to sanity check 
-test_data %>%
+combined_data_annotated %>%
+  filter(sensor_status == "under_water") %>%
   ggplot(aes(x = date_time, y = do_obs, color = as.character(depth), group = as.character(depth))) + 
   geom_line() + 
   theme_minimal() + 

@@ -185,47 +185,51 @@ buoy_above_water <- function(combined_data, depret_paired) {
 #    output: cleaned and paired wide format df of buoy deployments and retreivals ready to be used to trim buoy data to only time periods under water 
 
 # pulling in test data KAG 20260410
-depret <- read_excel("/Users/altagannon/repos/local_data/buoy_deployment_retreival_test.xlsx")
-test_data <- read.csv("/Users/altagannon/repos/local_data/test_data.csv")
+# depret <- read_excel("/Users/altagannon/repos/local_data/buoy_deployment_retreival_test.xlsx")
+# test_data <- read.csv("/Users/altagannon/repos/local_data/test_data.csv")
 
-# Scratch 
-head(depret)
-# might have an issue with no deployment time?
-test_data$date_time <- as.POSIXct(test_data$date_time)
-test_data %>%
-  ggplot(aes(x = date_time, y = do_obs, color = sensor_num)) + 
-  geom_line() +
-  theme_minimal()
+# # Scratch 
+# head(depret)
+# # might have an issue with no deployment time?
+# test_data$date_time <- as.POSIXct(test_data$date_time)
+# test_data %>%
+#   ggplot(aes(x = date_time, y = do_obs, color = sensor_num)) + 
+#   geom_line() +
+#   theme_minimal()
 
+# Trouble shoot: remove the rows in depret that have the deployment but no retreival 
+  depret <- read_excel(file.path(data_path, "Sensors/buoy_deployment_retreival_test.xlsx"))
   
 # IAO said this does not need to be a function (can just have in script )
-clean_deploy_retrieve <- function(depret){
 
     # format datetime into a timestamp POSIXct 
-      depret$timestamp <- paste(substring(depret$date_time, 1, 4), substring(depret$date_time, 5, 6), substring(depret$date_time, 7, 17), sep = "-" ) # this just adds "-" in between the year month and day in the date so that it is an unambiguous format 
-      depret$timestamp <- as.POSIXct(depret$timestamp, format = "%Y-%m-%d %H:%M:%OS") # format the timestamp as a POSIXct 
-  
+    depret$date <- paste(substring(depret$date_time, 1, 4), substring(depret$date_time, 5, 6), substring(depret$date_time, 7, 8), sep = "-" ) # this just adds "-" in between the year month and day in the date so that it is an unambiguous format and sets it to the very end of the day (removes the )
+
+    # format date times to remove the full day when sensor was out of the water 
+    depret$date_time <- ifelse(depret$deployed_retreived == "deployed", paste(depret$date, "23:59:59", sep = " "), 
+                                  paste(depret$date, "00:00:01", sep = " "))
+    depret$date_time  <- as.POSIXct(depret$date_time , format = "%Y-%m-%d %H:%M:%OS") # format the timestamp as a POSIXct 
+
     # Subset to only the sensor number, deploy retreive, and the time (then when you run through the minidot data just seperate everything by sensor number )
-      depret <- subset(depret, select = c("sensor_number", "deployed_retreived", "timestamp"))
+    depret <- subset(depret, select = c("sensor_number", "deployed_retreived", "date_time"))
 
     # pivot into wide format with a column for time deployed and the following columbn for time retreived 
     depret_paired <- depret %>%
-      # arrange(lake_id, location, timestamp) %>%  # order rows by lake > site > timestamp  # this Groups rows by lake_id, then within each lake, it groups by site, then finally within each site, sorts by timestamp (earliest -> latest)
-      # group_by(lake_id, location) %>% # group all of the rows by lake and site 
+      arrange(sensor_number, date_time) %>%  # order all of the rows by sensor number and then withiin sensor number arrange by date 
+      group_by(sensor_number) %>%       # group within each sensor because we want to work through each sensor independently 
       mutate(
-        event_id = cumsum(deployed_retreived == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that lake_id and location that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
+        event_id = cumsum(deployed_retreived == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that sensor number that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
       ) %>%
-      pivot_wider( # change format from long to wide 
-        id_cols = c(sensor_number), # columns that stay the same
+      pivot_wider(  # change format from long to wide 
+        id_cols = c(sensor_number, event_id), # columns that stay the same <- importantly we need to include the event id here 
         names_from = deployed_retreived, # column whose values become new column names
-        values_from = timestamp, # what fills those new columns
+        values_from = date_time, # what fills those new columns
         names_prefix = "time_" # add this prefix to the begining of the new column names 
       ) %>%
       filter(complete.cases(time_deployed, time_retreived)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retreived. This will get rid of rows where we have deployed the sensor in the lake but we haven't retreived it yet (so we shouldn't have data )
       ungroup()
-  
-      return(depret_paired)
-}
+
+ 
 
 
 #########################
@@ -247,42 +251,67 @@ clean_deploy_retrieve <- function(depret){
 # NOTE: this function can take some time because the "fuzzy join" is pretty slow checking every row of all your miniDOT data
           
 
+head(depret_paired)
 
+# outside the function: 
+      # seperate the combined minidot data into a list with a seperate data frame for each sensor number 
 
-buoy_above_water <- function(combined_data, depret_paired) {
+combined_data <- test_data
+combined_data$sensor_num <- substring(combined_data$sensor_num, 6, 14) # get rid of the first 5 digits of the sensor number code because they are all the same and we don't record them 
+combined_data_lst <- split(combined_data, f = combined_data$sensor_num)
 
-    # Merge the combined_do data with the depret_paired df 
-    combined_flagged <- combined_data %>% #note that this step is kind of slow 
-      fuzzy_left_join( # we use "fuzzy join" here because for time deployed and time retreived you want to join when they are within a range not necessarily equivalent 
-        depret_paired, # join combined data with the depret paired data and use left join because you want to keep all of the rows in combined data 
-        by = c(
-          "lake_id" = "lake_id", # lake id needs to match exactly 
-          "location" = "location", # location needs to match exactly 
-          "date_time" = "time_deployed", # here the date time needs to be greater than the time deployed 
-          "date_time" = "time_retreived" # the datetime needs to be less than the time retreived 
-        ),
-        match_fun = list(`==`, `==`, `>=`, `<=`) # this tells fuzzy join the equivalents you want to use for the four joins above 
-      )
+sand <- combined_data_lst[[3]]
+
+# then write a function to be applied over each data frame in that list 
+
+# inside that function: 
+sensor_above_water <- function(sensor_data, depret_paired){
+    # inputs: combined data, combined data from one sensor (sensor_data)
+
+    # first subset the dep ret data to only include the rows corresponding to that sensor 
+
+      # extract the semsor number for the sensor you are working with 
+      selected_sensor_number <- sensor_data[1, "sensor_num"] %>% as.character
+
+      # subset depret to only the sensor number you want 
+      depret_sub <- depret_paired %>%
+          filter(sensor_number == selected_sensor_number)
+
+    # then fuzzy join 
+      sensor_data_flagged <- sensor_data %>% #note that this step is kind of slow 
+            fuzzy_left_join( # we use "fuzzy join" here because for time deployed and time retreived you want to join when they are within a range not necessarily equivalent 
+              depret_sub, # join combined data with the depret paired data and use left join because you want to keep all of the rows in combined data 
+              by = c( # column name in sensor data = column name in depret data 
+                "sensor_num" = "sensor_number", # lake id needs to match exactly 
+                "date_time" = "time_deployed", # here the date time needs to be greater than the time deployed 
+                "date_time" = "time_retreived" # the datetime needs to be less than the time retreived 
+              ),
+              match_fun = list(`==`, `>`, `<`) # this tells fuzzy join the equivalents you want to use for the four joins above 
+            )
 
     # Use that combined df to create a "status" column with "above water" for any row that does not fall within a deployment window 
-    combined_flagged <- combined_flagged %>%
+    sensor_data_annotated <- sensor_data_flagged %>%
       mutate(
-        status = if_else(is.na(event_id), # then this is saying "if your event id column is NA then you are above water, otherwise you are under water". 
+        sensor_status = if_else(is.na(event_id), # then this is saying "if your event id column is NA then you are above water, otherwise you are under water". 
                       "above_water", # We are using the event id column because the depret_paired df has an "event_id" column but the combined do data doesn't so if you are a row that did not get matched with the depret df then you are not in the under water group 
                       "under_water")
       )
 
     # Clean up the ouput 
         # remove the extra rows that you created as part of this process
-        combined_flagged <- combined_flagged %>%
-          select(-event_id, -time_deployed, -time_retreived, -lake_id.y, -location.y) # this gets rid of the event id, time deployed, and time retreived columns 
-
-        # Rename the file names that got the .x at the end 
-        names(combined_flagged)[names(combined_flagged) == "lake_id.x" ] <- "lake_id"
-        names(combined_flagged)[names(combined_flagged) == "location.x" ] <- "location"
+        sensor_data_annotated <- sensor_data_annotated %>%
+          select(-event_id, -time_deployed, -time_retreived, -sensor_number) # this gets rid of the event id, time deployed, and time retreived columns 
   
-  return(combined_flagged)
+  print(selected_sensor_number)
+  return(sensor_data_annotated)
+
 }
+
+# check that the function works 
+   #  castle <- sensor_above_water(sensor_data = sand, depret_paired = depret_paired)
+
+combined_data_annotated_lst <- lapply(combined_data_lst, sensor_above_water, depret_paired)
+combined_data_annotated <- do.call(rbind, combined_data_annotated_lst)
 
 
 # #########################
@@ -325,4 +354,4 @@ buoy_above_water <- function(combined_data, depret_paired) {
   
 #   return(minidot_wide)
 
-# }
+  # }
