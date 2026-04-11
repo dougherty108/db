@@ -184,7 +184,21 @@ buoy_above_water <- function(combined_data, depret_paired) {
 #    input: raw data frame of deployments and retreivals (*** I want to automate this through excel similar to our sample inventory)
 #    output: cleaned and paired wide format df of buoy deployments and retreivals ready to be used to trim buoy data to only time periods under water 
 
+# pulling in test data KAG 20260410
+depret <- read_excel("/Users/altagannon/repos/local_data/buoy_deployment_retreival_test.xlsx")
+test_data <- read.csv("/Users/altagannon/repos/local_data/test_data.csv")
 
+# Scratch 
+head(depret)
+# might have an issue with no deployment time?
+test_data$date_time <- as.POSIXct(test_data$date_time)
+test_data %>%
+  ggplot(aes(x = date_time, y = do_obs, color = sensor_num)) + 
+  geom_line() +
+  theme_minimal()
+
+  
+# IAO said this does not need to be a function (can just have in script )
 clean_deploy_retrieve <- function(depret){
 
     # format datetime into a timestamp POSIXct 
