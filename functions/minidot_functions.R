@@ -76,7 +76,9 @@
       files <- files[!str_detect(files, "/duplicates not deleting just in case/")]
       files <- files[!str_detect(files, "/00_TEMPORARY_LOC_2526/")]
 
-      files <- files[str_detect(files, "SKY")] # if you want to specify only one or a few lakes 
+      files <- files[str_detect(files, "bubble_baths")]
+
+      # files <- files[str_detect(files, "SKY")] # if you want to specify only one or a few lakes 
       
       # Apply the processing function to each file and combine the results
       combined_data <- progressr::with_progress({

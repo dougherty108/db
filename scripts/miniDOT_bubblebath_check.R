@@ -26,3 +26,5 @@ bb_data %>%
   geom_point()+ 
   geom_line() + 
   theme_minimal()
+
+write.csv(bb_data, file = "data_export/20260413_minidotbubble_bath.csv")
