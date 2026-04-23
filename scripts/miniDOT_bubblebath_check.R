@@ -15,12 +15,17 @@
         data_path <- "/Users/kaga3666/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/" # Katie's desktop
 
 # Load and clean data using the "git miniDOT" function from the miniDOT functions script (loaded above)
-    bb_data <- get_miniDOT(data_path) # change the internal selection in get minidot to only pull the bubble bath 
-    head(bb_data)
+    # bb_data <- get_miniDOT(data_path) # change the internal selection in get minidot to only pull the bubble bath 
+bb_data <- read.csv("data_export/20260413_minidotbubble_bath.csv")
+bb_data$date_time <- as.POSIXct(bb_data$date_time)
+head(bb_data)
 
-# NEED TO CONVERT TO %Saturation to look at 
+# NEED TO CONVERT TO %Saturation to look at # boulder is at 1655
+bb_data$do_mgL_at_sat <-o2.at.sat.base(temp = bb_data$temp , altitude= 1655, salinity = bb_data$salinity)
+bb_data$do_sat <- bb_data$do_obs / bb_data$do_mgL_at_sat
+avg_do_sat <- mean(bb_data$do_mgL_at_sat)
 
-# quick plot to check 
+# Plot to check 
 bb_data %>%
   ggplot(aes(x = date_time, y = do_obs, color = as.character(sensor_num), group = as.character(sensor_num))) + 
   geom_point()+ 
