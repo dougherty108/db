@@ -34,6 +34,7 @@ bb_data_20260422 <- bb_data %>%
 
 # Plot to check 
 bb_data_20260422 %>%
+  filter(sensor_num == "7450-761903" | sensor_num ==  "7450-029591" | sensor_num == "7450-918273") %>%
   filter(date_time >= as.POSIXct("2026-04-22 12:00:00") & date_time <= as.POSIXct("2026-04-23 9:00:00")) %>%
   ggplot(aes(x = date_time, y = do_sat, color = as.character(sensor_num), group = as.character(sensor_num))) + 
   geom_point()+ 
