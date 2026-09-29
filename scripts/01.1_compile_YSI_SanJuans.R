@@ -27,24 +27,26 @@ Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest ){
 
 # Load in Data 
 
+# Root folder for all data (edit this one line if the location changes)
+data_root <- path.expand("~/OneDrive - UCB-O365/Research/Data/R/sensor_db/data")
+
 # LFM 
-LFM_dir <- here("data/Sensors/YSI Pro DSS/LFM/raw")
-LFMfiles <- dir_ls(LFM_dir, regexp = "\\.csv$", recurse = TRUE)     # Get all text files in the main directory and its subdirectories
-LFMfiles <- LFMfiles[str_detect(LFMfiles, "Zmax")]  # Only look at the "Zmax" files
-length(LFMfiles) #check how many files you have 
+LFM_dir <- file.path(data_root, "Sensors/YSI Pro DSS/LFM/raw")
+LFMfiles <- fs::dir_ls(LFM_dir, regexp = "\\.csv$", recurse = TRUE)     # Get all csv files in the main directory and its subdirectories
+LFMfiles <- LFMfiles[stringr::str_detect(LFMfiles, "Zmax")]             # Only look at the "Zmax" files
+length(LFMfiles) # check how many files you have 
 
 # UFM 
-UFM_dir <- here("data/Sensors/YSI Pro DSS/UFM/raw")
-UFMfiles <- dir_ls(UFM_dir, regexp = "\\.csv$", recurse = TRUE)     # Get all text files in the main directory and its subdirectories
-UFMfiles <- UFMfiles[str_detect(UFMfiles, "Zmax")]  # Only look at the "Zmax" files
-length(UFMfiles) #check how many files you have 
+UFM_dir <- file.path(data_root, "Sensors/YSI Pro DSS/UFM/raw")
+UFMfiles <- fs::dir_ls(UFM_dir, regexp = "\\.csv$", recurse = TRUE)
+UFMfiles <- UFMfiles[stringr::str_detect(UFMfiles, "Zmax")]
+length(UFMfiles) # check how many files you have 
 
 # TUC 
-TUC_dir <- here("data/Sensors/YSI Pro DSS/TUC/raw")
-TUCfiles <- dir_ls(TUC_dir, regexp = "\\.csv$", recurse = TRUE)     # Get all text files in the main directory and its subdirectories
-TUCfiles <- TUCfiles[str_detect(TUCfiles, "Zmax")]  # Only look at the "Zmax" files
-length(TUCfiles) #check how many files you have 
-
+TUC_dir <- file.path(data_root, "Sensors/YSI Pro DSS/TUC/raw")
+TUCfiles <- fs::dir_ls(TUC_dir, regexp = "\\.csv$", recurse = TRUE)
+TUCfiles <- TUCfiles[stringr::str_detect(TUCfiles, "Zmax")]
+length(TUCfiles) # check how many files you have
 
 # Process and Clean YSI profiles 
 
@@ -52,17 +54,20 @@ length(TUCfiles) #check how many files you have
 LFM_1 <- process_ysi(LFMfiles[1])
 LFM_2 <- process_ysi(LFMfiles[2])
 LFM_3 <- process_ysi(LFMfiles[3])
+LFM_4 <- process_ysi(LFMfiles[4])
+LFM_5 <- process_ysi(LFMfiles[5])
 
 # UFM
 UFM_1 <- process_ysi(UFMfiles[1])
 UFM_2 <- process_ysi(UFMfiles[2])
 UFM_3 <- process_ysi(UFMfiles[3])
+# 2026 data missing?
 
 # TUC
 TUC_1 <- process_ysi(TUCfiles[1])
 TUC_2 <- process_ysi(TUCfiles[2])
 TUC_3 <- process_ysi(TUCfiles[3])
-
+TUC_4 <- process_ysi(TUCfiles[4])
 
 
 # 02 Visualize Profiles  ---------------------------------------------
@@ -71,6 +76,8 @@ TUC_3 <- process_ysi(TUCfiles[3])
 Round_Plot_YSI_FUNC(LFM_1, 0.25) 
 Round_Plot_YSI_FUNC(LFM_2, 0.25) 
 Round_Plot_YSI_FUNC(LFM_3, 0.25)
+Round_Plot_YSI_FUNC(LFM_4, 0.25)
+Round_Plot_YSI_FUNC(LFM_5, 0.25)
 
 # UFM 
 Round_Plot_YSI_FUNC(UFM_1, 0.25) # just a point measurement
@@ -81,12 +88,13 @@ Round_Plot_YSI_FUNC(UFM_3, 0.25)
 Round_Plot_YSI_FUNC(TUC_1, 0.25) 
 Round_Plot_YSI_FUNC(TUC_2, 0.25) 
 Round_Plot_YSI_FUNC(TUC_3, 0.25)
-
+Round_Plot_YSI_FUNC(TUC_4, 0.25)
 
 
 # 03 Export csv with rounded depths  ---------------------------------------------
 
 #LFM 
+str(LFM_1)
 LFM_20240718 <- LFM_1 %>%
   mutate(depth_m=round(depth_m/0.25)*0.25) %>% 
   group_by(lake, date, depth_m, parameter) %>%
