@@ -83,19 +83,26 @@ process_ysi <- function(file_path) {
 }
 
 # Write plotting function 
-Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest ){
-      ysi_profile %>%
-        mutate(depth_m=round(depth_m/ round_to_nearest )* round_to_nearest ) %>% #round to the nearest 0.5
-        group_by(depth_m, parameter, lake) %>%
-        mutate(value = median(value, na.rm=TRUE)) %>%
-        mutate(month=month(date_time)) %>%
-        filter(!parameter %in% c("barometer_mmHg","cond_spec_uScm")) %>%
-        ggplot(aes(x=value, y=depth_m, color=parameter))+
-        geom_point()+
-        scale_y_reverse()+
-        facet_wrap(parameter~., scales="free_x", nrow = 2)+
-        labs(title=paste(unique(ysi_profile$lake),unique(ysi_profile$date)))
-    }
+Round_Plot_YSI_FUNC <- function(ysi_profile, round_to_nearest) {
+  
+  # Title pieces, built from the raw input
+  plot_lake <- paste(unique(ysi_profile$lake), collapse = ", ")
+  plot_date <- format(unique(as.Date(ysi_profile$date_time, tz = "America/Denver")),
+                      "%B %d, %Y")
+  plot_date <- paste(plot_date, collapse = " / ")
+  
+  ysi_profile %>%
+    mutate(depth_m = round(depth_m / round_to_nearest) * round_to_nearest) %>%
+    group_by(depth_m, parameter, lake) %>%
+    summarize(value = median(value, na.rm = TRUE), .groups = "drop") %>%
+    filter(!parameter %in% c("barometer_mmHg", "cond_spec_uScm")) %>%
+    ggplot(aes(x = value, y = depth_m, color = parameter)) +
+    geom_point() +
+    scale_y_reverse() +
+    facet_wrap(parameter ~ ., scales = "free_x", nrow = 2) +
+    labs(title = paste(plot_lake, "-", plot_date),
+         x = "Value", y = "Depth (m)")
+}
 
 # Write a function that rounds, summarizes by depth, and pivots the data to wide format 
 OTI_YSI_FUNC <- function(ysi_profile, round_to_nearest){
