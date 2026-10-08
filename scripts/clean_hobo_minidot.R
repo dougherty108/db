@@ -15,14 +15,14 @@
 
     # -------- YOU NEED TO CHANGE ON YOUR MACHINE 
     # Connect to Sharepoint data connection on your machine 
-        data_path <- "/Users/kaga3666/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Data/" # Katie's desktop
+        data_path <- "~/Library/CloudStorage/OneDrive-UCB-O365-Mountainlimnologylab-Data (9-15-26 4:13 PM)/" # CD Laptop
 
     # Load and clean data using the "git miniDOT" function from the miniDOT functions script (loaded above)
     combined_data <- get_miniDOT(data_path) # this can take a minute, it is a lot of data to process 
-    depret_test <- read_excel(file.path(data_path, "Sensors/buoy_deployment_retreival_test.xlsx"))
-    depret <- read_excel(file.path(data_path, "Sensors/sensor_metadata_all_loggers_KAG20260603.xlsx"))
+    #depret_test <- read_excel(file.path(data_path, "Sensors/sensor_metadata_all_loggers.xlsx"))
+    depret <- read_excel(file.path(data_path, "Sensors/sensor_metadata_all_loggers.xlsx"))
 
-    # combined_data_bombshelter <- combined_data
+     #combined_data_bombshelter <- combined_data
 
 #___________________________________________
 # MiniDOT 
@@ -58,15 +58,15 @@ combined_data %>%
 
     # standardize if it says deploy or deployed 
     depret<- depret %>% 
-      mutate(deployed_retreived = case_when(
-                                    deployed_retreived == "deploy" |  deployed_retreived == "deployed" ~ "deployed", 
-                                    deployed_retreived == "retrieve" | deployed_retreived == "retrieved" ~ "retrieved", 
+      mutate(deployed_retrieved = case_when(
+                                    deployed_retrieved == "deploy" |  deployed_retrieved == "deployed" ~ "deployed", 
+                                    deployed_retrieved == "retrieve" | deployed_retrieved == "retrieved" ~ "retrieved", 
                                     TRUE ~ NA
                                   )
       )
 
     # format date times to remove the full day when sensor was out of the water 
-    depret$date_time <- ifelse(depret$deployed_retreived == "deployed", # if this is true 
+    depret$date_time <- ifelse(depret$deployed_retrieved == "deployed", # if this is true 
                                 paste(depret$date, "23:59:59", sep = " "), # then use this 
                                 paste(depret$date, "00:00:01", sep = " ")) # otherwise, use this 
     depret$date_time  <- as.POSIXct(depret$date_time , format = "%Y-%m-%d %H:%M:%OS") # format the timestamp as a POSIXct 
@@ -76,22 +76,22 @@ combined_data %>%
       filter(!is.na(sensor_number))
 
     # Subset to only the sensor number, deploy retreive, and the time (then when you run through the minidot data just seperate everything by sensor number )
-    depret <- subset(depret, select = c("sensor_number", "deployed_retreived", "date_time"))
+    depret <- subset(depret, select = c("sensor_number", "deployed_retrieved", "date_time"))
 
     # pivot into wide format with a column for time deployed and the following columbn for time retreived 
     depret_paired <- depret %>%
-      arrange(sensor_number, date_time) %>%  # order all of the rows by sensor number and then withiin sensor number arrange by date 
+      arrange(sensor_number, date_time) %>%  # order all of the rows by sensor number and then within sensor number arrange by date 
       group_by(sensor_number) %>%       # group within each sensor because we want to work through each sensor independently 
       mutate(
-        event_id = cumsum(deployed_retreived == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that sensor number that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
+        event_id = cumsum(deployed_retrieved == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that sensor number that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
       ) %>%
       pivot_wider(  # change format from long to wide 
         id_cols = c(sensor_number, event_id), # columns that stay the same <- importantly we need to include the event id here 
-        names_from = deployed_retreived, # column whose values become new column names
+        names_from = deployed_retrieved, # column whose values become new column names
         values_from = date_time, # what fills those new columns
-        names_prefix = "time_" # add this prefix to the begining of the new column names 
+        names_prefix = "time_" # add this prefix to the beginning of the new column names 
       ) %>%
-      filter(complete.cases(time_deployed, time_retreived)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retreived. This will get rid of rows where we have deployed the sensor in the lake but we haven't retreived it yet (so we shouldn't have data )
+      filter(complete.cases(time_deployed, time_retrieved)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retrieved. This will get rid of rows where we have deployed the sensor in the lake but we haven't retrieved it yet (so we shouldn't have data )
       ungroup()
 
 #___________________________________________
