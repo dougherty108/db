@@ -15,14 +15,38 @@
 
     # -------- YOU NEED TO CHANGE ON YOUR MACHINE 
     # Connect to Sharepoint data connection on your machine 
-        data_path <- "~/Library/CloudStorage/OneDrive-UCB-O365-Mountainlimnologylab-Data (9-15-26 4:13 PM)/" # CD Laptop
+        data_path <- "~/Library/CloudStorage/OneDrive-SharedLibraries-UCB-O365/Mountain limnology lab - Documents/Data" # CD Laptop
 
     # Load and clean data using the "git miniDOT" function from the miniDOT functions script (loaded above)
-    combined_data <- get_miniDOT(data_path) # this can take a minute, it is a lot of data to process 
+    #combined_data <- get_miniDOT(data_path) # this can take a minute, it is a lot of data to process 
+    
+    
+# load all data parsing it out by lake, since when you run it all at once it fails to complete
+   # LVWS
+    LOC <- get_miniDOT(data_path, lake_id = "LOC")
+    SKY <- get_miniDOT(data_path, lake_id = "SKY")
+    FER <- get_miniDOT(data_path, lake_id = "FER")
+    #San Juans
+    TUC <- get_miniDOT(data_path, lake_id = "TUC")
+    UFM <- get_miniDOT(data_path, lake_id = "UFM")
+    LFM <- get_miniDOT(data_path, lake_id = "LFM")
+    # GLV
+    GL1 <- get_miniDOT(data_path, lake_id = "GL1")
+    GL4 <- get_miniDOT(data_path, lake_id = "GL4")
+    GL5 <- get_miniDOT(data_path, lake_id = "GL5")
+    
+    # bind into one massive object to match the rest of the workflow
+    combined_data <- rbind(LOC, SKY, FER, TUC, UFM, LFM, GL1, GL4, GL5) |> 
+      rename(serial_num = "sensor_num")
     #depret_test <- read_excel(file.path(data_path, "Sensors/sensor_metadata_all_loggers.xlsx"))
-    depret <- read_excel(file.path(data_path, "Sensors/sensor_metadata_all_loggers.xlsx"))
+    depret <- read_csv(file.path(data_path, "Sensors/sensor_metadata_all_loggers.csv")) |> 
+      mutate(date = ymd(date), 
+             time = hms(time),
+        date_time = ymd_hms(paste(date, time))) |> 
+      filter(serial_number != "808336")
+      
 
-     #combined_data_bombshelter <- combined_data
+    # combined_data_bombshelter <- combined_data
 
 #___________________________________________
 # MiniDOT 
@@ -31,7 +55,7 @@
 # Plot to check metadata 
 
 # We don't record the first set of digits in our database so remove them here 
-combined_data$sensor_num_sub <- substring(combined_data$sensor_num, 6, 12)
+combined_data$serial_num_sub <- substring(combined_data$serial_num, 6, 12)
 
 combined_data %>%
   filter(sensor_num_sub == "822871") %>%
@@ -50,59 +74,61 @@ combined_data %>%
 #___________________________________________
 # 1. Format the deployment and retreival data 
 
+# pretty sure this step is also unncessary now. 
     # format datetime into a timestamp POSIXct 
-    depret$date <- paste(substring(depret$date_time, 1, 4), 
-                          substring(depret$date_time, 5, 6), 
-                          substring(depret$date_time, 7, 8), 
-                          sep = "-" ) # this just adds "-" in between the year month and day in the date so that it is an unambiguous format and sets it to the very end of the day (removes the )
+   # depret$date <- paste(substring(depret$date_time, 1, 4), 
+  #                        substring(depret$date_time, 5, 6), 
+  #                        substring(depret$date_time, 7, 8), 
+  #                        sep = "-" ) # this just adds "-" in between the year month and day in the date so that it is an unambiguous format and sets it to the very end of the day (removes the )
 
     # standardize if it says deploy or deployed 
-    depret<- depret %>% 
-      mutate(deployed_retrieved = case_when(
-                                    deployed_retrieved == "deploy" |  deployed_retrieved == "deployed" ~ "deployed", 
-                                    deployed_retrieved == "retrieve" | deployed_retrieved == "retrieved" ~ "retrieved", 
-                                    TRUE ~ NA
-                                  )
-      )
+    # no longer necessary since the log has standardized deploy, retrieve. 
+    #depret<- depret %>% 
+    #  mutate(deployed_retrieved = case_when(
+    #                                deployed_retrieved == "deploy" |  deployed_retrieved == "deployed" ~ "deployed", 
+    #                                deployed_retrieved == "retrieve" | deployed_retrieved == "retrieved" ~ "retrieved", 
+    #                                TRUE ~ NA
+    #                              )
+    #  )
 
     # format date times to remove the full day when sensor was out of the water 
-    depret$date_time <- ifelse(depret$deployed_retrieved == "deployed", # if this is true 
+    depret$date_time <- ifelse(depret$deployRemove == "deploy", # if this is true 
                                 paste(depret$date, "23:59:59", sep = " "), # then use this 
                                 paste(depret$date, "00:00:01", sep = " ")) # otherwise, use this 
     depret$date_time  <- as.POSIXct(depret$date_time , format = "%Y-%m-%d %H:%M:%OS") # format the timestamp as a POSIXct 
 
     # Remove rows with an NA for sensor number
     depret <- depret %>% 
-      filter(!is.na(sensor_number))
+      filter(!is.na(serial_number))
 
-    # Subset to only the sensor number, deploy retreive, and the time (then when you run through the minidot data just seperate everything by sensor number )
-    depret <- subset(depret, select = c("sensor_number", "deployed_retrieved", "date_time"))
+    # Subset to only the sensor number, deploy retrieve, and the time (then when you run through the minidot data just seperate everything by sensor number )
+    depret <- subset(depret, select = c("serial_number", "deployRemove", "date_time"))
 
     # pivot into wide format with a column for time deployed and the following columbn for time retreived 
     depret_paired <- depret %>%
-      arrange(sensor_number, date_time) %>%  # order all of the rows by sensor number and then within sensor number arrange by date 
-      group_by(sensor_number) %>%       # group within each sensor because we want to work through each sensor independently 
+      arrange(serial_number, date_time) %>%  # order all of the rows by sensor number and then within sensor number arrange by date 
+      group_by(serial_number) %>%       # group within each sensor because we want to work through each sensor independently 
       mutate(
-        event_id = cumsum(deployed_retrieved == "deployed") # this creates a new column called "event_id" with a cumulative sum of all of the times for that sensor number that deployed_retreived column equals "deployed", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retreival pair 
+        event_id = cumsum(deployRemove == "deploy") # this creates a new column called "event_id" with a cumulative sum of all of the times for that sensor number that deployRemove column equals "deploy", essentially a count of each deployment. We need this in order to keep rows for each consecutive deployment and retrieval pair 
       ) %>%
       pivot_wider(  # change format from long to wide 
-        id_cols = c(sensor_number, event_id), # columns that stay the same <- importantly we need to include the event id here 
-        names_from = deployed_retrieved, # column whose values become new column names
+        id_cols = c(serial_number, event_id), # columns that stay the same <- importantly we need to include the event id here 
+        names_from = deployRemove, # column whose values become new column names
         values_from = date_time, # what fills those new columns
         names_prefix = "time_" # add this prefix to the beginning of the new column names 
       ) %>%
-      filter(complete.cases(time_deployed, time_retrieved)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retrieved. This will get rid of rows where we have deployed the sensor in the lake but we haven't retrieved it yet (so we shouldn't have data )
+      #filter(complete.cases(time_deployed, time_retrieved)) %>% #this is a failsafe check so we are only keeping rows that have BOTH a time deployed AND a time retrieved. This will get rid of rows where we have deployed the sensor in the lake but we haven't retrieved it yet (so we shouldn't have data )
       ungroup()
 
 #___________________________________________
 # 2. Create a "status" column in combined data to denote when the buoy was above water (between retreivals and deployments)
   # NOTE: this function can take some time because the "fuzzy join" is pretty slow checking every row of all your miniDOT data 
 
-    # get rid of the first 5 digits of the sensor number code because they are all the same and we don't record them 
-    combined_data$sensor_num <- substring(combined_data$sensor_num, 6, 14) 
+    # get rid of the first 5 digits of the serial number code because they are all the same and we don't record them 
+    combined_data$serial_num <- substring(combined_data$serial_num, 6, 14) 
 
-    # seperate the combined minidot data into a list with a seperate data frame for each sensor number
-    combined_data_lst <- split(combined_data, f = combined_data$sensor_num)
+    # seperate the combined minidot data into a list with a seperate data frame for each serial number
+    combined_data_lst <- split(combined_data, f = combined_data$serial_num)
 
     # check that the function works 
       #  sand <- combined_data_lst[[3]]
@@ -122,12 +148,31 @@ combined_data %>%
       theme_minimal() + 
       facet_wrap(~lake_id)
 
+combined_data_forexport = combined_data_annotated |> 
+  filter(sensor_status == "under_water") |> 
+  select(-sensor_status)
+# write output for collaborators: 
+write_csv(combined_data_annotated, "data_export/minidot_all_lakes_20261015.csv")
 
+### Do some investigation to see what was going on in Sky
+start <- ymd_hm("2018-09-01 19:57", tz = "UTC")
+end   <- ymd_hm("2019-01-11 08:57", tz = "UTC")
 
+combined_data_annotated |> 
+  filter(lake_id == "SKY") |>
+  filter(
+           date_time > start &
+           date_time <= end) |> 
+  ggplot(aes(date_time, temp)) + 
+  geom_point(
+    aes(shape = depth, color = serial_num_sub)
+    ) + 
+  ggtitle("SKY") + 
+  theme_bw()
 #___________________________________________
 # 3. Make a few formatting changes so that this data plays nice with other scripts 
 
-minidot_reformatted <- minidot %>%
+minidot_reformatted <- combined_data_annotated %>%
   rename(siteID = lake_id) %>% # for joining with SQL database. lake_id == siteID
   mutate(year = year(date_time), # extract year
         waterYear = calcWaterYear(date_time), # add water year column
@@ -182,7 +227,7 @@ minidot_reformatted <- minidot %>%
     minidot_reformatted %>% 
       filter(siteID== "loc" ) %>%
       filter(is.na(do_flag)) %>%
-      filter(status=="under_water") %>%
+      filter(sensor_status=="under_water") %>%
       ggplot(aes(x= date_time , y= do_obs, color = depth_from_top)) +
       geom_point(alpha=0.4) + 
       # geom_point() + 
@@ -190,9 +235,13 @@ minidot_reformatted <- minidot %>%
       labs(x = "Date", y = "DO (mg/L)", 
           title =  "DO over time") + 
       facet_wrap(~ waterYear, scales = "free")
+    
+    
+# CED write output to give GLAMR colleagues a lightly QAQC'd version to look at
+write_csv(minidot_reformatted, "data_export/minidot_all_lakes_qaqc_20261015.csv")
 
 #___________________________________________
-# 6. Seperate the DO and the temp data into seperate dfs, temp will get added to hobo bellow 
+# 6. Separate the DO and the temp data into seperate dfs, temp will get added to hobo bellow 
     # IAO - here what we should do instead is save a file with just the do_obs for each unique siteID.
     # Then keep the temperature data and combine it into one temperature dataframe along with the HOBO temperature data
     # so we have a "temperature_profiles.csv"
@@ -222,10 +271,23 @@ minidot_reformatted <- minidot %>%
     # for each file path in your list apply this function 
     hobo_formatted <- lapply(hobo_file_paths, process_hobo_file)
 
-    # Put all the hobo dfs together into one long temp profiles 
-    temp_profile <- bind_rows(hobo_formatted)
-    head(temp_profile)
-    # Add the temp data from the minidots 
+    # need to trim all the hobo data to it's deployRemove times in the depret_paired object
+    hobo_formatted_lst <- lapply(hobo_formatted, sensor_above_water, depret_paired)
     
-
+    # Put all the hobo dfs together into one long temp profiles 
+    temp_profile <- bind_rows(hobo_formatted_lst)
+    head(temp_profile)
+    
+    # plot up data to see if depths roughly make sense (seems like they do, at least for above/below water)
+    temp_profile %>%
+      filter(sensor_status == "under_water") %>%
+      ggplot(aes(x = date_time, y = temp, color = as.character(depth), group = as.character(depth))) + 
+      geom_line() + 
+      theme_minimal() + 
+      facet_wrap(~siteID, scales = "free_x")
+    
+    # write output
+    write_csv(temp_profile, "data_export/hobo_all_lakes_20261016.csv")
+    
+    
 hobo_file_paths[5]

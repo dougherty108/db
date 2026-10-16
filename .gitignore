@@ -54,3 +54,6 @@ rsconnect/
 #Ignore data
 /data
 /data_copy 
+minidot_all_lakes_20261015.csv
+data_export/hobo_all_lakes_20261016.csv
+ data_export/hobo_all_lakes_20261016.csv
