@@ -55,6 +55,8 @@
         return(data)
     }
 
+    
+  
 #########################
 # get miniDot function
 #    GOAL: pull each txt file from within the data structure, then processes it using the process file function above
@@ -62,7 +64,7 @@
 #    ouput: one large df containing the minidot data from all of the files within the folder structure 
 
     # Define the function 
-    get_miniDOT <- function(data_path) {
+    get_miniDOT <- function(data_path, lake_id) {
       
       # Define the path to the miniDOT data directory within your data directory 
       main_dir <- file.path(data_path, "Sensors/miniDOT") # they have this defined with data path seperate from script path, so file path is where the script is but data path is where the data are? 
@@ -76,7 +78,7 @@
       files <- files[!str_detect(files, "/duplicates not deleting just in case/")]
       files <- files[!str_detect(files, "/00_TEMPORARY_LOC_2526/")]
 
-      # files <- files[str_detect(files, "SKY")] # if you want to specify only one or a few lakes 
+       files <- files[str_detect(files, lake_id)] # if you want to specify only one or a few lakes 
       
       # Apply the processing function to each file and combine the results
       combined_data <- progressr::with_progress({
@@ -92,11 +94,6 @@
 
 # KATIE WORKING HERE ***********************************************************
 
-
-
-
-
- 
 
 
 #########################
@@ -116,20 +113,20 @@ sensor_above_water <- function(sensor_data, depret_paired){
     # first subset the dep ret data to only include the rows corresponding to that sensor 
 
       # extract the semsor number for the sensor you are working with 
-      selected_sensor_number <- sensor_data[1, "sensor_num"] %>% as.character
+      selected_serial_number <- sensor_data[1, "serial_num"] %>% as.character
 
       # subset depret to only the sensor number you want 
       depret_sub <- depret_paired %>%
-          filter(sensor_number == selected_sensor_number)
+          filter(serial_number == selected_serial_number)
 
     # then fuzzy join 
       sensor_data_flagged <- sensor_data %>% #note that this step is kind of slow 
             fuzzy_left_join( # we use "fuzzy join" here because for time deployed and time retreived you want to join when they are within a range not necessarily equivalent 
               depret_sub, # join combined data with the depret paired data and use left join because you want to keep all of the rows in combined data 
               by = c( # column name in sensor data = column name in depret data 
-                "sensor_num" = "sensor_number", # lake id needs to match exactly 
-                "date_time" = "time_deployed", # here the date time needs to be greater than the time deployed 
-                "date_time" = "time_retreived" # the datetime needs to be less than the time retreived 
+                "serial_num" = "serial_number", # lake id needs to match exactly 
+                "date_time" = "time_deploy", # here the date time needs to be greater than the time deployed 
+                "date_time" = "time_retrieve" # the datetime needs to be less than the time retrieved 
               ),
               match_fun = list(`==`, `>`, `<`) # this tells fuzzy join the equivalents you want to use for the four joins above 
             )
@@ -145,9 +142,9 @@ sensor_above_water <- function(sensor_data, depret_paired){
     # Clean up the ouput 
         # remove the extra rows that you created as part of this process
         sensor_data_annotated <- sensor_data_annotated %>%
-          select(-event_id, -time_deployed, -time_retreived, -sensor_number) # this gets rid of the event id, time deployed, and time retreived columns 
+          select(-event_id, -time_deploy, -time_retrieve, -serial_number) # this gets rid of the event id, time deployed, and time retrieved columns 
   
-  print(selected_sensor_number)
+  print(selected_serial_number)
   return(sensor_data_annotated)
 
 }

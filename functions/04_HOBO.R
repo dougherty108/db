@@ -191,8 +191,7 @@ compile_HOBO_data <- function(filepath) {
               siteID = file_info[1], # needs to be siteID to match the SQL database 
               depth = file_info[2], 
               depth_from = file_info[3], 
-              logging_interval = file_info[6],
-              sensor_num = substring(file_info[7], 7, 20), 
+              serial_num = substring(file_info[6], 7, 20), 
               location = ifelse(length(file_info) >= 8, file_info[4], "zmax") #this is adding a little flexibility for when we have shore sites and the file path indicates which site they are at
                     # this last location line of code says "check the length of the folder info object, if it contains 4 or more objects then use the forth to designate the location column, otherwise, call it zmax"
             ) %>%
@@ -206,3 +205,4 @@ compile_HOBO_data <- function(filepath) {
        # return the formatted data file 
         return(data)
     }
+    
