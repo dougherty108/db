@@ -1,59 +1,19 @@
-# History files
+# Large raw data files
+*.zip
+
+# Generated comparison results
+pipeline_comparison_results/
+
+# Specific large CSV files
+minidot_all_lakes_*.csv
+hobo_all_lakes_*.csv
+compiled_minidot.csv
+
+# RStudio temporary files
 .Rhistory
-.Rapp.history
-*.DS_Store
-.DS_Store
-
-
-# Session Data files
 .RData
-.RDataTmp
-
-# User-specific files
 .Ruserdata
-
-# Example code in package build process
-*-Ex.R
-
-# Output files from R CMD build
-/*.tar.gz
-
-# Output files from R CMD check
-/*.Rcheck/
-
-# RStudio files
 .Rproj.user/
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
-
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
-
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron
-
-# pkgdown site
-docs/
-
-# translation temp files
-po/*~
-
-# RStudio Connect folder
-rsconnect/
-
-#Ignore data
-/data
-/data_copy 
-minidot_all_lakes_20261015.csv
-data_export/hobo_all_lakes_20261016.csv
- data_export/hobo_all_lakes_20261016.csv
+# macOS files
+.DS_Store
